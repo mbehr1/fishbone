@@ -44,7 +44,10 @@ export default class App extends Component {
     // effect_cat = [effect,categories]
     // categories = [category, [root causes]]
     for (const effect_cat of data) {
+      // eslint-disable-next-line no-unused-vars
       const [effect, categories] = effect_cat;
+
+      // eslint-disable-next-line no-unused-vars
       for (const [category, rootCauses] of categories) {
         for (const rootcause of rootCauses) {
           if (typeof rootcause === 'object') {
@@ -52,6 +55,8 @@ export default class App extends Component {
             if (rootcause.type === 'react') {
               switch (rootcause.elementName) {
                 case 'MyCheckbox': rootcause.elementName = MyCheckbox; break;
+                default: // do nothing
+                  break;
               }
             }
           }
@@ -87,6 +92,10 @@ export default class App extends Component {
           this.setState({ data: msg.data, title: msg.title });
 
           break;
+        default:
+          console.warn(`App received unknown type=${msg.type} msg:`);
+          console.log(msg);      
+            break;
       }
     });
   }
