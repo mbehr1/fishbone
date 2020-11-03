@@ -1,0 +1,95 @@
+{
+    "type": "fba",
+    "version": "0.1",
+    "title": "test fishbone chart",
+    "fishbone": [
+      ["effect 1",
+        [
+          ["category1",
+            [
+                "rootcause 1 1",
+                "root cause 1 2",
+                { "type": "react", "elementName": "MyCheckbox", "props": { "name": "check1" } },
+                { "type": "react", "elementName": "MyCheckbox", "props": { "name": "check 2" } },
+                { "type": "react", "elementName": "MyCheckbox", "props": { "name": "check 3" } }
+            ]
+            ],
+          ["category2",
+            [
+                "rootcause21"
+            ]
+          ],
+          ["category3",
+            [
+                "rootcause31"
+            ]],
+          ["category4",
+            [
+                "rootcause 4 1",
+                "root cause 4 2"
+            ]
+          ]
+        ]
+      ],
+      ["effect 2",
+        [
+          ["category1",
+            [
+                "rootcause1",
+                "root cause 1 2"
+            ]
+            ],
+          ["category2",
+            [
+                "rootcause21"
+            ]
+          ],
+          ["category3",
+            [
+                "rootcause31"
+            ]],
+          ["category4",
+            [
+                "rootcause41"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "fishbone2": [
+      ["effect 1",
+        [
+          ["category1",
+            [
+                "rootcause11",
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check1" } },
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check2" } },
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check3" } }
+            ]],
+          ["category2",
+            [
+                "rootcause21",
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check1" } },
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check2" } },
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check3" } }
+            ]
+          ],
+          ["category3",
+            [
+                "rootcause31",
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check1" } },
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check2" } },
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check3" } }
+            ]],
+          ["category4",
+            [
+                "rootcause41",
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check1" } },
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check2" } },
+              { "type": "react2", "elementName": "MyCheckbox", "props": { "name": "check3" } }
+            ]
+          ]
+        ]
+      ]
+    ]
+}
