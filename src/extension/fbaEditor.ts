@@ -2,13 +2,13 @@
  * copyright (c) 2020, Matthias Behr
  *
  * todo:
- * - change storage format to yaml using e.g. js-yaml for better readability
  * - add nonce/random ids to each element? (for smaller edits/updates)
  */
 
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { getNonce } from './util';
+import * as yaml from 'js-yaml';
 
 interface AssetManifest {
     files: {
@@ -78,7 +78,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
             postMsgOnceAlive({
                 type: 'update',
                 data: docObj.fishbone,
-                title: docObj.title
+                title: docObj.title,
+                attributes: docObj.attributes
             });
         }
 
@@ -118,7 +119,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
 
             switch (e.type) {
                 case 'update':
-                    this.updateTextDocument(document, { fishbone: e.data, title: e.title }); // same as update webview
+                    this.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
+                        console.log(`updateTextDocument fulfilled=${fulfilled}`);
+                    }); // same as update webview
                     break;
                 case 'log':
                     console.log(e.message);
@@ -225,28 +228,49 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
     /**
      * Write out the object to a given document.
      */
-    private updateTextDocument(document: vscode.TextDocument, json: any) {
-        console.log(`updateTextDocument called with json.keys=${Object.keys(json)}`);
+    private updateTextDocument(document: vscode.TextDocument, docObj: any) {
+        console.log(`updateTextDocument called with json.keys=${Object.keys(docObj)}`);
+        Object.keys(docObj).forEach(key => {
+            console.log(` ${key}=${JSON.stringify(docObj[key])}`);
+        });
 
         const edit = new vscode.WorkspaceEdit();
 
         // Just replace the entire text document every time for now.
-        // but
-        // only 'title' and 'fishbone' are updated for now. keep the rest:
-        let jsonObj: any = {};
+        let yamlObj: any = {};
         try {
-            jsonObj = JSON.parse(document.getText());
+            yamlObj = yaml.safeLoad(document.getText()); // JSON.parse(document.getText());
+            if (typeof yamlObj !== 'object') {
+                console.error('Could not get document as json. Content is not valid yamlObj ' + JSON.stringify(yamlObj));
+                yamlObj = {};
+            }
         } catch (e) {
-            console.error('Could not get document as json. Content is not valid json e= ' + e);
+            console.error('Could not get document as json. Content is not valid yaml e= ' + e);
         }
-        jsonObj.title = json.title;
-        jsonObj.fishbone = json.fishbone;
 
-        edit.replace(
-            document.uri,
-            new vscode.Range(0, 0, document.lineCount, 0),
-            JSON.stringify(jsonObj, null, 2));
+        // only 'title', 'attributes' and 'fishbone' are updated for now. keep the rest:
 
+        if ('title' in docObj) { yamlObj.title = docObj.title; }
+        if (('attributes' in docObj) && docObj.attributes !== undefined) { yamlObj.attributes = docObj.attributes; }
+        if ('fishbone' in docObj) { yamlObj.fishbone = docObj.fishbone; }
+
+        // now store it as yaml:
+        try {
+            const yamlStr = yaml.safeDump(yamlObj);
+
+    /*console.log(`new yaml text=
+    ${yamlStr}
+    `);*/
+
+            edit.replace(
+                document.uri,
+                new vscode.Range(0, 0, document.lineCount, 0),
+                yamlStr);
+
+        } catch (e) {
+            console.error(`storing as YAML failed. Error=${e}`);
+            return;
+        }
         return vscode.workspace.applyEdit(edit);
     }
 
@@ -254,26 +278,31 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
  * Parse the documents content into an object.
  */
     static getFBDataFromText(text: string): any {
+    /*console.log(`getFBDataFromText text=
+    ${text}
+    `);*/
+
         // here we do return the data that we pass as data=... to the Fishbone
 
-        // our document is a JSON document. 
+        // our document is a yaml document. 
         // representing a single object with properties:
         //  type <- expect "fba"
         //  version <- 0.1
         //  fishbone : array <- we use this as fishbone data
 
         if (text.trim().length === 0) {
-            return '[]'; // empty or initial data?
+            return { fishbone: [], title: '<please set title>' }; // empty or initial data?
         }
 
         try {
-            const jsonObj = JSON.parse(text);
-            console.log(`getFBDataFromText type=${jsonObj.type}, version=${jsonObj.version}`);
-            console.log(`getFBDataFromText title=${jsonObj.title}`);
-            return { fishbone: jsonObj.fishbone, title: jsonObj.title || '<please add title to .fba>' };
+            const yamlObj: any = yaml.safeLoad(text); // JSON.parse(text);
+            if (typeof yamlObj !== 'object') { return []; }
+            console.log(`getFBDataFromText type=${yamlObj.type}, version=${yamlObj.version}`);
+            console.log(`getFBDataFromText title=${yamlObj.title}`);
+            return { attributes: yamlObj?.attributes, fishbone: yamlObj.fishbone, title: yamlObj.title || '<please add title to .fba>' };
         } catch (e) {
-            throw new Error('Could not get document as json. Content is not valid json e= ' + e);
+            throw new Error('Could not get document as yaml. Content is not valid yaml e= ' + e);
         }
-        return '[]';
+        return { title: '<error>' };
     }
 }
