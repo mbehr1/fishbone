@@ -4,6 +4,7 @@
  * todo list:
  * - make FishboneChart fully controlled or fully uncontrolled: https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html
  * - ensure that real state changes (zoom in, effect selection) get stored in .fba and vscode.state
+ * - use Chips instead of texts (allowing always to set the <DoneIcon />?)
  * - rethink "react" class support (function as string parsed to js?)
  * 
  * - use webpack (or something else) for proper react "app" bundling/generation incl. debugging support
@@ -20,24 +21,38 @@ import Checkbox from '@material-ui/core/Checkbox';
 import Tooltip from '@material-ui/core/Tooltip';
 import Filter1Icon from '@material-ui/icons/Filter1';
 import FishboneChart from './components/fishbone/fishboneChart'
-import { FormControlLabel } from '@material-ui/core';
+import { FormControlLabel, IconButton, Container } from '@material-ui/core';
+import EditIcon from '@material-ui/icons/Edit';
+
 
 class MyCheckbox extends Component {
   render() {
-    return (<FormControlLabel control={<Tooltip title={`a tooltip for ${this.props.name}`}><Checkbox color="primary"></Checkbox></Tooltip>} label={this.props.name} />);
+    return (
+      <Container>
+        <Tooltip title={`a tooltip for ${this.props.name}`}>
+          <FormControlLabel control={
+            <Checkbox {...this.props} color="primary"></Checkbox>
+          } label={this.props.label}
+          />
+        </Tooltip >
+        <IconButton aria-label="edit">
+          <EditIcon fontSize="small" />
+        </IconButton>
+      </Container>
+    );
   }
 }
 
 export default class App extends Component {
 
-  fbChartKey = 0;
+  fbChartKey = 0; // todo once FishboneChart is a controlled component this can be removed.
 
   logMsg(msg) {
     console.log('logPostMsg:' + msg);
     this.props.vscode.postMessage({ type: 'log', message: 'logMsg:' + msg });
   }
 
-  static parseFBData(data) {
+  parseFBData(data) {
     // parse data for known react classes and replace them (in the same object) 
     // data consists of:
     // [effect_cat]
@@ -53,8 +68,8 @@ export default class App extends Component {
           if (typeof rootcause === 'object') {
             console.log(`found object rootcause:'${JSON.stringify(rootcause)}'`);
             if (rootcause.type === 'react') {
-              switch (rootcause.elementName) {
-                case 'MyCheckbox': rootcause.elementName = MyCheckbox; break;
+              switch (rootcause.element) {
+                case 'MyCheckbox': rootcause.elementName = MyCheckbox; rootcause.props.onChange = this.handleInputChange.bind(this, rootcause); break;
                 default: // do nothing
                   break;
               }
@@ -67,11 +82,12 @@ export default class App extends Component {
 
   constructor(props) {
     super(props);
+    //this.handleInputChange = this.handleInputChange.bind(this);
 
     const vsCodeState = props.vscode.getState();
 
     // need to convert to class names...
-    App.parseFBData(vsCodeState?.data || []);
+    this.parseFBData(vsCodeState?.data || []);
 
     console.log(`vsCodeState=${JSON.stringify(vsCodeState)}`);
 
@@ -86,7 +102,7 @@ export default class App extends Component {
         case 'update':
           // we store the non-modified data in vscode.state (e.g. with react:MyCheckbox as string)
           this.props.vscode.setState({ data: msg.data, title: msg.title }); // todo shall we store any other data?
-          App.parseFBData(msg.data); // modifies msg.data
+          this.parseFBData(msg.data); // modifies msg.data
           // update the FishboneChart completely (as props changes are not handled correctly! (todo))
           this.fbChartKey++;
           this.setState({ data: msg.data, title: msg.title });
@@ -98,6 +114,28 @@ export default class App extends Component {
             break;
       }
     });
+
+  }
+
+  handleInputChange(object, event) {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+    const id = target.id;
+    console.log(`App.handleInputChange(id=${id}, type=${target.type}, name=${name}, value=${value} key=${target.key} object.keys=${Object.keys(object).toString()})`);
+    if ('props' in object) {
+      if (target.type === 'checkbox') {
+        object.props.checked = value;
+      }
+      console.log(`updated object to ${JSON.stringify(object)}`);
+      // update state... (todo...think about how to do this best)
+      this.setState({});
+      // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
+      this.props.vscode.setState({ data: this.state.data, title: this.state.title }); // todo shall we store any other data?
+
+      // we parse and unparse to get rid of the elementName modifications... (functions)
+      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title });
+    }
   }
 
   render() {
@@ -110,7 +148,7 @@ export default class App extends Component {
         </Breadcrumbs>
         <Filter1Icon />
         <Paper>
-          <FishboneChart key={this.fbChartKey} data={this.state.data} title={this.state.title} cols="12" />
+          <FishboneChart key={this.fbChartKey.toString()} onChange={this.handleInputChange} data={this.state.data} title={this.state.title} cols="12" />
         </Paper>
       </div>
     );

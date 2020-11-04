@@ -1,4 +1,10 @@
-// copyright (c) 2020, Matthias Behr
+/**
+ * copyright (c) 2020, Matthias Behr
+ *
+ * todo:
+ * - change storage format to yaml using e.g. js-yaml for better readability
+ */
+
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { getNonce } from './util';
@@ -65,34 +71,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
             }
         };
 
-        function getFBDataFromText(text: string): any {
-            // here we do return the data that we pass as data=... to the Fishbone
-
-            // our document is a JSON document. 
-            // representing a single object with properties:
-            //  type <- expect "fba"
-            //  version <- 0.1
-            //  fishbone : array <- we use this as fishbone data
-
-            if (text.trim().length === 0) {
-                return '[]'; // empty or initial data?
-            }
-
-            try {
-                const jsonObj = JSON.parse(text);
-                console.log(`getFBDataFromText type=${jsonObj.type}, version=${jsonObj.version}`);
-                console.log(`getFBDataFromText title=${jsonObj.title}`);
-                return { data: jsonObj.fishbone, title: jsonObj.title || '<please add title to .fba>' };
-            } catch (e) {
-                throw new Error('Could not get document as json. Content is not valid json e= ' + e);
-            }
-            return '[]';
-        }
-
         function updateWebview() {
             console.log(`updateWebview called`);
 
-            const docObj: any = getFBDataFromText(document.getText());
+            const docObj: any = FBAEditorProvider.getFBDataFromText(document.getText());
 
             postMsgOnceAlive({
                 type: 'update',
@@ -136,6 +118,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
             }
 
             switch (e.type) {
+                case 'update':
+                    this.updateTextDocument(document, { data: e.data, title: e.title }); // same as update webview
+                    break;
                 case 'add':
                     this.addNewScratch(document);
                     return;
@@ -245,6 +230,58 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
     }
 
     /**
+     * Write out the json to a given document.
+     */
+    private updateTextDocument(document: vscode.TextDocument, json: any) {
+        console.log(`updateTextDocument called with json.keys=${Object.keys(json)}`);
+
+        const edit = new vscode.WorkspaceEdit();
+
+        // Just replace the entire text document every time for now.
+        // but
+        // only 'title' and 'fishbone' are updated for now. keep the rest:
+        let jsonObj: any = {};
+        try {
+            jsonObj = JSON.parse(document.getText());
+        } catch (e) {
+            console.error('Could not get document as json. Content is not valid json e= ' + e);
+        }
+        jsonObj.title = json.title;
+        jsonObj.fishbone = json.data;
+
+        edit.replace(
+            document.uri,
+            new vscode.Range(0, 0, document.lineCount, 0),
+            JSON.stringify(jsonObj, null, 2));
+
+        return vscode.workspace.applyEdit(edit);
+    }
+
+    static getFBDataFromText(text: string): any {
+        // here we do return the data that we pass as data=... to the Fishbone
+
+        // our document is a JSON document. 
+        // representing a single object with properties:
+        //  type <- expect "fba"
+        //  version <- 0.1
+        //  fishbone : array <- we use this as fishbone data
+
+        if (text.trim().length === 0) {
+            return '[]'; // empty or initial data?
+        }
+
+        try {
+            const jsonObj = JSON.parse(text);
+            console.log(`getFBDataFromText type=${jsonObj.type}, version=${jsonObj.version}`);
+            console.log(`getFBDataFromText title=${jsonObj.title}`);
+            return { data: jsonObj.fishbone, title: jsonObj.title || '<please add title to .fba>' };
+        } catch (e) {
+            throw new Error('Could not get document as json. Content is not valid json e= ' + e);
+        }
+        return '[]';
+    }
+
+    /**
      * Try to get a current document as json text.
      */
     private getDocumentAsJson(document: vscode.TextDocument): any {
@@ -258,21 +295,5 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
         } catch {
             throw new Error('Could not get document as json. Content is not valid json');
         }
-    }
-
-    /**
-     * Write out the json to a given document.
-     */
-    private updateTextDocument(document: vscode.TextDocument, json: any) {
-        const edit = new vscode.WorkspaceEdit();
-
-        // Just replace the entire document every time for this example extension.
-        // A more complete extension should compute minimal edits instead.
-        edit.replace(
-            document.uri,
-            new vscode.Range(0, 0, document.lineCount, 0),
-            JSON.stringify(json, null, 2));
-
-        return vscode.workspace.applyEdit(edit);
     }
 }
