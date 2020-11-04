@@ -3,6 +3,7 @@
  *
  * todo:
  * - change storage format to yaml using e.g. js-yaml for better readability
+ * - add nonce/random ids to each element? (for smaller edits/updates)
  */
 
 import * as path from 'path';
@@ -37,8 +38,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
 
     /**
      * Called when our custom editor is opened.
-     * 
-     * 
      */
     public async resolveCustomTextEditor(
         document: vscode.TextDocument,
@@ -78,7 +77,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
 
             postMsgOnceAlive({
                 type: 'update',
-                data: docObj.data,
+                data: docObj.fishbone,
                 title: docObj.title
             });
         }
@@ -119,14 +118,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
 
             switch (e.type) {
                 case 'update':
-                    this.updateTextDocument(document, { data: e.data, title: e.title }); // same as update webview
+                    this.updateTextDocument(document, { fishbone: e.data, title: e.title }); // same as update webview
                     break;
-                case 'add':
-                    this.addNewScratch(document);
-                    return;
-                case 'delete':
-                    this.deleteScratch(document, e.id);
-                    return;
                 case 'log':
                     console.log(e.message);
                     return;
@@ -200,7 +193,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
 
     /**
      * Add a new scratch to the current document.
-     */
+
     private addNewScratch(document: vscode.TextDocument) {
         const json = this.getDocumentAsJson(document);
         json.scratches = [
@@ -213,11 +206,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
         ];
 
         return this.updateTextDocument(document, json);
-    }
+    } */
 
     /**
      * Delete an existing scratch from a document.
-     */
+
     private deleteScratch(document: vscode.TextDocument, id: string) {
         const json = this.getDocumentAsJson(document);
         if (!Array.isArray(json.scratches)) {
@@ -227,10 +220,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
         json.scratches = json.scratches.filter((note: any) => note.id !== id);
 
         return this.updateTextDocument(document, json);
-    }
+    } */
 
     /**
-     * Write out the json to a given document.
+     * Write out the object to a given document.
      */
     private updateTextDocument(document: vscode.TextDocument, json: any) {
         console.log(`updateTextDocument called with json.keys=${Object.keys(json)}`);
@@ -247,7 +240,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
             console.error('Could not get document as json. Content is not valid json e= ' + e);
         }
         jsonObj.title = json.title;
-        jsonObj.fishbone = json.data;
+        jsonObj.fishbone = json.fishbone;
 
         edit.replace(
             document.uri,
@@ -257,6 +250,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
         return vscode.workspace.applyEdit(edit);
     }
 
+/**
+ * Parse the documents content into an object.
+ */
     static getFBDataFromText(text: string): any {
         // here we do return the data that we pass as data=... to the Fishbone
 
@@ -274,26 +270,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
             const jsonObj = JSON.parse(text);
             console.log(`getFBDataFromText type=${jsonObj.type}, version=${jsonObj.version}`);
             console.log(`getFBDataFromText title=${jsonObj.title}`);
-            return { data: jsonObj.fishbone, title: jsonObj.title || '<please add title to .fba>' };
+            return { fishbone: jsonObj.fishbone, title: jsonObj.title || '<please add title to .fba>' };
         } catch (e) {
             throw new Error('Could not get document as json. Content is not valid json e= ' + e);
         }
         return '[]';
-    }
-
-    /**
-     * Try to get a current document as json text.
-     */
-    private getDocumentAsJson(document: vscode.TextDocument): any {
-        const text = document.getText();
-        if (text.trim().length === 0) {
-            return {};
-        }
-
-        try {
-            return JSON.parse(text);
-        } catch {
-            throw new Error('Could not get document as json. Content is not valid json');
-        }
     }
 }
