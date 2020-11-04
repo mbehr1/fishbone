@@ -1,6 +1,11 @@
 type: fba
 version: '0.1'
 title: test fishbone chart
+attributes:
+  date: 2020-11-04T09:10:11.000Z
+  sw-version:
+    value:
+    dataProvider: dlt-logs/get/sw-versions 
 fishbone:
   - - effect 1
     - - - category1
@@ -17,7 +22,7 @@ fishbone:
             props:
               name: check 2
               label: Check 2
-              checked: false
+              checked: true
           - type: react
             element: MyCheckbox
             props:
