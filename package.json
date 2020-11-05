@@ -3,6 +3,20 @@
 	"displayName": "fishbone",
 	"description": "Create interactive fishbone diagrams",
 	"version": "0.0.1",
+	"license": "CC-BY-NC-SA-4.0",
+	"publisher": "mbehr1",
+	"author": {
+		"name": "Matthias Behr",
+		"email": "mbehr+fishbone@mcbehr.de"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/mbehr1/fishbone.git"
+	},
+	"bugs": {
+		"url": "https://github.com/mbehr1/fishbone/issues"
+	},
+	"homepage": "https://mbehr1.github.io/fishbone/",
 	"engines": {
 		"vscode": "^1.50.0"
 	},

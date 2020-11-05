@@ -22,7 +22,7 @@ interface AssetManifest {
 /**
  * 
  */
-export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
+export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscode.Disposable {
 
     public static register(context: vscode.ExtensionContext): vscode.Disposable {
         const provider = new FBAEditorProvider(context);
@@ -31,10 +31,83 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
     }
 
     private static readonly viewType = 'fishbone.fba'; // has to match the package.json
+    private _subscriptions: Array<vscode.Disposable> = new Array<vscode.Disposable>();
+
+    /// some extensions might offer a rest api (currently only dlt-logs), store ext name and function here
+    private _restQueryExtFunctions: Map<string, Function> = new Map<string, Function>();
+    private _checkExtensionsTimer?: NodeJS.Timeout = undefined;
+    private _checkExtensionsLastActive = 0;
 
     constructor(
         private readonly context: vscode.ExtensionContext
-    ) { }
+    ) {
+        console.log(`FBAEditorProvider constructor() called...`);
+
+        // time-sync feature: check other extensions for api onDidChangeSelectedTime and connect to them.
+        this._subscriptions.push(vscode.extensions.onDidChange(() => {
+            setTimeout(() => {
+                console.log(`fishbone.extensions.onDidChange #ext=${vscode.extensions.all.length}`);
+                this.checkActiveExtensions();
+            }, 1500);
+        }));
+        this._checkExtensionsTimer = setInterval(() => {
+            this.checkActiveExtensions();
+        }, 1000);
+        /* setTimeout(() => {
+            this.checkActiveExtensions();
+        }, 2000); todo renable one the onDidChange works reliable... */
+    }
+
+    dispose() {
+        console.log(`FBAEditorProvider dispose() called...`);
+
+        if (this._checkExtensionsTimer) {
+            clearInterval(this._checkExtensionsTimer);
+            this._checkExtensionsTimer = undefined;
+        }
+
+        this._subscriptions.forEach((value) => {
+            if (value !== undefined) {
+                value.dispose();
+            }
+        });
+    }
+
+    checkActiveExtensions() {
+
+        // we debounce and react only if the number of active extensions changes:
+        let nrActiveExt = vscode.extensions.all.reduce((acc, cur) => acc + (cur.isActive ? 1 : 0), 0);
+        if (nrActiveExt !== this._checkExtensionsLastActive) {
+            this._checkExtensionsLastActive = nrActiveExt;
+            // no need to dispose them.
+            this._restQueryExtFunctions.clear();
+            let newRQs = new Map<string, Function>();
+
+            vscode.extensions.all.forEach((value) => {
+                if (value.isActive) {
+                    // console.log(`dlt-log:found active extension: id=${value.id}`);// with #exports=${value.exports.length}`);
+                    try {
+                        let importedApi = value.exports;
+                        if (importedApi !== undefined) {
+                            let subscr = importedApi.restQuery;
+                            if (subscr !== undefined) {
+                                console.log(`fishbone.got restQuery api from ${value.id}`);
+                                // testing it:
+                                console.log(`fishbone restQuery('/get/version')=${subscr('/get/version')}`);
+                                newRQs.set(value.id, subscr);
+                            }
+                        }
+                    } catch (error) {
+                        console.log(`fishbone: extension ${value.id} throws: ${error}`);
+                    }
+                }
+            });
+            this._restQueryExtFunctions = newRQs;
+            console.log(`fishbone.checkActiveExtensions: got ${this._restQueryExtFunctions.size} rest query functions.`);
+        } else {
+            // console.log(`fishbone.checkActiveExtensions: nrActiveExt = ${nrActiveExt}`);
+        }
+    }
 
     /**
      * Called when our custom editor is opened.
@@ -122,6 +195,39 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider {
                     this.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
                         console.log(`updateTextDocument fulfilled=${fulfilled}`);
                     }); // same as update webview
+                    break;
+                case 'sAr':
+                    {  // vscode.postMessage({ type: 'sAr', req: req, id: reqId });
+                        console.log(`fbaEditor got sAr msg(id=${e.id}}): ${JSON.stringify(e.req)}`);
+                        switch (e.req.type) {
+                            case 'restQuery':
+                                { // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
+                                    const request: string = e.req.request;
+                                    if (request.startsWith('ext:')) {
+
+                                        const extName = request.slice(4, request.indexOf('/'));
+                                        const query = request.slice(request.indexOf('/'));
+                                        console.log(`extName=${extName} request=${request}`);
+                                        // did this extension offer the restQuery?
+                                        const rq = this._restQueryExtFunctions.get(extName);
+                                        if (rq) {
+                                            // call it:
+                                            const res = rq(query);
+                                            console.log(`restQuery response='${res}'`);
+                                            // todo try/catch
+                                            webviewPanel.webview.postMessage({ type: e.type, res: JSON.parse(res), id: e.id });
+                                        } else {
+                                            webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`extName '${extName}' does not offer restQuery (yet?)`] }, id: e.id });
+                                        }
+                                    }
+                                }
+                                break;
+                            default:
+                                console.warn(`fbaEditor got unknown sAr type '${e.req.type}'`);
+                                webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`unknown sAr type '${e.req.type}'`] }, id: e.id });
+                                break;
+                        }
+                    }
                     break;
                 case 'log':
                     console.log(e.message);
