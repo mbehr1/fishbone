@@ -3,8 +3,7 @@
  * 
  * todo list:
  * - make FishboneChart fully controlled or fully uncontrolled: https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html
- * - ensure that real state changes (zoom in, effect selection) get stored in .fba and vscode.state
- * - use Chips instead of texts (allowing always to set the <DoneIcon />?)
+ * - ensure that real state changes (zoom in, effect selection) get stored in .fba and vscode.state and that e.g. persisting data doesn't change the view (esp. for nested diagrams)
  * - rethink "react" class support (function as string parsed to js?)
  * 
  * - use webpack (or something else) for proper react "app" bundling/generation incl. debugging support
@@ -137,13 +136,24 @@ export default class App extends Component {
   handleInputChange(object, event, propsField) {
     // if propsField is provided this determines the field to update (e.g. object.props[propsField]=...)
     const target = event.target;
+    let values = target.values; // this can be an array like [{<name>:<value>}] in this case propsField will be ignored!
     let value = target.type === 'checkbox' ? target.checked : target.value;
 
+    if (values && propsField) {
+      console.error(`logical error! only values or propsFields must be used!`);
+      throw new Error(`logical error! only values or propsFields must be used!`);
+    }  
+
     const propsFieldName = (propsField !== undefined) ? propsField : (target.type === 'checkbox' ? 'checked' : 'value');
+  
+    if (!values) {
+      values = { [propsFieldName]: value }
+    }
+
 
     const name = target.name;
     const id = target.id;
-    console.log(`App.handleInputChange(id=${id}, type=${target.type}, name=${name}, value=${value} propsField=${propsField} key=${target.key} object.keys=${Object.keys(object).toString()})`);
+    console.log(`App.handleInputChange(id=${id}, type=${target.type}, name=${name}, value=${value} propsField=${propsField} key=${target.key} object.keys=${Object.keys(object).toString()} values=`, values);
 
     let didUpdate = false;
 
@@ -158,7 +168,8 @@ export default class App extends Component {
       if ('checked' in object) { object.checked = value; didUpdate = true; }
       // todo for attributes!
     } else {
-      if ('props' in object) { object.props[propsFieldName] = value; didUpdate = true; } else {
+      if ('props' in object) { for (const [key, value] of Object.entries(values)) { object.props[key] = value; }; /*object.props[propsFieldName] = value; */ didUpdate = true; }
+      else {
         // for attributes object contains just one key: (the name)
         if (Object.keys(object).length === 1) {
           console.log(`App.handleInputChange found attribute like object to update: ${JSON.stringify(object)}`);
@@ -166,15 +177,19 @@ export default class App extends Component {
           if (typeof curValue === 'object') {
             const attrObj = curValue;
             console.log(`App.handleInputChange found object inside attribute to update: ${JSON.stringify(attrObj)}`);
-            if (propsFieldName in attrObj) {
-              attrObj[propsFieldName] = value;
-              didUpdate = true;
-              console.log(`App.handleInputChange updated object inside attribute to: ${JSON.stringify(object)}`);
+            for (const [key, value] of Object.entries(values)) {
+              if (key in attrObj) {
+                attrObj[key] = value;
+                didUpdate = true;
+                console.log(`App.handleInputChange updated object inside attribute to: ${JSON.stringify(object)}`);
+              } else {
+                console.error(`didn't found '${key}' to update to '${value}' in object!`);
+              }
             }
           } else {
-            // update that one directly
+            // update that one directly todo: needs update with values logic!
             object[Object.keys(object)[0]] = value;
-            console.log(`App.handleInputChange updated flat attribute to: ${JSON.stringify(object)}`);
+            console.warn(`App.handleInputChange updated flat attribute to: ${JSON.stringify(object)}`);
             didUpdate = true;
           }
         }

@@ -34,8 +34,8 @@ fishbone:
             props:
               name: check1
               label: Check 1
-              checked: true
               tooltip: new tooltip for check 1
+              value: error
           - type: react
             element: MyCheckbox
             props:
@@ -46,7 +46,6 @@ fishbone:
             element: FBACheckbox
             props:
               id: 0815
-              checked: true
               name: check 3
               label: Check 3
               backgroundDescription: >-
@@ -58,6 +57,7 @@ fishbone:
               comments: |-
                 this is a long comment...
                 2nd line of long comment
+              value: ok
       - - category2
         - - rootcause21
       - - category3

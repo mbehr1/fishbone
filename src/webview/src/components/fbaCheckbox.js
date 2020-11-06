@@ -2,9 +2,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Container from '@material-ui/core/Container';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
-import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
 import EditIcon from '@material-ui/icons/Edit';
 import FilterListIcon from '@material-ui/icons/FilterList';
@@ -20,6 +17,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import Button from '@material-ui/core/Button';
 import MuiAlert from '@material-ui/lab/Alert';
 import { ButtonGroup, Snackbar, TextField } from '@material-ui/core';
+import MultiStateBox from './multiStateBox';
 
 
 // import Grid from '@material-ui/core/Grid';
@@ -29,8 +27,7 @@ import { ButtonGroup, Snackbar, TextField } from '@material-ui/core';
 // import jp from 'jsonpath'
 
 // todo
-// - remove tooltip completely when undefined
-// - implement tri-state (or more for warning?) for the icon
+//  - use Chips instead of texts (allowing always to set the <DoneIcon />?)
 // - highlight current selection with a different text. e.g. "keep as OK", ...
 // - add id= to buttons...
 // - use e.g. react-markdown to support markdown for background, desc, comments
@@ -44,24 +41,35 @@ export default function FBACheckbox(props) {
     const [editOpen, setEditOpen] = React.useState(false);
     const [applyFilterBarOpen, setApplyFilterBarOpen] = React.useState(false);
 
-    // values that can be changed:
-    const [values, setValues] = React.useState({ 'comments': props.comments });
+    // values that can be changed: (comments and value (ok/error...))
+    const [values, setValues] = React.useState({ 'comments': props.comments, 'value': props.value });
     const handleValueChanges = e => {
         const { name, value } = e.target;
-        console.log(`handleValueChange name=${name}, value=${value}`);
         setValues({ ...values, [name]: value })
     }
-
 
     const handleClickOpen = () => {
         setEditOpen(true);
     };
 
-    const handleClose = () => {
+    const handleClose = (partValues) => {
+        console.log(`handleClose values=`, values);
+        console.log(`handleClose props=`, props);
+        console.log(`handleClose partValues=`, partValues);
         setEditOpen(false);
+        let newValues = { ...values };
+        if (partValues) {
+            newValues = { ...values, value: partValues.value };
+            console.log(`handleClose newValues=`, newValues);
+            setValues(newValues);
+            console.log(`handleClose values=`, values);
+            // todo investigate. I still dont understand the useState hooks...
+            // values here is still unchanged...
+        }
         // update values... todo (event) => props.onChange(event, 'comments')
-        if (values.comments !== props.comments) {
-            props.onChange({ target: { type: 'textfield', value: values.comments } }, 'comments'); // todo rethink interface to update multiple attrs
+        if ((newValues.comments !== props.comments) ||
+            (newValues.value !== props.value)) {
+            props.onChange({ target: { type: 'textfield', values: newValues } });
         }
     };
 
@@ -91,16 +99,11 @@ export default function FBACheckbox(props) {
 
     return (
         <Container>
-            <Tooltip title={props.tooltip || 'no tooltip provided'}>
-                <FormControlLabel control={
-                    <Checkbox {...props} color="primary"></Checkbox>
-                } label={props.label}
-                />
-            </Tooltip >
+            <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon /> }, { value: 'ok', icon: <CheckBoxIcon /> }, { value: 'error', icon: <ErrorIcon />, color: 'secondary' }]} {...props} color="primary" />
             <IconButton aria-label="edit" onClick={handleClickOpen}>
                 <EditIcon fontSize="small" />
             </IconButton>
-            <Dialog open={editOpen} onClose={handleClose} fullWidth={true} maxWidth='md'>
+            <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
                 <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>Edit '{props.label}'</DialogTitle>
                 <DialogContent>
                     {backgroundFragments}
@@ -118,17 +121,17 @@ export default function FBACheckbox(props) {
                         </Alert>
                     </Snackbar>
                     <ButtonGroup>
-                        <Button size="small" onClick={handleClose} color="primary" startIcon={<CheckBoxIcon />}>
-                            mark as ok
+                        <Button size="small" onClick={() => { handleClose({ value: 'ok' }); }} color="primary" startIcon={<CheckBoxIcon />}>
+                            {values.value === 'ok' ? 'keep as OK' : 'mark as OK'}
                         </Button>
-                        <Button size="small" onClick={handleClose} color="secondary" startIcon={<ErrorIcon />}>
-                            mark as error
+                        <Button size="small" onClick={() => { handleClose({ value: 'error' }); }} color="secondary" startIcon={<ErrorIcon />}>
+                            {values.value === 'error' ? 'keep as ERROR' : 'mark as ERROR'}
                         </Button>
-                        <Button size="small" onClick={handleClose} color="primary" startIcon={<CheckBoxOutlineBlankIcon />}>
-                            mark as unprocessed
+                        <Button size="small" onClick={() => { handleClose({ value: null }); }} color="primary" startIcon={<CheckBoxOutlineBlankIcon />}>
+                            {!values.value ? 'keep as unprocessed' : 'mark as unprocessed'}   
                         </Button>
                     </ButtonGroup>
-                    <Button onClick={handleClose} color="primary">
+                    <Button onClick={() => handleClose()} color="primary">
                         Close
                     </Button>
                 </DialogActions>
