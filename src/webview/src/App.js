@@ -178,13 +178,9 @@ export default class App extends Component {
             const attrObj = curValue;
             console.log(`App.handleInputChange found object inside attribute to update: ${JSON.stringify(attrObj)}`);
             for (const [key, value] of Object.entries(values)) {
-              if (key in attrObj) {
-                attrObj[key] = value;
-                didUpdate = true;
-                console.log(`App.handleInputChange updated object inside attribute to: ${JSON.stringify(object)}`);
-              } else {
-                console.error(`didn't found '${key}' to update to '${value}' in object!`);
-              }
+              attrObj[key] = value;
+              didUpdate = true;
+              console.log(`App.handleInputChange updated object inside attribute to: ${JSON.stringify(object)}`);
             }
           } else {
             // update that one directly todo: needs update with values logic!

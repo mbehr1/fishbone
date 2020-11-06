@@ -91,11 +91,12 @@ export default function InputDataProvided(props) {
                 setOpen(false);
             }}
             value={{ name: props.value }}
-            onChange={(event, value) => { console.log(`Autocomplete.onChange(value=`, value); props.onChange({ target: { type: 'DataProvider', name: props.id, value: value?.name } }); }}
+            onChange={(event, value) => { console.log(`Autocomplete.onChange(value=`, value); props.onChange({ target: { type: 'DataProvider', name: props.id, value: typeof value === 'object' ? value?.name : value } }); }}
             getOptionSelected={(option, value) => option.name === value.name}
             getOptionLabel={(option) => option.name}
             options={options}
             loading={loading}
+            freeSolo
             renderInput={(params) => (
                 <TextField
                     {...params}

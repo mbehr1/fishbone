@@ -7,20 +7,19 @@ attributes:
       type: datetime-local
       label: Date/Time (locale)
   - ecu:
-      value: null
       label: ECU identifier
       dataProvider:
         source: 'ext:mbehr1.dlt-logs/get/docs'
         jsonPath: '$..attributes.ecus[*].attributes.name'
+      value: ECU1
   - sw:
-      value: null
       label: SW name
       dataProvider:
         source: 'ext:mbehr1.dlt-logs/get/docs?ecu=${attributes.ecu}'
         jsonPath: '$..attributes.ecus[0].attributes.sws[*]'
   - lifecycleStart:
       label: Lifecycle start
-      value: null
+      value: 'Thu, 26 Mar 2020 16:43:04 GMT'
       dataProvider:
         source: 'ext:mbehr1.dlt-logs/get/docs?ecu=${attributes.ecu}'
         jsonPath: '$..attributes.ecus[0].attributes.lifecycles[*].attributes.startTimeUtc'
