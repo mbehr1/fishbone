@@ -16,7 +16,9 @@ This Visual Studio Code(tm) extension adds support create interactive fishbone c
 
 ## Planned features
 
+- add/edit/delete effects/categories/root-causes via UI (currently only in YAML format in the serialized .fba files)
 - support a "template-workflow" (e.g. reset values, comments,... or clone)
+- add JIRA data provider support
 - add markdown support for descriptive fields like background, instructions, comments
 
 ## Known Issues
