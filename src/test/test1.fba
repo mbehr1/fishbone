@@ -7,20 +7,20 @@ attributes:
       type: datetime-local
       label: Date/Time (locale)
   - ecu:
-      value:
+      value: null
       label: ECU identifier
       dataProvider:
         source: 'ext:mbehr1.dlt-logs/get/docs'
         jsonPath: '$..attributes.ecus[*].attributes.name'
   - sw:
-      value:
+      value: null
       label: SW name
       dataProvider:
         source: 'ext:mbehr1.dlt-logs/get/docs?ecu=${attributes.ecu}'
         jsonPath: '$..attributes.ecus[0].attributes.sws[*]'
   - lifecycleStart:
       label: Lifecycle start
-      value:
+      value: null
       dataProvider:
         source: 'ext:mbehr1.dlt-logs/get/docs?ecu=${attributes.ecu}'
         jsonPath: '$..attributes.ecus[0].attributes.lifecycles[*].attributes.startTimeUtc'
@@ -62,6 +62,37 @@ fishbone:
         - - rootcause21
       - - category3
         - - rootcause31
+          - type: nested
+            title: nested FB...
+            data:
+              - - nested effect 1
+                - - - nested cat 1
+                    - - nested rootcause 1
+                      - type: react
+                        element: FBACheckbox
+                        props:
+                          name: rootcause1
+                          label: check rootcause1
+                          tooltip: new tooltip for check 1
+                          comments: a comment
+                  - - nested cat 2
+                    - - type: react
+                        element: FBACheckbox
+                        props:
+                          name: nestedRootcause2
+                          label: check nested rootcause 2
+                          tooltip: see edit on details for this rootcause
+                          comments: b comment
+                          value: ok
+                  - - nested cat 3
+                    - - type: react
+                        element: FBACheckbox
+                        props:
+                          name: nestedCat3Rootcause1
+                          label: cat3 rootcause 1
+                          tooltip: see edit on details for this rootcause1
+                          comments: c comment
+                          value: error
       - - category4
         - - rootcause 4 1
           - root cause 4 2
