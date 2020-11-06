@@ -2,34 +2,62 @@ type: fba
 version: '0.1'
 title: test fishbone chart
 attributes:
-  date: 2020-11-04T09:10:11.000Z
-  sw-version:
-    value:
-    dataProvider: dlt-logs/get/sw-versions 
+  - date:
+      value: '2020-11-04T12:10:11.000Z'
+      type: datetime-local
+      label: Date/Time (locale)
+  - ecu:
+      value:
+      label: ECU identifier
+      dataProvider:
+        source: 'ext:mbehr1.dlt-logs/get/docs'
+        jsonPath: '$..attributes.ecus[*].attributes.name'
+  - sw:
+      value:
+      label: SW name
+      dataProvider:
+        source: 'ext:mbehr1.dlt-logs/get/docs?ecu=${attributes.ecu}'
+        jsonPath: '$..attributes.ecus[0].attributes.sws[*]'
+  - lifecycleStart:
+      label: Lifecycle start
+      value:
+      dataProvider:
+        source: 'ext:mbehr1.dlt-logs/get/docs?ecu=${attributes.ecu}'
+        jsonPath: '$..attributes.ecus[0].attributes.lifecycles[*].attributes.startTimeUtc'
 fishbone:
   - - effect 1
     - - - category1
         - - rootcause 1 1
           - root cause 1 2
           - type: react
-            element: MyCheckbox
+            element: FBACheckbox
             props:
               name: check1
               label: Check 1
               checked: true
+              tooltip: new tooltip for check 1
           - type: react
             element: MyCheckbox
             props:
               name: check 2
               label: Check 2
-              checked: true
+              checked: false
           - type: react
-            element: MyCheckbox
+            element: FBACheckbox
             props:
               id: 0815
               checked: true
               name: check 3
               label: Check 3
+              backgroundDescription: >-
+                Before executing the function the condition ... needs to be
+                fulfilled.
+              instructions: >-
+                To check whether the condition ... is fulfilled please do the
+                following... A filter is provided to speed up the check.
+              comments: |-
+                this is a long comment...
+                2nd line of long comment
       - - category2
         - - rootcause21
       - - category3
@@ -40,7 +68,20 @@ fishbone:
   - - effect 2
     - - - category1
         - - rootcause1
-          - root cause 1 2
+          - type: nested
+            title: nested fb title
+            data:
+              - - effect 3
+                - - - category n4
+                    - - rootcause n1
+                      - type: react
+                        element: FBACheckbox
+                        props:
+                          name: check1
+                          label: Check 1
+                          checked: false
+                          tooltip: new tooltip for check 1
+                          comments: a comment
       - - category2
         - - rootcause21
       - - category3
@@ -105,3 +146,7 @@ fishbone2:
             elementName: MyCheckbox
             props:
               name: check3
+  - - effect 2
+  - - - category1
+      - - rootcause1
+        - type: foo - effect 3 - category5 - rootcause 331

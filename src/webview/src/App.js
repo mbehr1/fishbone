@@ -26,8 +26,9 @@ import { FormControlLabel, IconButton, Container, TextField } from '@material-ui
 // import { makeStyles } from '@material-ui/core/styles';
 import EditIcon from '@material-ui/icons/Edit';
 import Grid from '@material-ui/core/Grid';
-import MenuItem from '@material-ui/core/MenuItem';
+//import MenuItem from '@material-ui/core/MenuItem';
 import InputDataProvided from './components/dataProvider';
+import FBACheckbox from './components/fbaCheckbox';
 import { receivedResponse } from './util';
 
 class MyCheckbox extends Component {
@@ -57,6 +58,22 @@ export default class App extends Component {
     this.props.vscode.postMessage({ type: 'log', message: 'logMsg:' + msg });
   }
 
+  addInlineElements = (rootcause) => {
+    if (typeof rootcause === 'object') {
+      console.log(`addInlineElements found object rootcause:'${JSON.stringify(rootcause)}'`);
+      if (rootcause.type === 'react') {
+        if (!('elementName' in rootcause)) {
+          switch (rootcause.element) {
+            case 'MyCheckbox': rootcause.elementName = MyCheckbox; rootcause.props.onChange = this.handleInputChange.bind(this, rootcause); break;
+            case 'FBACheckbox': rootcause.elementName = FBACheckbox; rootcause.props.onChange = this.handleInputChange.bind(this, rootcause); break;
+            default: // do nothing
+              break;
+          }
+        }
+      }
+    }
+  }
+
   parseFBData(data) {
     // parse data for known react classes and replace them (in the same object) 
     // data consists of:
@@ -67,19 +84,11 @@ export default class App extends Component {
       // eslint-disable-next-line no-unused-vars
       const [effect, categories] = effect_cat;
 
+
       // eslint-disable-next-line no-unused-vars
       for (const [category, rootCauses] of categories) {
         for (const rootcause of rootCauses) {
-          if (typeof rootcause === 'object') {
-            console.log(`found object rootcause:'${JSON.stringify(rootcause)}'`);
-            if (rootcause.type === 'react') {
-              switch (rootcause.element) {
-                case 'MyCheckbox': rootcause.elementName = MyCheckbox; rootcause.props.onChange = this.handleInputChange.bind(this, rootcause); break;
-                default: // do nothing
-                  break;
-              }
-            }
-          }
+          this.addInlineElements(rootcause);
         }
       }
     }
@@ -125,12 +134,16 @@ export default class App extends Component {
 
   }
 
-  handleInputChange(object, event) {
+  handleInputChange(object, event, propsField) {
+    // if propsField is provided this determines the field to update (e.g. object.props[propsField]=...)
     const target = event.target;
     let value = target.type === 'checkbox' ? target.checked : target.value;
+
+    const propsFieldName = (propsField !== undefined) ? propsField : (target.type === 'checkbox' ? 'checked' : 'value');
+
     const name = target.name;
     const id = target.id;
-    console.log(`App.handleInputChange(id=${id}, type=${target.type}, name=${name}, value=${value} key=${target.key} object.keys=${Object.keys(object).toString()})`);
+    console.log(`App.handleInputChange(id=${id}, type=${target.type}, name=${name}, value=${value} propsField=${propsField} key=${target.key} object.keys=${Object.keys(object).toString()})`);
 
     let didUpdate = false;
 
@@ -145,7 +158,7 @@ export default class App extends Component {
       if ('checked' in object) { object.checked = value; didUpdate = true; }
       // todo for attributes!
     } else {
-      if ('props' in object) { object.props.value = value; didUpdate = true; } else {
+      if ('props' in object) { object.props[propsFieldName] = value; didUpdate = true; } else {
         // for attributes object contains just one key: (the name)
         if (Object.keys(object).length === 1) {
           console.log(`App.handleInputChange found attribute like object to update: ${JSON.stringify(object)}`);
@@ -153,8 +166,8 @@ export default class App extends Component {
           if (typeof curValue === 'object') {
             const attrObj = curValue;
             console.log(`App.handleInputChange found object inside attribute to update: ${JSON.stringify(attrObj)}`);
-            if ('value' in attrObj) {
-              attrObj.value = value;
+            if (propsFieldName in attrObj) {
+              attrObj[propsFieldName] = value;
               didUpdate = true;
               console.log(`App.handleInputChange updated object inside attribute to: ${JSON.stringify(object)}`);
             }
@@ -234,13 +247,13 @@ export default class App extends Component {
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Breadcrumbs aria-label="breadcrumb">
-              <Link color="inherit" href="/">Material-UI</Link>
-              <Link color="inherit" href="/">path2</Link>
+              <Link color="primary" href="/">Material-UI</Link>
+              <Link color="primary" href="/">path2</Link>
             </Breadcrumbs>
           </Grid>
           <Grid item xs={12}>
             <Paper>
-              <FishboneChart key={this.fbChartKey.toString()} onChange={this.handleInputChange} data={this.state.data} title={this.state.title} cols="12" />
+              <FishboneChart key={this.fbChartKey.toString()} reactInlineElementsAdder={this.addInlineElements} onChange={this.handleInputChange} data={this.state.data} title={this.state.title} cols="12" />
             </Paper>
           </Grid>
           <Grid item xs={6}>
@@ -272,10 +285,7 @@ export default class App extends Component {
 
       // dataProvider?
       if (attrObj.dataProvider) {
-        useSelect = (
-          [<MenuItem key="1" value="select 1val">select 1 label</MenuItem>,
-          <MenuItem key="2" value="select 2val">select 2 label</MenuItem>]
-        );
+        useSelect = true
       }
 
     } else {
@@ -292,7 +302,14 @@ export default class App extends Component {
     if (useSelect !== undefined) {
       return (
         <Grid item>
-          <InputDataProvided dataProvider={attrObj.dataProvider} label={label} value={attrValue} />
+          <InputDataProvided
+            id={`attribute_${attrName}`}
+            dataProvider={attrObj.dataProvider}
+            attributes={this.state.attributes}
+            label={label}
+            value={attrValue}
+            onChange={this.handleInputChange.bind(this, attribute)}
+          />
         </Grid>
       );
     } else {

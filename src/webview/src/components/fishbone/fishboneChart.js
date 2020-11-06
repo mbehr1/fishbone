@@ -20,7 +20,7 @@ export class FishboneElementUrl extends Component {
 export default class FishboneChart extends Component {
   constructor(props) {
     super(props);
-    console.log(`FishboneChart constructor called. props.title=${props.title}`);
+    console.log(`FishboneChart constructor called. props.title=${props.title} props.reactInlineElementsAdder=${props.reactInlineElementsAdder}`);
     this.state = INITIAL_STATE;
     this.state.data = props.data;
   }
@@ -155,8 +155,24 @@ componentWillMount() {
             return (<div key={`root_causes_${rootCause.title}_${index}`} >{React.createElement(FishboneElementUrl, rootCause, null)} </div>);
           case 'react':
             // console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
-            return (<div key={`root_causes_${index}`}> {React.createElement(rootCause.elementName, rootCause.props, null)}</div>);
+            let fragment = null;
+            try {
+              console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})elementsAdder=${this.props.reactInlineElementsAdder} `);
+              if (!rootCause.elementName && this.props.reactInlineElementsAdder) {
+                this.props.reactInlineElementsAdder(rootCause);
+              }
+
+              if (rootCause.elementName) {
+                fragment = (<div key={`root_causes_${index}`}> {React.createElement(rootCause.elementName, rootCause.props, null)}</div>);
+              } else {
+                console.warn(`elementName undefined for element=${rootCause.element}`);
+              }
+            } catch (e) {
+              console.error(`got error while creating rootcause.type 'react' elementName=${rootCause.elementName}. e=${e}`);
+            }
+            return fragment;
           case 'nested':
+            console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
             return (<button key={`root_causes_${index}`} type="button" onClick={() => this.selectChildFB(rootCause.data, rootCause.title)} >{rootCause.title}</button>);
           default:
             return (<div key={`root_causes_${rootCause.title}_${index}`} >`unsupported type='{rootCause.type}'` </div>);

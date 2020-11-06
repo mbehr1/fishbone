@@ -407,6 +407,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             console.log(`getFBDataFromText title=${yamlObj.title}`);
             return { attributes: yamlObj?.attributes, fishbone: yamlObj.fishbone, title: yamlObj.title || '<please add title to .fba>' };
         } catch (e) {
+            vscode.window.showErrorMessage(`Fishbone: Could not get document as yaml. Content is not valid yaml e= ${e}`);
             throw new Error('Could not get document as yaml. Content is not valid yaml e= ' + e);
         }
         return { title: '<error>' };
