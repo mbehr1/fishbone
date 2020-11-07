@@ -364,13 +364,13 @@ export default class App extends Component {
       const icon = index === -1 ? <HomeIcon /> : null; // disabled for now
       if (index < arr.length - 1) {
         return (
-          <Link key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
+          <Link component="button" key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
             {icon}{path.title}
           </Link>);
       } else {
-        return (<Link key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="inherit" >
+        return (<Typography variant="subtitle1" key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="inherit" >
           {icon}{path.title}
-        </Link>);
+        </Typography>);
       }
     });
 
@@ -387,7 +387,7 @@ export default class App extends Component {
             <Paper>
               <div>
                 <Grid container spacing={2} justify="center">
-                  <Grid item gutterBottom justify="center">
+                  <Grid item gutterBottom>
                     <Breadcrumbs>
                       {breadcrumbFragment}
                     </Breadcrumbs>
