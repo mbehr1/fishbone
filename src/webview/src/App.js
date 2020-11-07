@@ -364,16 +364,18 @@ export default class App extends Component {
       const icon = index === -1 ? <HomeIcon /> : null; // disabled for now
       if (index < arr.length - 1) {
         return (
-          <Link key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="inherit">
+          <Link key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
             {icon}{path.title}
           </Link>);
       } else {
-        return (<Link key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary" >
+        return (<Link key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="inherit" >
           {icon}{path.title}
         </Link>);
       }
     });
 
+    // alignItems = vertical alignment
+    // justify = horiz.
     return (
       <div className="App">
         <Grid container spacing={3}>
@@ -382,16 +384,16 @@ export default class App extends Component {
             </Paper>
           </Grid>
           <Grid item xs={12}>
-            <Paper> {/* todo remove fb chart title? */}
+            <Paper>
               <div>
-                <Grid container spacing={2} margin={3}>
-                  <Grid item xs={12} gutterBottom justfy="center">
-                    <Breadcrumbs >
+                <Grid container spacing={2} justify="center">
+                  <Grid item gutterBottom justify="center">
+                    <Breadcrumbs>
                       {breadcrumbFragment}
                     </Breadcrumbs>
                   </Grid>
                 </Grid>
-              </div>
+              </div>{/* todo remove fb chart title? */}
               <FishboneChart onStateChange={(fbData) => this.handleFBStateChange(fbData)} reactInlineElementsAdder={this.addInlineElements} onChange={this.handleInputChange} data={this.getCurData(this.state.fbPath, this.state.data)} title={this.state.fbPath[this.state.fbPath.length - 1].title} effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
             </Paper>
           </Grid>
