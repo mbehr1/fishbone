@@ -1,5 +1,5 @@
 // copyright (c) 2020, Matthias Behr
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Container from '@material-ui/core/Container';
 import IconButton from '@material-ui/core/IconButton';
@@ -18,6 +18,7 @@ import Button from '@material-ui/core/Button';
 import MuiAlert from '@material-ui/lab/Alert';
 import { ButtonGroup, Snackbar, TextField } from '@material-ui/core';
 import MultiStateBox from './multiStateBox';
+import { triggerRestQuery } from './../util';
 
 
 // import Grid from '@material-ui/core/Grid';
@@ -40,9 +41,29 @@ export default function FBACheckbox(props) {
 
     const [editOpen, setEditOpen] = React.useState(false);
     const [applyFilterBarOpen, setApplyFilterBarOpen] = React.useState(false);
+    const [applyFilterResult, setApplyFilterResult] = React.useState('<not triggered yet>')
 
     // values that can be changed: (comments and value (ok/error...))
     const [values, setValues] = React.useState({ 'comments': props.comments, 'value': props.value });
+
+    useEffect(() => {
+        console.log(`FBACheckbox applyFilterBarOpen=${applyFilterBarOpen}`, props.filter);
+        if (applyFilterBarOpen && props.filter) {
+            setApplyFilterResult('filter settings triggered...');
+            const fetchdata = async () => {
+                try {
+                    const res = await triggerRestQuery(props.filter.apply);
+                    console.log(`res=`, res);
+                    setApplyFilterResult('filter settings applied');
+                } catch (e) {
+                    console.log(`e=`, e);
+                    setApplyFilterResult('Failed to apply filter settings!');
+                };
+            };
+            fetchdata();
+        }
+    }, [applyFilterBarOpen, props.filter]);
+
     const handleValueChanges = e => {
         const { name, value } = e.target;
         setValues({ ...values, [name]: value })
@@ -97,6 +118,25 @@ export default function FBACheckbox(props) {
         </React.Fragment>
     ) : null;
 
+    // todo add tooltip...
+
+    const handleApplyFilter = (request) => {
+        setApplyFilterBarOpen(true)
+    }
+
+    const applyFilterFragment = props.filter ? (
+        <React.Fragment>
+            <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(props.filter.apply)}>
+                Apply filter
+            </Button>
+            <Snackbar open={applyFilterBarOpen} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} onClose={handleFilterBarClose}>
+                <Alert onClose={handleFilterBarClose} severity="info">
+                    {applyFilterResult}
+                </Alert>
+            </Snackbar>
+        </React.Fragment>
+    ) : null; // todo or an "disable button to tease the feature!"
+
     return (
         <Container>
             <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon /> }, { value: 'ok', icon: <CheckBoxIcon /> }, { value: 'error', icon: <ErrorIcon />, color: 'secondary' }]} {...props} color="primary" />
@@ -112,14 +152,7 @@ export default function FBACheckbox(props) {
                     <TextField name='comments' onChange={handleValueChanges} margin="dense" id={'comments-field-' + props.name} label='Comments' fullWidth multiline value={values.comments} />
                 </DialogContent>
                 <DialogActions>
-                    <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={() => setApplyFilterBarOpen(true)}>
-                        Apply filter
-                    </Button>
-                    <Snackbar open={applyFilterBarOpen} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} onClose={handleFilterBarClose}>
-                        <Alert onClose={handleFilterBarClose} severity="info">
-                            Filter applied on document '...dlt'
-                        </Alert>
-                    </Snackbar>
+                    {applyFilterFragment}
                     <ButtonGroup>
                         <Button size="small" onClick={() => { handleClose({ value: 'ok' }); }} color="primary" startIcon={<CheckBoxIcon />}>
                             {values.value === 'ok' ? 'keep as OK' : 'mark as OK'}
