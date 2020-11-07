@@ -2,8 +2,6 @@
  * copyright (c) 2020, Matthias Behr
  * 
  * todo list:
- * - make FishboneChart fully controlled or fully uncontrolled: https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html
- * - ensure that real state changes (zoom in, effect selection) get stored in .fba and vscode.state and that e.g. persisting data doesn't change the view (esp. for nested diagrams)
  * - rethink "react" class support (function as string parsed to js?)
  * 
  * - use webpack (or something else) for proper react "app" bundling/generation incl. debugging support
@@ -29,6 +27,7 @@ import Grid from '@material-ui/core/Grid';
 import InputDataProvided from './components/dataProvider';
 import FBACheckbox from './components/fbaCheckbox';
 import { receivedResponse } from './util';
+import HomeIcon from '@material-ui/icons/Home';
 
 class MyCheckbox extends Component {
   render() {
@@ -49,8 +48,6 @@ class MyCheckbox extends Component {
 }
 
 export default class App extends Component {
-
-  fbChartKey = 0; // todo once FishboneChart is a controlled component this can be removed.
 
   logMsg(msg) {
     console.log('logPostMsg:' + msg);
@@ -73,24 +70,80 @@ export default class App extends Component {
     }
   }
 
-  parseFBData(data) {
-    // parse data for known react classes and replace them (in the same object) 
-    // data consists of:
-    // [effect_cat]
-    // effect_cat = [effect,categories]
-    // categories = [category, [root causes]]
-    for (const effect_cat of data) {
-      // eslint-disable-next-line no-unused-vars
-      const [effect, categories] = effect_cat;
+  /**
+   * return the data object for the current path
+   * @param {*} curPath array of objects with {title, effectIndex}
+   * @param {*} data full tree of fishbone chart data, i.e. root chart.
+   * @returns data object for the current path or null if not available
+   */
+  getCurData(curPath, data) {
+    console.log(`getCurData(curPath=${JSON.stringify(curPath)}) called...`);
+    if (!curPath.length) return null;
+    if (curPath.length === 1) return data;
+    // a path consists of e.g. [ (roottitle, effectIndex1), (childTitle, effectIndex2),... ]
+    // the childFB1 has to be reachable via an nested type rootcause named "childFB1title" within roottitle/effectIndex1
 
+    // we start checking from the 2nd one (level/idx 1):
+    let prevData = data;
+    let prevEffectIndex = curPath[0].effectIndex;
 
-      // eslint-disable-next-line no-unused-vars
-      for (const [category, rootCauses] of categories) {
-        for (const rootcause of rootCauses) {
-          this.addInlineElements(rootcause);
+    for (let level = 1; level < curPath.length; ++level) {
+      const childTitle = curPath[level].title;
+      // does prevData has at prevEffectIndex a rootcaused typed "nested" and named "childTitle?
+      const [, causes] = prevData.length > prevEffectIndex ? prevData[prevEffectIndex] : [null, null];
+      if (causes) { // array of [category, [rootcauses]]
+        console.log(`causes=`, causes);
+
+        let found = false;
+        console.log(`causes.length = ${causes.length}`);
+        for (const catCauseArray of causes) {
+          console.log(`catCauseArray[0] = ${catCauseArray[0]} [1].length=${catCauseArray[1].length}`);
+          for (const rootcause of catCauseArray[1]) {
+            if (typeof rootcause === 'object') {
+              console.log(`found rootcause type=${rootcause.type} ${rootcause.title}`);
+              if (rootcause.type === 'nested' && rootcause.title === childTitle) {
+                // got it
+                console.log(`getCurData found ${childTitle}`);
+                prevData = rootcause.data;
+                prevEffectIndex = curPath[level].effectIndex;
+                found = true;
+                break;
+              }
+            }
+          }
+          if (found) break;
         }
-      }
+        if (!found) { console.log(`didnt found '${childTitle}'`); return null; }
+      } else { console.log(`got no causes!`); return null; }
     }
+    console.log(`getCurData returning `, prevData, data);
+    return prevData;
+  }
+
+  /**
+   * Returns the longest matching path. Modifies the curPath!
+   * @param {*} curPath current path array. Will be shortend if not fitting!
+   * @param {*} data  root fishbone data node.
+   * @param {*} firstTitle first/root chart title
+   * @returns longest matching path (in most cases a shortened curPath)
+   */
+  matchingFbPath(curPath, data, firstTitle) {
+    const matchingPath = [{ title: firstTitle, effectIndex: 0 }];
+    console.log(`matchingFbPath(curPath.length=${curPath.length}) called`);
+    if (curPath[0]?.title !== firstTitle) return matchingPath;
+
+    // now check from the end:
+    // we could do binary search but for this use case most of the time 
+    // the path doesn't change anyhow!
+    while (curPath.length > 0) {
+      const pathData = this.getCurData(curPath, data);
+      if (!pathData) {
+        curPath.pop();
+      } else return curPath;
+    }
+    console.log(`matchingFbPath(curPath.length=${curPath.length}) done`);
+    if (curPath.length > 0) return curPath;
+    return matchingPath;
   }
 
   constructor(props) {
@@ -100,11 +153,18 @@ export default class App extends Component {
     const vsCodeState = props.vscode.getState();
 
     // need to convert to class names...
-    this.parseFBData(vsCodeState?.data || []);
+    // done on the fly/need now this.parseFBData(vsCodeState?.data || []);
 
     console.log(`vsCodeState=${JSON.stringify(vsCodeState)}`);
 
-    this.state = vsCodeState || (props.initialData ? { data: props.initialData, title: "<no title>" } : { data: [], title: "<no title>" });
+    this.state = vsCodeState ||
+      (props.initialData ?
+        { data: props.initialData, title: "<no title>" } :
+        { data: [], title: "<no title>" });
+
+    if (!(this.state?.fbPath?.length)) {
+      this.state.fbPath = [{ title: this.state.title, effectIndex: 0 }]
+    }
 
     this.logMsg(`from App/constructor state.title=${this.state.title}`);
     window.addEventListener('message', event => {
@@ -113,13 +173,15 @@ export default class App extends Component {
       console.log(msg);
       switch (msg.type) {
         case 'update':
-          // we store the non-modified data in vscode.state (e.g. with react:MyCheckbox as string)
-          this.props.vscode.setState({ data: msg.data, title: msg.title, attributes: msg.attributes }); // todo shall we store any other data?
-          this.parseFBData(msg.data); // modifies msg.data
-          // update the FishboneChart completely (as props changes are not handled correctly! (todo))
-          this.fbChartKey++;
-          this.setState({ data: msg.data, title: msg.title, attributes: msg.attributes });
+          // do we need to update the fbPath?
+          // check whether the current path is still valid, if not use the first matching parts:
+          console.log(`state.fbPath=${JSON.stringify(this.state.fbPath)}`);
+          const newFbPath = this.matchingFbPath(this.state.fbPath, msg.data, msg.title);
+          console.log(`newPath=${JSON.stringify(newFbPath)}`);
 
+          // we store the non-modified data in vscode.state (e.g. with react:MyCheckbox as string)
+          this.props.vscode.setState({ data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath }); // todo shall we store any other data?
+          this.setState({ data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath });
           break;
         case 'sAr':
           receivedResponse(msg);
@@ -131,6 +193,40 @@ export default class App extends Component {
       }
     });
 
+  }
+
+  handleFBStateChange(fbState) {
+    console.log(`App.handleFBStateChange fbState=`, fbState);
+    if ('childFBData' in fbState) {
+      const fbData = fbState.childFBData;
+      if (Array.isArray(fbData)) {
+        const [, childTitle] = fbData;
+        console.log(`App.handleFBStateChange nest into '${childTitle}'`);
+        console.log(`App.handleFBStateChange curPath=`, this?.state?.fbPath);
+        const curPath = this.state.fbPath; // 
+        curPath.push({ title: childTitle, effectIndex: 0 });
+        this.setState({ fbPath: curPath });
+      } else {
+        // go back to prev.
+        console.log(`App.handleFBStateChange curPath=`, this?.state?.fbPath);
+        const curPath = this.state.fbPath; // 
+        curPath.pop();
+        this.setState({ fbPath: curPath });
+      }
+      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
+    }
+    if ('effectIndex' in fbState) {
+      // update fbPath last element:
+      if (!(this.state?.fbPath.length)) {
+        throw new Error(`handleFBStateChange effectIndex change without fbPath!`);
+      }
+      // modify directly and call setState... ? dirty   
+      console.log(`App.handleFBStateChange curPath=`, this?.state?.fbPath);
+      const curPath = this.state.fbPath; // 
+      curPath[this.state.fbPath.length - 1].effectIndex = fbState.effectIndex || 0;
+      this.setState({ fbPath: curPath });
+      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: curPath }); // todo shall we store any other data?
+    }
   }
 
   handleInputChange(object, event, propsField) {
@@ -197,7 +293,7 @@ export default class App extends Component {
       // update state... (todo...think about how to do this best)
       this.setState({});
       // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
-      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes }); // todo shall we store any other data?
+      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
 
       // we parse and unparse to get rid of the elementName modifications... (functions)
       this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
@@ -207,7 +303,7 @@ export default class App extends Component {
   }
 
   render() {
-    console.log(`App render state.data: ${JSON.stringify(this.state.data)}`);
+    console.log(`App render () `); // state.data: ${JSON.stringify(this.state.data)}`);
 
     // attribute section
     let attributeSection = undefined;
@@ -253,18 +349,50 @@ export default class App extends Component {
       );
     }
 
+    const handleBreadcrumbClick = (index) => {
+      console.log(`handleBreadcrumbClick ev=`, index);
+      // we encode the level in href
+      const level = index;
+      console.log(`handleBreadcrumbClick level=${level}`);
+      // shorten path to that level:
+      const curPath = this.state.fbPath;
+      while (curPath.length > level + 1) curPath.pop();
+      this.setState({ fbPath: curPath });
+    }
+
+    const breadcrumbFragment = this.state.fbPath.map((path, index, arr) => {
+      const icon = index === -1 ? <HomeIcon /> : null; // disabled for now
+      if (index < arr.length - 1) {
+        return (
+          <Link key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="inherit">
+            {icon}{path.title}
+          </Link>);
+      } else {
+        return (<Link key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary" >
+          {icon}{path.title}
+        </Link>);
+      }
+    });
+
     return (
       <div className="App">
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Breadcrumbs aria-label="breadcrumb">
-              <Link color="primary" href="/">Material-UI</Link>
-              <Link color="primary" href="/">path2</Link>
-            </Breadcrumbs>
+            <Paper>
+            </Paper>
           </Grid>
           <Grid item xs={12}>
-            <Paper>
-              <FishboneChart key={this.fbChartKey.toString()} reactInlineElementsAdder={this.addInlineElements} onChange={this.handleInputChange} data={this.state.data} title={this.state.title} cols="12" />
+            <Paper> {/* todo remove fb chart title? */}
+              <div>
+                <Grid container spacing={2} margin={3}>
+                  <Grid item xs={12} gutterBottom justfy="center">
+                    <Breadcrumbs >
+                      {breadcrumbFragment}
+                    </Breadcrumbs>
+                  </Grid>
+                </Grid>
+              </div>
+              <FishboneChart onStateChange={(fbData) => this.handleFBStateChange(fbData)} reactInlineElementsAdder={this.addInlineElements} onChange={this.handleInputChange} data={this.getCurData(this.state.fbPath, this.state.data)} title={this.state.fbPath[this.state.fbPath.length - 1].title} effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
             </Paper>
           </Grid>
           <Grid item xs={6}>
