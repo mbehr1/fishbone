@@ -15,6 +15,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import Button from '@material-ui/core/Button';
+import Badge from '@material-ui/core/Badge';
 import MuiAlert from '@material-ui/lab/Alert';
 import { ButtonGroup, Snackbar, TextField } from '@material-ui/core';
 import MultiStateBox from './multiStateBox';
@@ -25,7 +26,7 @@ import { triggerRestQuery } from './../util';
 // import Autocomplete from '@material-ui/lab/Autocomplete';
 // import CircularProgress from '@material-ui/core/CircularProgress';
 // import { sendAndReceiveMsg } from '../util';
-// import jp from 'jsonpath'
+import jp from 'jsonpath'
 
 // todo
 //  - use Chips instead of texts (allowing always to set the <DoneIcon />?)
@@ -42,6 +43,10 @@ export default function FBACheckbox(props) {
     const [editOpen, setEditOpen] = React.useState(false);
     const [applyFilterBarOpen, setApplyFilterBarOpen] = React.useState(false);
     const [applyFilterResult, setApplyFilterResult] = React.useState('<not triggered yet>')
+
+    // badge support (restquery in the background)
+    const [badgeCounter, setBadgeCounter] = React.useState(0);
+    const [badgeStatus, setBadgeStatus] = React.useState(0); // 0 not queried yet, 1 = pending, 2 = done badgeCounter set!
 
     // values that can be changed: (comments and value (ok/error...))
     const [values, setValues] = React.useState({ 'comments': props.comments, 'value': props.value });
@@ -63,6 +68,35 @@ export default function FBACheckbox(props) {
             fetchdata();
         }
     }, [applyFilterBarOpen, props.filter]);
+
+    // effect for badge processing:
+
+    useEffect(() => {
+        console.log(`FBACheckbox effect for badge processing called (badgeStatus=${badgeStatus}, filter.badge=${JSON.stringify(props?.filter?.badge)})`);
+        if (!badgeStatus && props?.filter?.badge?.source) {
+            const fetchdata = async () => {
+                try {
+                    setBadgeStatus(1);
+                    const res = await triggerRestQuery(props.filter.badge.source);
+                    console.log(`FBACheckbox effect for badge processing got res '${JSON.stringify(res)}'`);
+                    // do we have a jsonPath?
+                    if (props.filter.badge.jsonPath) {
+                        const data = jp.query(res.data, props.filter.badge.jsonPath);
+                        console.log(`jsonPath('${props.filter.badge.jsonPath}') returned '${JSON.stringify(data)}' size==${Array.isArray(data) ? data.length : 0}`);
+                        setBadgeCounter(Array.isArray(data) ? data.length : 0);
+                    } else {
+                        // todo...?
+                        setBadgeCounter(0);
+                    }
+
+                    setBadgeStatus(2);
+                } catch (e) {
+                    console.warn(`FBACheckbox effect for badge processing got error '${e}'`);
+                }
+            };
+            fetchdata();
+        }
+    }, [badgeStatus, props?.filter?.badge]); // todo and attribute status ecu/lifecycle... (to determine...)
 
     const handleValueChanges = e => {
         const { name, value } = e.target;
@@ -139,7 +173,9 @@ export default function FBACheckbox(props) {
 
     return (
         <Container>
+            <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || !props?.filter?.badge || badgeStatus < 2}>
             <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon /> }, { value: 'ok', icon: <CheckBoxIcon /> }, { value: 'error', icon: <ErrorIcon />, color: 'secondary' }]} {...props} color="primary" />
+            </Badge>
             <IconButton aria-label="edit" onClick={handleClickOpen}>
                 <EditIcon fontSize="small" />
             </IconButton>

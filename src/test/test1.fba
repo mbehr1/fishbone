@@ -34,13 +34,25 @@ fishbone:
               name: check1
               label: Check 1
               tooltip: new tooltip for check 1
-              value: error
+              value: null
+              backgroundDescription: Background info for check 1 ...
+              instructions: Instructions for check 1...
+              filter:
+                apply: >-
+                  ext:mbehr1.dlt-logs/get/docs/0/filters?delete={"fishbone":
+                  "temp"}&disableAll=neg&add={"fishbone":"temp", "type":0,
+                  "name":"fb check1", "ctid": "CID "}
+                badge:
+                  source: >-
+                    ext:mbehr1.dlt-logs/get/docs/0/filters?query=[{"type":0,
+                    "apid": "CID "}]
+                  jsonPath: '$[*]'
           - type: react
             element: MyCheckbox
             props:
               name: check 2
               label: Check 2
-              checked: false
+              checked: true
           - type: react
             element: FBACheckbox
             props:
@@ -73,7 +85,8 @@ fishbone:
                           name: rootcause1
                           label: check rootcause1
                           tooltip: new tooltip for check 1
-                          comments: a comment
+                          comments: a comment for rootcause 1
+                          value: null
                   - - nested cat 2
                     - - type: react
                         element: FBACheckbox
@@ -112,6 +125,7 @@ fishbone:
                           checked: false
                           tooltip: new tooltip for check 1
                           comments: a comment
+                          value: null
       - - category2
         - - rootcause21
       - - category3
