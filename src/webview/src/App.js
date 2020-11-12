@@ -19,7 +19,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 // import Filter1Icon from '@material-ui/icons/Filter1';
 import FishboneChart from './components/fishbone/fishboneChart'
-import { FormControlLabel, IconButton, Container, TextField } from '@material-ui/core';
+import { FormControlLabel, IconButton, Container, TextField, ThemeProvider } from '@material-ui/core';
 // import { makeStyles } from '@material-ui/core/styles';
 import EditIcon from '@material-ui/icons/Edit';
 import Grid from '@material-ui/core/Grid';
@@ -28,6 +28,7 @@ import InputDataProvided from './components/dataProvider';
 import FBACheckbox from './components/fbaCheckbox';
 import { receivedResponse } from './util';
 import HomeIcon from '@material-ui/icons/Home';
+import { createMuiTheme } from '@material-ui/core/styles';
 
 class MyCheckbox extends Component {
   render() {
@@ -305,6 +306,31 @@ export default class App extends Component {
   render() {
     console.log(`App render () `); // state.data: ${JSON.stringify(this.state.data)}`);
 
+    // hack to get the css variables from vscode:
+    const vscodeStyles = window.getComputedStyle(document.body);
+
+    const theme = createMuiTheme({
+      palette: {
+        common: {
+          black: '#ff0000'
+        },
+        background: {
+          paper: vscodeStyles.getPropertyValue('--vscode-editor-background'),
+        },
+        text: {
+          primary: vscodeStyles.getPropertyValue('--vscode-foreground'),
+          secondary: vscodeStyles.getPropertyValue('--vscode-descriptionForeground'),
+          disabled: '#ff0000',
+          hint: '#00ff00',
+        }
+      },
+      typography: {
+        // looks weird?        fontSize: 'var(--vscode-font-size)',
+        fontFamily: vscodeStyles.getPropertyValue('--vscode-font-family'),
+        // looks weird?        fontWeightRegular: 'var(--vscode-font-weight)'
+      }
+    });
+
     // attribute section
     let attributeSection = undefined;
     if (this.state.attributes?.length > 0) {
@@ -378,6 +404,7 @@ export default class App extends Component {
     // justify = horiz.
     return (
       <div className="App">
+        <ThemeProvider theme={theme}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Paper>
@@ -401,6 +428,7 @@ export default class App extends Component {
             {attributeSection}
           </Grid>
         </Grid>
+        </ThemeProvider>
       </div>
     );
   }

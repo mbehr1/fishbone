@@ -47,6 +47,10 @@ fishbone:
                     ext:mbehr1.dlt-logs/get/docs/0/filters?query=[{"type":0,
                     "apid": "CID "}]
                   jsonPath: '$[*]'
+                badge2:
+                  source:
+                    url: 'https://api.github.com/repos/mbehr1/dlt-logs/issues/1'
+                  jsonPath: '$.state'
           - type: react
             element: MyCheckbox
             props:
