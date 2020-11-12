@@ -232,6 +232,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                         if (username && password) {
                                             headers.set('Authorization', 'Basic ' + Buffer.from(username + ":" + password).toString('base64')); // todo chrome uses latin1
                                             headers.set('credentials', 'include');
+                                            console.log(`headers.Authorization='${headers.get("Authorization")}'`);
                                         }
                                         fetch.default(request,
                                             {
@@ -239,6 +240,14 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                                 "headers": headers
                                             })
                                             .then(response => {
+                                                try {
+                                                    console.log(`got response.ok=${response.ok} for request '${request}'`);
+                                                    console.log(`got response.status=${response.status} ${response.statusText}`);
+                                                    console.log(`got response.headers=`, response.headers.raw());
+                                                } catch (err) {
+                                                    console.warn(`got err=${err}`);
+
+                                                };
                                                 response.text().then(text => {
                                                     console.log(`fetch got response.text()='${text.slice(0, 200)}'...`);
                                                     const json = JSON.parse(text);
