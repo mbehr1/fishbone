@@ -230,7 +230,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                         headers.set("Accept-Charset", "utf-8");
 
                                         if (username && password) {
-                                            headers.set('Authorization', 'Basic ' + Buffer.from(username + ":" + password, 'latin1').toString('base64'));
+                                            headers.set('Authorization', 'Basic ' + Buffer.from(username + ":" + password).toString('base64')); // todo chrome uses latin1
+                                            headers.set('credentials', 'include');
                                         }
                                         fetch.default(request,
                                             {
