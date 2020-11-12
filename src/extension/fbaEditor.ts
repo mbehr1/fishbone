@@ -226,7 +226,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                         const username = requestObj && requestObj.username ? requestObj.username : undefined;
                                         const password = requestObj && requestObj.password ? requestObj.password : undefined;
                                         const headers = new fetch.Headers();
-                                        headers.set("Content-Type", "application/json");
                                         headers.set("Accept", "application/json");
                                         headers.set("Accept-Charset", "utf-8");
 
@@ -238,8 +237,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                                 "method": 'GET',
                                                 "headers": headers
                                             })
-                                            .then(response => response.json()).then(json => {
-                                                webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id });
+                                            .then(response => {
+                                                response.text().then(text => {
+                                                    console.log(`fetch got response.text()='${text.slice(0, 200)}'...`);
+                                                    const json = JSON.parse(text);
+                                                    webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id });
+                                                });
                                             }).catch(err => {
                                                 webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`fetch failed with err=${err}`] }, id: e.id });
                                             });
