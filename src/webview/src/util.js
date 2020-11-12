@@ -41,8 +41,10 @@ export function receivedResponse(response) {
 
 export function triggerRestQuery(requestStr, jsonPath) {
 
-    const url = typeof requestStr === 'string' ? requestStr : requestStr.url;
-    if (url.startsWith('ext:')) {
+    //const url = typeof requestStr === 'string' ? requestStr : requestStr.url;
+     // due to e.g. CORS we cannot run the https:// request from inside, 
+     // so we do forward to the extension as well
+     // if (url.startsWith('ext:')) {
         return new Promise((resolve, reject) => {
             console.log(`triggerRestQuery triggering ${JSON.stringify(requestStr)} via extension`);
             try {
@@ -66,7 +68,7 @@ export function triggerRestQuery(requestStr, jsonPath) {
                 reject(e);
             }
         });
-    } else {
+/*    } else {
         // e.g. https:// we do directly: (todo check for https://?)
         return new Promise((resolve, reject) => {
             console.log(`triggerRestQuery triggering ${JSON.stringify(requestStr)} via fetch`);
@@ -79,5 +81,5 @@ export function triggerRestQuery(requestStr, jsonPath) {
             fetch(url, { method: 'GET', headers: headers })
                 .then(response => response.json()).then(json => resolve(json)).catch(e => reject(e));
         });
-    }
+    }*/
 }

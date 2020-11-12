@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { getNonce } from './util';
 import * as yaml from 'js-yaml';
+import * as fetch from 'node-fetch';
 
 interface AssetManifest {
     files: {
@@ -202,7 +203,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         switch (e.req.type) {
                             case 'restQuery':
                                 { // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
-                                    const request: string = e.req.request;
+                                    const request: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url;
                                     if (request.startsWith('ext:')) {
 
                                         const extName = request.slice(4, request.indexOf('/'));
@@ -219,6 +220,29 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                         } else {
                                             webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`extName '${extName}' does not offer restQuery (yet?)`] }, id: e.id });
                                         }
+                                    } else {
+                                        const requestObj: any = typeof e.req.request === 'object' ? e.req.request : undefined;
+                                        console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via fetch`);
+                                        const username = requestObj && requestObj.username ? requestObj.username : undefined;
+                                        const password = requestObj && requestObj.password ? requestObj.password : undefined;
+                                        const headers = new fetch.Headers();
+                                        headers.set("Content-Type", "application/json");
+                                        headers.set("Accept", "application/json");
+                                        headers.set("Accept-Charset", "utf-8");
+
+                                        if (username && password) {
+                                            headers.set('Authorization', 'Basic ' + Buffer.from(username + ":" + password, 'latin1').toString('base64'));
+                                        }
+                                        fetch.default(request,
+                                            {
+                                                "method": 'GET',
+                                                "headers": headers
+                                            })
+                                            .then(response => response.json()).then(json => {
+                                                webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id });
+                                            }).catch(err => {
+                                                webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`fetch failed with err=${err}`] }, id: e.id });
+                                            });
                                     }
                                 }
                                 break;
