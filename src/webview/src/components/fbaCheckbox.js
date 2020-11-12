@@ -48,6 +48,11 @@ export default function FBACheckbox(props) {
     const [badgeCounter, setBadgeCounter] = React.useState(0);
     const [badgeStatus, setBadgeStatus] = React.useState(0); // 0 not queried yet, 1 = pending, 2 = done badgeCounter set!
 
+    // badge2 support (rest query in the background)
+    const [badge2Counter, setBadge2Counter] = React.useState(0);
+    const [badge2Status, setBadge2Status] = React.useState(0); // 0 not queried yet, 1 = pending, 2 = done badgeCounter set!
+
+
     // values that can be changed: (comments and value (ok/error...))
     const [values, setValues] = React.useState({ 'comments': props.comments, 'value': props.value });
 
@@ -70,7 +75,6 @@ export default function FBACheckbox(props) {
     }, [applyFilterBarOpen, props.filter]);
 
     // effect for badge processing:
-
     useEffect(() => {
         console.log(`FBACheckbox effect for badge processing called (badgeStatus=${badgeStatus}, filter.badge=${JSON.stringify(props?.filter?.badge)})`);
         if (!badgeStatus && props?.filter?.badge?.source) {
@@ -97,6 +101,47 @@ export default function FBACheckbox(props) {
             fetchdata();
         }
     }, [badgeStatus, props?.filter?.badge]); // todo and attribute status ecu/lifecycle... (to determine...)
+
+    // effect for badge2 processing:
+    useEffect(() => {
+        console.log(`FBACheckbox effect for badge2 processing called (badgeStatus=${badge2Status}, filter.badge=${JSON.stringify(props?.filter?.badge2)})`);
+        if (!badge2Status && props?.filter?.badge2?.source) {
+            const fetchdata = async () => {
+                try {
+                    setBadgeStatus(1);
+                    const res = await triggerRestQuery(props.filter.badge2.source);
+                    console.log(`FBACheckbox effect for badge2 processing got res '${JSON.stringify(res)}'`);
+                    // do we have a jsonPath?
+                    if (props.filter.badge2.jsonPath) {
+                        const data = jp.query(res, props.filter.badge2.jsonPath); // todo... .data?
+                        console.log(`jsonPath('${props.filter.badge2.jsonPath}') returned '${JSON.stringify(data)}' size==${Array.isArray(data) ? data.length : 0}`);
+
+                        // determine the data:
+                        // if its an array and the one and only array element is a string -> use as string
+                        // if its an array -> use nr of array elements
+                        // its a string -> use as string
+                        let counterValue = undefined;
+                        if (Array.isArray(data)) {
+                            if (data.length === 1 && typeof (data[0]) === 'string') { counterValue = data[0] } else {
+                                counterValue = data.length;
+                            }
+                        } else {
+                            if (typeof data === 'string') { counterValue = data; } else { counterValue = 0; }
+                        }
+
+                        setBadge2Counter(counterValue); // todo same logic for badge(1)
+                    } else {
+                        // todo...?
+                    }
+                    setBadge2Status(2);
+                } catch (e) {
+                    console.warn(`FBACheckbox effect for badge2 processing got error '${e}'`);
+                }
+            };
+            fetchdata();
+        }
+    }, [badge2Status, props?.filter?.badge2]); // todo and attribute status ecu/lifecycle... (to determine...)
+
 
     const handleValueChanges = e => {
         const { name, value } = e.target;
@@ -174,7 +219,9 @@ export default function FBACheckbox(props) {
     return (
         <Container>
             <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || !props?.filter?.badge || badgeStatus < 2}>
-            <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon /> }, { value: 'ok', icon: <CheckBoxIcon /> }, { value: 'error', icon: <ErrorIcon />, color: 'secondary' }]} {...props} color="primary" />
+                <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={!props?.filter?.badge2 || badge2Status < 2}>
+                    <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon /> }, { value: 'ok', icon: <CheckBoxIcon /> }, { value: 'error', icon: <ErrorIcon />, color: 'secondary' }]} {...props} color="primary" />
+                </Badge>
             </Badge>
             <IconButton aria-label="edit" onClick={handleClickOpen}>
                 <EditIcon fontSize="small" />

@@ -40,27 +40,44 @@ export function receivedResponse(response) {
 }
 
 export function triggerRestQuery(requestStr, jsonPath) {
-    return new Promise((resolve, reject) => {
-        console.log(`triggerRestQuery triggering ${JSON.stringify(requestStr)}`);
-        try {
-            sendAndReceiveMsg({ type: 'restQuery', request: requestStr }).then((res) => {
-                console.log(`triggerRestQuery got response ${JSON.stringify(res)}`);
-                // check for res.error... and trigger reject then...
-                // if we have errors we reject:
-                if ('errors' in res && res.errors.length > 0) {
-                    reject(res);
-                    return;
-                }
 
-                if (jsonPath) {
-                    const data = jp.query(res.data, jsonPath);
-                    console.log(`jsonPath('${jsonPath}') returned '${JSON.stringify(data)}'`);
-                    resolve(data);
-                } else resolve(res);
-            }).catch(reject);
-        } catch (e) {
-            console.log(`triggerRestQuery failed with ${e}`);
-            reject(e);
-        }
-    });
+    const url = typeof requestStr === 'string' ? requestStr : requestStr.url;
+    if (url.startsWith('ext:')) {
+        return new Promise((resolve, reject) => {
+            console.log(`triggerRestQuery triggering ${JSON.stringify(requestStr)} via extension`);
+            try {
+                sendAndReceiveMsg({ type: 'restQuery', request: requestStr }).then((res) => {
+                    console.log(`triggerRestQuery got response ${JSON.stringify(res)}`);
+                    // check for res.error... and trigger reject then...
+                    // if we have errors we reject:
+                    if ('errors' in res && res.errors.length > 0) {
+                        reject(res);
+                        return;
+                    }
+
+                    if (jsonPath) {
+                        const data = jp.query(res.data, jsonPath);
+                        console.log(`jsonPath('${jsonPath}') returned '${JSON.stringify(data)}'`);
+                        resolve(data);
+                    } else resolve(res);
+                }).catch(reject);
+            } catch (e) {
+                console.log(`triggerRestQuery failed with ${e}`);
+                reject(e);
+            }
+        });
+    } else {
+        // e.g. https:// we do directly: (todo check for https://?)
+        return new Promise((resolve, reject) => {
+            console.log(`triggerRestQuery triggering ${JSON.stringify(requestStr)} via fetch`);
+            const username = typeof requestStr === 'object' && requestStr.username ? requestStr.username : undefined;
+            const password = typeof requestStr === 'object' && requestStr.password ? requestStr.password : undefined;
+            let headers = new Headers();
+            if (username && password) {
+                headers.set('Authorization', 'Basic ' + btoa(username + ":" + password));
+            }
+            fetch(url, { method: 'GET', headers: headers })
+                .then(response => response.json()).then(json => resolve(json)).catch(e => reject(e));
+        });
+    }
 }
