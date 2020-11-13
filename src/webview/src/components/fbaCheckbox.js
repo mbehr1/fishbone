@@ -224,7 +224,7 @@ export default function FBACheckbox(props) {
                 </Badge>
             </Badge>
             <IconButton aria-label="edit" onClick={handleClickOpen}>
-                <EditIcon fontSize="small" />
+                <EditIcon fontSize="small" color="primary" />
             </IconButton>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
                 <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>Edit '{props.label}'</DialogTitle>

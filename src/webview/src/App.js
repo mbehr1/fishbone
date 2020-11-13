@@ -41,7 +41,7 @@ class MyCheckbox extends Component {
           />
         </Tooltip >
         <IconButton aria-label="edit">
-          <EditIcon fontSize="small" />
+          <EditIcon fontSize="small" color="primary" />
         </IconButton>
       </Container>
     );
