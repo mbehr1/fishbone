@@ -66,6 +66,11 @@
     padding: 15px 0px;
 }
 
+.nestedRootCauses {
+    color: #4f4f4f;
+    background-color: inherit;
+}
+
 .legend {
     display: flex;
     flex-direction: column;

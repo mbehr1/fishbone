@@ -100,7 +100,7 @@ export default function FishboneChart(props) {
                 return fragment;
               case 'nested':
                 console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
-                return (<button key={`root_causes_${index}`} type="button" onClick={() => props?.onStateChange({childFBData: [rootCause.data, rootCause.title]})} >{rootCause.title}</button>);
+                return (<button class="nestedRootCauses" key={`root_causes_${index}`} type="button" onClick={() => props?.onStateChange({ childFBData: [rootCause.data, rootCause.title] })} >{rootCause.title}</button>);
               default:
                 return (<div key={`root_causes_${rootCause.title}_${index}`} >`unsupported type='{rootCause.type}'` </div>);
             }
