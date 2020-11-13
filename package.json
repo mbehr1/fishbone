@@ -2,7 +2,7 @@
 	"name": "fishbone",
 	"displayName": "fishbone",
 	"description": "Create interactive fishbone diagrams",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"license": "CC-BY-NC-SA-4.0",
 	"publisher": "mbehr1",
 	"author": {
@@ -55,7 +55,7 @@
 		"@types/js-yaml": "^3.12.5",
 		"@types/mocha": "^7.0.2",
 		"@types/node": "^13.11.0",
-		"@types/node-fetch": "^2.5.7",
+		"@types/request": "^2.48.5",
 		"@types/vscode": "^1.50.0",
 		"@typescript-eslint/eslint-plugin": "^2.30.0",
 		"@typescript-eslint/parser": "^2.30.0",
@@ -68,6 +68,6 @@
 	"dependencies": {
 		"js-yaml": "^3.14.0",
 		"jsonpath": "^1.0.2",
-		"node-fetch": "^2.6.1"
+		"request": "^2.88.2"
 	}
 }

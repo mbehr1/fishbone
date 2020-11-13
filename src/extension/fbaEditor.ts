@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { getNonce } from './util';
 import * as yaml from 'js-yaml';
-import * as fetch from 'node-fetch';
+import * as request from 'request';
 
 interface AssetManifest {
     files: {
@@ -203,12 +203,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         switch (e.req.type) {
                             case 'restQuery':
                                 { // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
-                                    const request: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url;
-                                    if (request.startsWith('ext:')) {
+                                    const url: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url;
+                                    if (url.startsWith('ext:')) {
 
-                                        const extName = request.slice(4, request.indexOf('/'));
-                                        const query = request.slice(request.indexOf('/'));
-                                        console.log(`extName=${extName} request=${request}`);
+                                        const extName = url.slice(4, url.indexOf('/'));
+                                        const query = url.slice(url.indexOf('/'));
+                                        console.log(`extName=${extName} request=${url}`);
                                         // did this extension offer the restQuery?
                                         const rq = this._restQueryExtFunctions.get(extName);
                                         if (rq) {
@@ -222,40 +222,38 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                         }
                                     } else {
                                         const requestObj: any = typeof e.req.request === 'object' ? e.req.request : undefined;
-                                        console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via fetch`);
+                                        console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via request`);
                                         const username = requestObj && requestObj.username ? requestObj.username : undefined;
                                         const password = requestObj && requestObj.password ? requestObj.password : undefined;
-                                        const headers = new fetch.Headers();
-                                        headers.set("Accept", "application/json");
-                                        headers.set("Accept-Charset", "utf-8");
+                                        const options: any = {
+                                            url: url,
+                                            headers: {
+                                                'User-Agent': 'mbehr1.fishbone', // todo add version
+                                                'Accept': 'application/json'
+                                            }
+                                        };
 
                                         if (username && password) {
-                                            headers.set('Authorization', 'Basic ' + Buffer.from(username + ":" + password).toString('base64')); // todo chrome uses latin1
-                                            headers.set('credentials', 'include');
-                                            console.log(`headers.Authorization='${headers.get("Authorization")}'`);
+                                            console.log(`request using username='${username}'`);
+                                            
+                                            options.auth = {
+                                                'username': username,
+                                                'password': password,
+                                                'sendImmediately': false
+                                            };
                                         }
-                                        fetch.default(request,
-                                            {
-                                                "method": 'GET',
-                                                "headers": headers
-                                            })
-                                            .then(response => {
-                                                try {
-                                                    console.log(`got response.ok=${response.ok} for request '${request}'`);
-                                                    console.log(`got response.status=${response.status} ${response.statusText}`);
-                                                    console.log(`got response.headers=`, response.headers.raw());
-                                                } catch (err) {
-                                                    console.warn(`got err=${err}`);
-
-                                                };
-                                                response.text().then(text => {
-                                                    console.log(`fetch got response.text()='${text.slice(0, 200)}'...`);
-                                                    const json = JSON.parse(text);
-                                                    webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id });
-                                                });
-                                            }).catch(err => {
-                                                webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`fetch failed with err=${err}`] }, id: e.id });
-                                            });
+                                        console.log(`request to url='${options.url}'`);
+                                        request.get(options, (err: any, res: any, body: any) => {
+                                            if (err) {
+                                                console.warn(`request failed with err=`, err);
+                                                webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`request failed with err=${err}`] }, id: e.id });
+                                            } else {
+                                                // todo statusCode...?
+                                                console.log(`request statsCode=${res.statusCode}`);
+                                                const json = JSON.parse(body);
+                                                webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id });
+                                            }
+                                        });
                                     }
                                 }
                                 break;
