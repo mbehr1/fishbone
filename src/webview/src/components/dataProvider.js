@@ -20,7 +20,8 @@ export default function InputDataProvided(props) {
     const [options, setOptions] = React.useState([]);
     const loading = open && options.length === 0;
 
-    console.log(`InputDataProvided(props=${JSON.stringify(props)}) loading=${loading} called`);
+    //console.log(`InputDataProvided(props=${JSON.stringify(props)}) loading=${loading} called`);
+    console.log(`InputDataProvided(props=${props?.dataProvider?.source}) loading=${loading} called`);
 
     React.useEffect(() => {
         let active = true;

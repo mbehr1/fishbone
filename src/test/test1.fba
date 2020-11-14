@@ -1,5 +1,5 @@
 type: fba
-version: '0.1'
+version: '0.2'
 title: test fishbone chart
 attributes:
   - date:
@@ -24,9 +24,11 @@ attributes:
         source: 'ext:mbehr1.dlt-logs/get/docs?ecu=${attributes.ecu}'
         jsonPath: '$..attributes.ecus[0].attributes.lifecycles[*].attributes.startTimeUtc'
 fishbone:
-  - - effect 1
-    - - - category1
-        - - rootcause 1 1
+  - name: effect 1
+    categories:
+      - name: category1
+        rootCauses:
+          - rootcause 1 1
           - root cause 1 2
           - type: react
             element: FBACheckbox
@@ -50,7 +52,7 @@ fishbone:
                 badge2:
                   source:
                     url: 'https://api.github.com/repos/mbehr1/dlt-logs/issues/1'
-                  jsonPath: '$.state'
+                  jsonPath: $.state
           - type: react
             element: MyCheckbox
             props:
@@ -73,16 +75,20 @@ fishbone:
                 this is a long comment...
                 2nd line of long comment
               value: ok
-      - - category2
-        - - rootcause21
-      - - category3
-        - - rootcause31
+      - name: category2
+        rootCauses:
+          - rootcause21
+      - name: category3
+        rootCauses:
+          - rootcause31
           - type: nested
             title: nested FB...
             data:
-              - - nested effect 1
-                - - - nested cat 1
-                    - - nested rootcause 1
+              - name: nested effect 1
+                categories:
+                  - name: nested cat 1
+                    rootCauses:
+                      - nested rootcause 1
                       - type: react
                         element: FBACheckbox
                         props:
@@ -91,8 +97,9 @@ fishbone:
                           tooltip: new tooltip for check 1
                           comments: a comment for rootcause 1
                           value: null
-                  - - nested cat 2
-                    - - type: react
+                  - name: nested cat 2
+                    rootCauses:
+                      - type: react
                         element: FBACheckbox
                         props:
                           name: nestedRootcause2
@@ -100,8 +107,9 @@ fishbone:
                           tooltip: see edit on details for this rootcause
                           comments: b comment
                           value: ok
-                  - - nested cat 3
-                    - - type: react
+                  - name: nested cat 3
+                    rootCauses:
+                      - type: react
                         element: FBACheckbox
                         props:
                           name: nestedCat3Rootcause1
@@ -109,18 +117,27 @@ fishbone:
                           tooltip: see edit on details for this rootcause1
                           comments: c comment
                           value: error
-      - - category4
-        - - rootcause 4 1
+              - name: effect 2
+                categories:
+                  - name: category 1
+                    rootCauses: []
+      - name: category4
+        rootCauses:
+          - rootcause 4 1
           - root cause 4 2
-  - - effect 2
-    - - - category1
-        - - rootcause1
+  - name: effect 2
+    categories:
+      - name: category1
+        rootCauses:
+          - rootcause1
           - type: nested
             title: nested fb title
             data:
-              - - effect 3
-                - - - category n4
-                    - - rootcause n1
+              - name: effect 3
+                categories:
+                  - name: category n4
+                    rootCauses:
+                      - rootcause n1
                       - type: react
                         element: FBACheckbox
                         props:
@@ -130,12 +147,15 @@ fishbone:
                           tooltip: new tooltip for check 1
                           comments: a comment
                           value: null
-      - - category2
-        - - rootcause21
-      - - category3
-        - - rootcause31
-      - - category4
-        - - rootcause41
+      - name: category2
+        rootCauses:
+          - rootcause21
+      - name: category3
+        rootCauses:
+          - rootcause31
+      - name: category4
+        rootCauses:
+          - rootcause41
 fishbone2:
   - - effect 1
     - - - category1

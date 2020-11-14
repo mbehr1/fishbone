@@ -147,7 +147,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         function updateWebview() {
             console.log(`updateWebview called`);
 
-            const docObj: any = FBAEditorProvider.getFBDataFromText(document.getText());
+            const docObj: any = FBAEditorProvider.getFBDataFromDoc(document);
 
             postMsgOnceAlive({
                 type: 'update',
@@ -193,7 +193,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
             switch (e.type) {
                 case 'update':
-                    this.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
+                    FBAEditorProvider.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
                         console.log(`updateTextDocument fulfilled=${fulfilled}`);
                     }); // same as update webview
                     break;
@@ -336,40 +336,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     }
 
     /**
-     * Add a new scratch to the current document.
-
-    private addNewScratch(document: vscode.TextDocument) {
-        const json = this.getDocumentAsJson(document);
-        json.scratches = [
-            ...(Array.isArray(json.scratches) ? json.scratches : []),
-            {
-                id: getNonce(),
-                text: 'bla',
-                created: Date.now(),
-            }
-        ];
-
-        return this.updateTextDocument(document, json);
-    } */
-
-    /**
-     * Delete an existing scratch from a document.
-
-    private deleteScratch(document: vscode.TextDocument, id: string) {
-        const json = this.getDocumentAsJson(document);
-        if (!Array.isArray(json.scratches)) {
-            return;
-        }
-
-        json.scratches = json.scratches.filter((note: any) => note.id !== id);
-
-        return this.updateTextDocument(document, json);
-    } */
-
-    /**
      * Write out the object to a given document.
      */
-    private updateTextDocument(document: vscode.TextDocument, docObj: any) {
+    static updateTextDocument(document: vscode.TextDocument, docObj: any) {
         console.log(`updateTextDocument called with json.keys=${Object.keys(docObj)}`);
         Object.keys(docObj).forEach(key => {
             console.log(` ${key}=${JSON.stringify(docObj[key])}`);
@@ -390,6 +359,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         }
 
         // only 'title', 'attributes' and 'fishbone' are updated for now. keep the rest:
+        if ('version' in docObj) { yamlObj.version = docObj.version; } else {
+            if (!('version' in yamlObj)) { yamlObj.version = '0.2'; } // todo const somewhere..
+        }
 
         if ('title' in docObj) { yamlObj.title = docObj.title; }
         if (('attributes' in docObj) && docObj.attributes !== undefined) { yamlObj.attributes = docObj.attributes; }
@@ -418,10 +390,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 /**
  * Parse the documents content into an object.
  */
-    static getFBDataFromText(text: string): any {
-    /*console.log(`getFBDataFromText text=
-    ${text}
-    `);*/
+    static getFBDataFromDoc(doc: vscode.TextDocument): any {
+        const text = doc.getText();
 
         // here we do return the data that we pass as data=... to the Fishbone
 
@@ -438,8 +408,43 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         try {
             const yamlObj: any = yaml.safeLoad(text); // JSON.parse(text);
             if (typeof yamlObj !== 'object') { return []; }
-            console.log(`getFBDataFromText type=${yamlObj.type}, version=${yamlObj.version}`);
-            console.log(`getFBDataFromText title=${yamlObj.title}`);
+            console.log(`getFBDataFromDoc type=${yamlObj.type}, version=${yamlObj.version}`);
+            console.log(`getFBDataFromDoc title=${yamlObj.title}`);
+
+            // convert data from prev. versions?
+            const convertv01Effects = (effects: any) => {
+                return effects.map((effectsPair: any) => {
+                    return {
+                        name: effectsPair[0],
+                        categories: effectsPair[1].map((catPair: any) => {
+                            return {
+                                name: catPair[0],
+                                rootCauses: catPair[1].map((rootCause: any) => {
+                                    if (typeof rootCause === 'object' && rootCause.type === 'nested') {
+                                        const newRootCause = { ...rootCause };
+                                        newRootCause.data = convertv01Effects(rootCause.data);
+                                        return newRootCause;
+                                    } else {
+                                        return rootCause;
+                                    }
+                                })
+                            };
+                        })
+                    };
+                });
+            };
+
+            if (yamlObj?.version === '0.1') {
+                // the effects storage has changed:
+                if (yamlObj.fishbone) {
+                    const fbv02 = convertv01Effects(yamlObj.fishbone);
+                    console.log(`fbv02=`, fbv02);
+                    yamlObj.fishbone = fbv02;
+                }
+                yamlObj.version = '0.2';
+                FBAEditorProvider.updateTextDocument(doc, yamlObj);
+            }
+
             return { attributes: yamlObj?.attributes, fishbone: yamlObj.fishbone, title: yamlObj.title || '<please add title to .fba>' };
         } catch (e) {
             vscode.window.showErrorMessage(`Fishbone: Could not get document as yaml. Content is not valid yaml e= ${e}`);

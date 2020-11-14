@@ -12,6 +12,10 @@ import React from 'react';
 import Grid from '../layout/grid';
 import './fishboneChart.css';
 
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import Input from '@material-ui/core/Input';
+
 // const INITIAL_STATE = {causes: undefined, effect: undefined, index: 0};
 
 /**
@@ -28,7 +32,6 @@ export function FishboneElementUrl(props) {
 }
 
 // todo add PropTypes
-// title
 // *cols
 // reactInlineElementsAdder...
 // onChange, for persisted data
@@ -41,10 +44,16 @@ export function FishboneElementUrl(props) {
 
 export default function FishboneChart(props) {
 
-    const [effect, causes] = props?.data.length ?
-        props.data[props?.effectIndex ? props.effectIndex : 0] : ['no effects', []];
+  const effectIndex = props?.effectIndex ? props.effectIndex : 0;
+  const effect = props?.data.length ?
+    props.data[effectIndex] : { name: 'no effects', rootCauses: [] };
 
-    if (!causes) {
+  const categories = effect.categories;
+
+  const initialCMState = { mouseX: null, mouseY: null };
+  const [contextMenuState, setContextMenuState] = React.useState(initialCMState);
+
+  if (!categories) {
       console.log(`FishboneChart render no causes!`);
       return <React.Fragment></React.Fragment>;
     }
@@ -70,7 +79,7 @@ export default function FishboneChart(props) {
       }
     
 
-    const effectIndexColor = getColor(props?.effectIndex ? props.effectIndex : 0);
+  const effectIndexColor = getColor(effectIndex);
 
     const getRootCauses = (rootCauses) => {
         const causes = rootCauses.map((rootCause, index) => {
@@ -84,7 +93,7 @@ export default function FishboneChart(props) {
                 // console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
                 let fragment = null;
                 try {
-                  console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})elementsAdder=${props.reactInlineElementsAdder} `);
+                  //console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})elementsAdder=${props.reactInlineElementsAdder} `);
                   if (!rootCause.elementName && props.reactInlineElementsAdder) {
                     props.reactInlineElementsAdder(rootCause);
                   }
@@ -109,14 +118,14 @@ export default function FishboneChart(props) {
         return (<div className="rootCauses">{causes}</div>);
       }
 
-    const getHalfCauses = (causes, top) => {
+  const getHalfCategories = (categories, top) => {
         // we want them sorted from left to right always changing top/down, e.g.
         // 1 3 5
         //  2 4
     
         const halfArray = [];
-        for (let i = top ? 0 : 1; i < causes.length; i += 2) {
-          halfArray.push(causes[i]);
+    for (let i = top ? 0 : 1; i < categories.length; i += 2) {
+      halfArray.push(categories[i]);
         }
         // top ? causes.slice(0, middle) : causes.slice(middle);
     
@@ -124,25 +133,25 @@ export default function FishboneChart(props) {
         const halfCauses = halfArray.map((category, index) => {
           if (top) {
             return (
-              <div key={`top_causes_${category[0]}_${index}`} className="causeContent">
+              <div key={`top_causes_${category.name}_${index}`} className="causeContent">
                 <div className={`cause top ${color}_ ${color}Border`}>
-                  {category[0]}
+                  {category.name}
                 </div>
                 <div className="causeAndLine">
-                        {getRootCauses(category[1])}
+                  {getRootCauses(category.rootCauses)}
                   <div className={`diagonalLine ${color}TopBottom`} />
                 </div>
               </div>
             );
           } else {
             return (
-              <div key={`bottom_causes_${category[0]}_${index}`} className="causeContent">
+              <div key={`bottom_causes_${category.name}_${index}`} className="causeContent">
                 <div className="causeAndLine">
-                        {getRootCauses(category[1])}
+                  {getRootCauses(category.rootCauses)}
                   <div className={`diagonalLine ${color}BottomTop`} />
                 </div>
                 <div className={`cause bottom ${color}_ ${color}Border`}>
-                  {category[0]}
+                  {category.name}
                 </div>
               </div>
             );
@@ -155,34 +164,53 @@ export default function FishboneChart(props) {
         const color = effectIndexColor;
         return (
             <div className="causes">
-                {getHalfCauses(causes, true)}
+            {getHalfCategories(categories, true)}
                 <div className={`lineEffect ${color}Border`} />
-                {getHalfCauses(causes, false)}
+            {getHalfCategories(categories, false)}
             </div>
         );
-    }
+    };
 
+  // context menu support
+  const cmHandleClick = (event) => {
+    event.preventDefault();
+    setContextMenuState({
+      mouseX: event.clientX - 2,
+      mouseY: event.clientY - 4
+    });
+  };
+
+  const cmHandleClose = () => {
+    setContextMenuState(initialCMState);
+  };
 
     const getEffect = ()=> {
         const color = effectIndexColor;
         return (
-          <div className={`effect left ${color}_ ${color}Border`}>
+          <div className={`effect left ${color}_ ${color}Border`} onContextMenu={cmHandleClick} style={{ cursor: 'context-menu' }}>
             <div className={`effectValue`}>
-              {effect}
+              <Input value={effect.name} style={{ width: 100 }} onChange={(event) => props.onChange(effect, event, 'name')} />
             </div>
+            {props.effectContextMenu && props.effectContextMenu.length > 0 &&
+              <Menu keepMounted open={contextMenuState.mouseY != null} onClose={cmHandleClose} anchorReference="anchorPosition"
+                anchorPosition={contextMenuState.mouseY !== null && contextMenuState.mouseX !== null ? { top: contextMenuState.mouseY, left: contextMenuState.mouseX } : undefined}
+              >
+                {props.effectContextMenu.map((menuItem, index) => <MenuItem onClick={() => { cmHandleClose(); menuItem?.cb(props.data, effectIndex); }}>{menuItem.text}</MenuItem>)}
+              </Menu>
+            }
           </div>
         );
       }
       
       const getLegend = () => {
-        const effectLabels = props.data.map((effect, index) => effect[0]);
+        const effectLabels = props.data.map((effect, index) => effect.name);
     
         if (effectLabels.length <= 1) {
           return;
         }
     
         const labelsDivs = effectLabels.map((label, index) => {
-          const labelClass = index === props.effectIndex ? 'label_' : 'labelLineThrough';
+          const labelClass = index === effectIndex ? 'label_' : 'labelLineThrough';
           const color = getColor(index);
           return (
             <div key={`labels_${label}_${index}`} className="legendLabel" onClick={() => props?.onStateChange({effectIndex: index})} >
@@ -209,70 +237,3 @@ export default function FishboneChart(props) {
         </Grid >
     );
 }
-
-/*
-
-  getParentNav() {
-    // render a breadcrumb like:
-    // title / effect (only if more than 1)  [ / category / title / effect ]
-    // this does not allow to choose effects...
-    //
-    // or
-    //
-    // render a tree for navigation like:
-    // title
-    // - effect
-    //   |- category
-    //      |- (root cause title)
-    //         - effect
-    //         - effect
-
-    const navPath = [];
-
-    let curObj = this.state;
-    let parentState = undefined;
-    while (curObj) {
-        var callback = (thisObj, sta) => {
-            return ()=> { thisObj.restoreState(sta); console.log(`callback called thisObj=${thisObj} sta=${JSON.stringify(sta)}`);}
-        }
-      // effect if more than 1:
-      if (curObj.data.length > 1) {
-        navPath.unshift({ref: curObj.data[curObj.index][0], onClick: callback(this, parentState)});
-        // prefer to insert at effect not at title
-        parentState = undefined;
-      }
-      // title
-      navPath.unshift({ref: curObj.title || 'no title', onClick: callback(this, parentState)});
-      parentState = curObj.parentState;
-      curObj = parentState;
-    }
-
-    if ('onNavigationChanged' in this.props) {
-      this.navPath = navPath;
-      if (this.lastPath === undefined) {
-        this.lastPath = navPath;
-        this.props.onNavigationChanged(this.navPath); // todo this leads to the warning:
-        // Cannot update during an existing state transition...
-        // find a better way for it.
-      }
-      return null;
-    }
-
-    const breadCrumb = (<div>{navPath.map((elem) => elem.ref).join(' / ')}</div>);
-
-    if (this.state.parentState) {
-      return (
-        < div>
-          { breadCrumb}
-          <button type="button" onClick={() => this.restoreState(this.state.parentState)} >back</button>
-        </div >
-      );
-    } else {
-      return (
-        <div>
-          {breadCrumb}
-        </div>
-      );
-    }
-  }
-*/

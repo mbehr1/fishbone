@@ -57,13 +57,13 @@ export default class App extends Component {
 
   addInlineElements = (rootcause) => {
     if (typeof rootcause === 'object') {
-      console.log(`addInlineElements found object rootcause:'${JSON.stringify(rootcause)}'`);
       if (rootcause.type === 'react') {
         if (!('elementName' in rootcause)) {
           switch (rootcause.element) {
             case 'MyCheckbox': rootcause.elementName = MyCheckbox; rootcause.props.onChange = this.handleInputChange.bind(this, rootcause); break;
             case 'FBACheckbox': rootcause.elementName = FBACheckbox; rootcause.props.onChange = this.handleInputChange.bind(this, rootcause); break;
             default: // do nothing
+              console.log(`addInlineElements found unknown object rootcause element:'${JSON.stringify(rootcause)}'`);
               break;
           }
         }
@@ -91,17 +91,18 @@ export default class App extends Component {
     for (let level = 1; level < curPath.length; ++level) {
       const childTitle = curPath[level].title;
       // does prevData has at prevEffectIndex a rootcaused typed "nested" and named "childTitle?
-      const [, causes] = prevData.length > prevEffectIndex ? prevData[prevEffectIndex] : [null, null];
-      if (causes) { // array of [category, [rootcauses]]
-        console.log(`causes=`, causes);
+      const effectObj = prevData.length > prevEffectIndex ? prevData[prevEffectIndex] : [null, null];
+      if (effectObj.categories) { // array of [{name:category, rootCauses:[rootcauses]}]
+        const categories = effectObj.categories;
+        // console.log(`categories=`, categories);
 
         let found = false;
-        console.log(`causes.length = ${causes.length}`);
-        for (const catCauseArray of causes) {
-          console.log(`catCauseArray[0] = ${catCauseArray[0]} [1].length=${catCauseArray[1].length}`);
-          for (const rootcause of catCauseArray[1]) {
+        console.log(`categories.length = ${categories.length}`);
+        for (const category of categories) {
+          // console.log(`category = ${category.name} rootCauses.length=${category?.rootCauses.length}`);
+          for (const rootcause of category?.rootCauses) {
             if (typeof rootcause === 'object') {
-              console.log(`found rootcause type=${rootcause.type} ${rootcause.title}`);
+              // console.log(`found rootcause type=${rootcause.type} ${rootcause.title}`);
               if (rootcause.type === 'nested' && rootcause.title === childTitle) {
                 // got it
                 console.log(`getCurData found ${childTitle}`);
@@ -115,7 +116,7 @@ export default class App extends Component {
           if (found) break;
         }
         if (!found) { console.log(`didnt found '${childTitle}'`); return null; }
-      } else { console.log(`got no causes!`); return null; }
+      } else { console.log(`got no categories!`); return null; }
     }
     console.log(`getCurData returning `, prevData, data);
     return prevData;
@@ -231,6 +232,11 @@ export default class App extends Component {
   }
 
   handleInputChange(object, event, propsField) {
+    console.warn(`handleInputChange this=`, this);
+    console.warn(`handleInputChange object=`, object);
+    console.warn(`handleInputChange event=`, event);
+    console.warn(`handleInputChange propsField=`, propsField);
+
     // if propsField is provided this determines the field to update (e.g. object.props[propsField]=...)
     const target = event.target;
     let values = target.values; // this can be an array like [{<name>:<value>}] in this case propsField will be ignored!
@@ -285,6 +291,16 @@ export default class App extends Component {
             console.warn(`App.handleInputChange updated flat attribute to: ${JSON.stringify(object)}`);
             didUpdate = true;
           }
+        } else {
+          // update the key directly? (e.g. for effect(=object) name(propsField) change)
+          for (const [key, value] of Object.entries(values)) {
+            if (key in object) {
+              object[key] = value;
+              didUpdate = true;
+            } else {
+              console.warn(`handleInputChange didn't found key '${key}' in object to update to value '${value}'!`);
+            }
+          }
         }
       }
     }
@@ -302,6 +318,51 @@ export default class App extends Component {
       console.warn(`App.handleInputChange didn't found property to update!`);
     }
   }
+
+  onAddEffect(data, effectIndex) {
+    console.log(`onAddEffect called. effectIndex = ${effectIndex} data=`, data);
+    data.splice(effectIndex + 1, 0, { name: `effect ${effectIndex + 2}`, categories: [{ name: `category 1`, rootCauses: [] }] }); // todo add one root cause?
+
+    // we do select the new one
+    const curPath = this.state.fbPath;
+    // console.log(`onDeleteEffect called. curPath =`, curPath);
+    curPath[this.state.fbPath.length - 1].effectIndex = effectIndex + 1;
+
+    // eslint-disable-next-line no-lone-blocks
+    { // todo put in sep. function 
+      // update state... (todo...think about how to do this best)
+      this.setState({});
+      // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
+      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
+
+      // we parse and unparse to get rid of the elementName modifications... (functions)
+      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
+    }
+
+  }
+
+  onDeleteEffect(data, effectIndex) {
+    console.log(`onDeleteEffect called. effectIndex = ${effectIndex} data=`, data);
+    if (data.length <= 1) return; // we dont allow to delete the last effect
+    data.splice(effectIndex, 1);
+
+    // we do select the prev one as next one
+    const curPath = this.state.fbPath;
+    // console.log(`onDeleteEffect called. curPath =`, curPath);
+    curPath[this.state.fbPath.length - 1].effectIndex = effectIndex > 0 ? effectIndex - 1 : 0;
+
+    // eslint-disable-next-line no-lone-blocks
+    { // todo put in sep. function 
+      // update state... (todo...think about how to do this best)
+      this.setState({});
+      // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
+      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
+
+      // we parse and unparse to get rid of the elementName modifications... (functions)
+      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
+    }
+  }
+
 
   render() {
     console.log(`App render () `); // state.data: ${JSON.stringify(this.state.data)}`);
@@ -420,8 +481,14 @@ export default class App extends Component {
                     </Breadcrumbs>
                   </Grid>
                 </Grid>
-              </div>{/* todo remove fb chart title? */}
-              <FishboneChart onStateChange={(fbData) => this.handleFBStateChange(fbData)} reactInlineElementsAdder={this.addInlineElements} onChange={this.handleInputChange} data={this.getCurData(this.state.fbPath, this.state.data)} title={this.state.fbPath[this.state.fbPath.length - 1].title} effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
+                </div>
+                <FishboneChart
+                  onStateChange={(fbData) => this.handleFBStateChange(fbData)}
+                  reactInlineElementsAdder={this.addInlineElements}
+                  onChange={this.handleInputChange.bind(this)}
+                  effectContextMenu={[{ text: 'add effect', cb: this.onAddEffect.bind(this) }, { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
+                  data={this.getCurData(this.state.fbPath, this.state.data)}
+                  effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
             </Paper>
           </Grid>
           <Grid item xs={6}>
