@@ -2,6 +2,7 @@
  * copyright (c) 2020, Matthias Behr
  *
  * todo:
+ * - add "new fishbone" command
  * - add nonce/random ids to each element? (for smaller edits/updates)
  */
 

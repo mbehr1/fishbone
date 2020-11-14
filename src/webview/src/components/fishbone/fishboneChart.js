@@ -15,6 +15,7 @@ import './fishboneChart.css';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Input from '@material-ui/core/Input';
+import InputBase from '@material-ui/core/InputBase';
 
 // const INITIAL_STATE = {causes: undefined, effect: undefined, index: 0};
 
@@ -135,7 +136,7 @@ export default function FishboneChart(props) {
             return (
               <div key={`top_causes_${category.name}_${index}`} className="causeContent">
                 <div className={`cause top ${color}_ ${color}Border`}>
-                  {category.name}
+                  <InputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
                 </div>
                 <div className="causeAndLine">
                   {getRootCauses(category.rootCauses)}
@@ -151,7 +152,7 @@ export default function FishboneChart(props) {
                   <div className={`diagonalLine ${color}BottomTop`} />
                 </div>
                 <div className={`cause bottom ${color}_ ${color}Border`}>
-                  {category.name}
+                  <InputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
                 </div>
               </div>
             );
@@ -189,7 +190,7 @@ export default function FishboneChart(props) {
         return (
           <div className={`effect left ${color}_ ${color}Border`} onContextMenu={cmHandleClick} style={{ cursor: 'context-menu' }}>
             <div className={`effectValue`}>
-              <Input value={effect.name} style={{ width: 100 }} onChange={(event) => props.onChange(effect, event, 'name')} />
+              <Input multiline value={effect.name} style={{ width: 100 }} onChange={(event) => props.onChange(effect, event, 'name')} />
             </div>
             {props.effectContextMenu && props.effectContextMenu.length > 0 &&
               <Menu keepMounted open={contextMenuState.mouseY != null} onClose={cmHandleClose} anchorReference="anchorPosition"
@@ -203,7 +204,7 @@ export default function FishboneChart(props) {
       }
       
       const getLegend = () => {
-        const effectLabels = props.data.map((effect, index) => effect.name);
+        const effectLabels = props.data.map((effect, index) => effect.name.slice(0, 12));
     
         if (effectLabels.length <= 1) {
           return;
