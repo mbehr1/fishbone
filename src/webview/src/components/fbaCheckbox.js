@@ -11,6 +11,8 @@ import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ErrorIcon from '@material-ui/icons/Error';
 
+import Input from '@material-ui/core/Input';
+
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -56,7 +58,7 @@ export default function FBACheckbox(props) {
 
 
     // values that can be changed: (comments and value (ok/error...))
-    const [values, setValues] = React.useState({ 'comments': props.comments, 'value': props.value });
+    const [values, setValues] = React.useState({ 'comments': props.comments, 'value': props.value, 'label': props.label });
 
     useEffect(() => {
         console.log(`FBACheckbox applyFilterBarOpen=${applyFilterBarOpen}`, props.filter);
@@ -170,7 +172,8 @@ export default function FBACheckbox(props) {
         }
         // update values... todo (event) => props.onChange(event, 'comments')
         if ((newValues.comments !== props.comments) ||
-            (newValues.value !== props.value)) {
+            (newValues.value !== props.value) ||
+            (newValues.label !== props.label)) {
             props.onChange({ target: { type: 'textfield', values: newValues } });
         }
     };
@@ -235,7 +238,8 @@ export default function FBACheckbox(props) {
                 </Grid>
             </Grid>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
-                <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>Edit '{props.label}'</DialogTitle>
+                <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>
+                    <Input id={'input-label'} name='label' value={values.label} onChange={handleValueChanges} ></Input></DialogTitle>
                 <DialogContent>
                     {backgroundFragments}
                     {instructionsFragment}

@@ -10,12 +10,13 @@
 
 import React from 'react';
 import Grid from '../layout/grid';
+import OnBlurInputBase from '../onBlurInputBase';
+
 import './fishboneChart.css';
 
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Input from '@material-ui/core/Input';
-import InputBase from '@material-ui/core/InputBase';
 import IconButton from '@material-ui/core/IconButton';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 
@@ -171,7 +172,7 @@ export default function FishboneChart(props) {
             return (
               <div key={`top_causes_${category.name}_${index}`} className="causeContent">
                 <div className={`cause top ${color}_ ${color}Border`}>
-                  <InputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
+                  <OnBlurInputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
                   {props.categoryContextMenu && props.categoryContextMenu.length > 0 &&
                     <React.Fragment>
                       <IconButton id={`top_cat_${index}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
@@ -196,7 +197,7 @@ export default function FishboneChart(props) {
                   <div className={`diagonalLine ${color}BottomTop`} />
                 </div>
                 <div className={`cause bottom ${color}_ ${color}Border`}>
-                  <InputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
+                  <OnBlurInputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
                   {props.categoryContextMenu && props.categoryContextMenu.length > 0 &&
                     <React.Fragment>
                       <IconButton id={`bottom_cat_${index}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
