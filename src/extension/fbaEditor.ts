@@ -435,6 +435,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 });
             };
 
+            // convert from prev. known formats:
             if (yamlObj?.version === '0.1') {
                 // the effects storage has changed:
                 if (yamlObj.fishbone) {
@@ -446,9 +447,15 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 FBAEditorProvider.updateTextDocument(doc, yamlObj);
             }
 
+            // we're not forwards compatible. 
+            if (yamlObj?.version !== '0.2') {
+                const msg = `Fishbone: The document uses unknown version ${yamlObj?.version}. Please check whether an extension update is available.`;
+                throw new Error(msg);
+            }
+
             return { attributes: yamlObj?.attributes, fishbone: yamlObj.fishbone, title: yamlObj.title || '<please add title to .fba>' };
         } catch (e) {
-            vscode.window.showErrorMessage(`Fishbone: Could not get document as yaml. Content is not valid yaml e= ${e}`);
+            vscode.window.showErrorMessage(`Fishbone: Could not get document as yaml. Content is not valid yaml. Error= ${e}`);
             throw new Error('Could not get document as yaml. Content is not valid yaml e= ' + e);
         }
         return { title: '<error>' };
