@@ -58,7 +58,13 @@ export default function FBACheckbox(props) {
 
 
     // values that can be changed: (comments and value (ok/error...))
-    const [values, setValues] = React.useState({ 'comments': props.comments, 'value': props.value, 'label': props.label });
+    const [values, setValues] = React.useState({
+        'comments': props.comments,
+        'value': props.value,
+        'label': props.label,
+        'instructions': props.instructions,
+        'backgroundDescription': props.backgroundDescription
+    });
 
     useEffect(() => {
         console.log(`FBACheckbox applyFilterBarOpen=${applyFilterBarOpen}`, props.filter);
@@ -173,7 +179,9 @@ export default function FBACheckbox(props) {
         // update values... todo (event) => props.onChange(event, 'comments')
         if ((newValues.comments !== props.comments) ||
             (newValues.value !== props.value) ||
-            (newValues.label !== props.label)) {
+            (newValues.label !== props.label) ||
+            (newValues.backgroundDescription !== props.backgroundDescription) ||
+            (newValues.instructions !== props.instructions)) {
             props.onChange({ target: { type: 'textfield', values: newValues } });
         }
     };
@@ -185,22 +193,27 @@ export default function FBACheckbox(props) {
         setApplyFilterBarOpen(false);
     }
 
-    const backgroundFragments = props.backgroundDescription ? (
+    const backgroundFragments = (
         <React.Fragment>
-            <DialogContentText variant='h5'>Background</DialogContentText><DialogContentText paragraph>
-                {props.backgroundDescription}
-            </DialogContentText>
-        </React.Fragment>
-    ) : null;
-
-    const instructionsFragment = props.instructions ? (
-        <React.Fragment>
-            <DialogContentText variant='h5'>Instructions</DialogContentText>
             <DialogContentText paragraph>
-                {props.instructions}
+                <TextField name='backgroundDescription' onChange={handleValueChanges} margin="dense" id={'backgroundDescription-field-' + props.name}
+                    InputLabelProps={{ shrink: true, }} fullWidth multiline value={values.backgroundDescription}
+                    label='Background'
+                    placeholder='Please enter some background information on this root cause.' />
             </DialogContentText>
         </React.Fragment>
-    ) : null;
+    );
+
+    const instructionsFragment = (
+        <React.Fragment>
+            <DialogContentText paragraph>
+                <TextField name='instructions' onChange={handleValueChanges} margin="dense" id={'instructions-field-' + props.name}
+                    InputLabelProps={{ shrink: true, }} fullWidth multiline value={values.instructions}
+                    label='Instructions'
+                    placeholder='Please enter instructions here on how to check whether this root cause did occur.' />
+            </DialogContentText>
+        </React.Fragment>
+    );
 
     // todo add tooltip...
 
@@ -243,8 +256,17 @@ export default function FBACheckbox(props) {
                 <DialogContent>
                     {backgroundFragments}
                     {instructionsFragment}
-                    <DialogContentText variant='h5'>Processing comments</DialogContentText>
-                    <TextField name='comments' onChange={handleValueChanges} margin="dense" id={'comments-field-' + props.name} label='Comments' fullWidth multiline value={values.comments} />
+                    <TextField InputLabelProps={{ shrink: true, }}
+                        name='comments'
+                        placeholder='Please enter some processing comments here.'
+                        onChange={handleValueChanges}
+                        margin="dense"
+                        variant="outlined"
+                        id={'comments-field-' + props.name}
+                        label='Processing comments'
+                        fullWidth
+                        multiline
+                        value={values.comments} />
                 </DialogContent>
                 <DialogActions>
                     {applyFilterFragment}
