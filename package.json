@@ -24,10 +24,17 @@
 		"Other"
 	],
 	"activationEvents": [
+		"onCommand:fishbone.addNewFile",
 		"onCustomEditor:fishbone.fba"
 	],
 	"main": "./out/extension/extension.js",
 	"contributes": {
+		"commands": [
+			{
+				"command": "fishbone.addNewFile",
+				"title": "New fishbone"
+			}
+		],
 		"customEditors": [
 			{
 				"viewType": "fishbone.fba",

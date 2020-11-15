@@ -404,15 +404,32 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         // our document is a yaml document. 
         // representing a single object with properties:
         //  type <- expect "fba"
-        //  version <- 0.1
-        //  fishbone : array <- we use this as fishbone data
-
-        if (text.trim().length === 0) {
-            return { fishbone: [], title: '<please set title>' }; // empty or initial data?
-        }
+        //  version <- 0.2
+        //  fishbone : array of effect objects
 
         try {
-            const yamlObj: any = yaml.safeLoad(text); // JSON.parse(text);
+            let yamlObj: any = undefined;
+            if (text.trim().length === 0) {
+                yamlObj = {
+                    type: 'fba',
+                    version: '0.2',
+                    title: '<no title>',
+                    fishbone: [
+                        {
+                            name: "<enter effect to analyse>",
+                            categories: [
+                                {
+                                    name: 'category 1',
+                                    rootCauses: []
+                                }
+                            ]
+                        }
+                    ],
+                    attributes: []
+                };
+            } else {
+                yamlObj = yaml.safeLoad(text); // JSON.parse(text);
+            }
             if (typeof yamlObj !== 'object') { return []; }
             console.log(`getFBDataFromDoc type=${yamlObj.type}, version=${yamlObj.version}`);
             console.log(`getFBDataFromDoc title=${yamlObj.title}`);

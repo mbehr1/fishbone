@@ -1,5 +1,6 @@
 // todo add copyright, 2020 Matthias Behr
 
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
 import { FBAEditorProvider } from './fbaEditor';
@@ -31,6 +32,27 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log(`extension ${extensionId} v${extensionVersion} is now active!`);
 
 	context.subscriptions.push(FBAEditorProvider.register(context, reporter));
+
+	context.subscriptions.push(vscode.commands.registerCommand("fishbone.addNewFile", async () => {
+		console.log(`fishbone.addNewFile...`);
+		vscode.window.showSaveDialog({
+			filters: {
+				'Fishbone analysis': ['fba']
+			},
+			saveLabel: 'New fishbone analysis'
+		}).then(async (uri) => {
+			if (uri) {
+				console.log(`got uri scheme='${uri.scheme}' fspath=${uri.fsPath} path=${uri.path}`);
+				// if file exists, open directly: (the overwrite warning was there already)
+				if (fs.existsSync(uri.fsPath)) {
+					fs.unlinkSync(uri.fsPath);
+				}
+				const newFileUri = vscode.Uri.parse(`untitled:${uri.fsPath}`);
+				await vscode.workspace.openTextDocument(newFileUri);
+				vscode.commands.executeCommand('vscode.open', newFileUri);
+			}
+		});
+	}));
 }
 
 // this method is called when your extension is deactivated
