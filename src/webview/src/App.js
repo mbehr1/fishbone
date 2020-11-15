@@ -213,7 +213,7 @@ export default class App extends Component {
         console.log(`App.handleFBStateChange curPath=`, this?.state?.fbPath);
         const curPath = this.state.fbPath; // 
         curPath.pop();
-        this.setState({ fbPath: curPath });
+        this.setState({ fbPath: curPath }); // todo use setAllStates with new params "noDocUpdate?"
       }
       this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
     }
@@ -307,32 +307,31 @@ export default class App extends Component {
 
     if (didUpdate) {
       console.log(`updated object to ${JSON.stringify(object)}`);
-      // update state... (todo...think about how to do this best)
-      this.setState({});
-      // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
-      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
-
-      // we parse and unparse to get rid of the elementName modifications... (functions)
-      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
+      this.setAllStates();
     } else {
       console.warn(`App.handleInputChange didn't found property to update!`);
     }
+  }
+
+  /**
+   * Updates state and the cached vscode.setState and posts the data to the
+   * extension for updating the document.
+   * @param {*} newStateFragements fragment of the state that shall be updated
+   */
+  setAllStates(newStateFragements) {
+    this.setState(newStateFragements || {}, () => {
+      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
+      // we parse and unparse to get rid of the elementName modifications... (functions)
+      // storing all but the fbPath... (todo: why not?)
+      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
+    });
   }
 
   onAddCategory(data, effectIndex) {
     console.log(`onAddEffect called. effectIndex = ${effectIndex} data=`, data);
     data[effectIndex].categories.push({ name: `category ${data[effectIndex].categories.length + 1}`, rootCauses: [] });
 
-    // eslint-disable-next-line no-lone-blocks
-    { // todo put in sep. function 
-      // update state... (todo...think about how to do this best)
-      this.setState({});
-      // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
-      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
-
-      // we parse and unparse to get rid of the elementName modifications... (functions)
-      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
-    }
+    this.setAllStates();
   }
 
   onAddEffect(data, effectIndex) {
@@ -344,17 +343,7 @@ export default class App extends Component {
     // console.log(`onDeleteEffect called. curPath =`, curPath);
     curPath[this.state.fbPath.length - 1].effectIndex = effectIndex + 1;
 
-    // eslint-disable-next-line no-lone-blocks
-    { // todo put in sep. function 
-      // update state... (todo...think about how to do this best)
-      this.setState({});
-      // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
-      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
-
-      // we parse and unparse to get rid of the elementName modifications... (functions)
-      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
-    }
-
+    this.setAllStates();
   }
 
   onDeleteEffect(data, effectIndex) {
@@ -367,16 +356,7 @@ export default class App extends Component {
     // console.log(`onDeleteEffect called. curPath =`, curPath);
     curPath[this.state.fbPath.length - 1].effectIndex = effectIndex > 0 ? effectIndex - 1 : 0;
 
-    // eslint-disable-next-line no-lone-blocks
-    { // todo put in sep. function 
-      // update state... (todo...think about how to do this best)
-      this.setState({});
-      // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
-      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
-
-      // we parse and unparse to get rid of the elementName modifications... (functions)
-      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
-    }
+    this.setAllStates();
   }
 
 
