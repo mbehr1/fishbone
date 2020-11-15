@@ -319,6 +319,22 @@ export default class App extends Component {
     }
   }
 
+  onAddCategory(data, effectIndex) {
+    console.log(`onAddEffect called. effectIndex = ${effectIndex} data=`, data);
+    data[effectIndex].categories.push({ name: `category ${data[effectIndex].categories.length + 1}`, rootCauses: [] });
+
+    // eslint-disable-next-line no-lone-blocks
+    { // todo put in sep. function 
+      // update state... (todo...think about how to do this best)
+      this.setState({});
+      // this.state.data might not be updated yet but it doesn't matter as we modified the object directly...
+      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
+
+      // we parse and unparse to get rid of the elementName modifications... (functions)
+      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
+    }
+  }
+
   onAddEffect(data, effectIndex) {
     console.log(`onAddEffect called. effectIndex = ${effectIndex} data=`, data);
     data.splice(effectIndex + 1, 0, { name: `effect ${effectIndex + 2}`, categories: [{ name: `category 1`, rootCauses: [] }] }); // todo add one root cause?
@@ -486,7 +502,10 @@ export default class App extends Component {
                   onStateChange={(fbData) => this.handleFBStateChange(fbData)}
                   reactInlineElementsAdder={this.addInlineElements}
                   onChange={this.handleInputChange.bind(this)}
-                  effectContextMenu={[{ text: 'add effect', cb: this.onAddEffect.bind(this) }, { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
+                  effectContextMenu={[
+                    { text: 'add category', cb: this.onAddCategory.bind(this) },
+                    { text: 'add effect', cb: this.onAddEffect.bind(this) },
+                    { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
                   data={this.getCurData(this.state.fbPath, this.state.data)}
                   effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
             </Paper>

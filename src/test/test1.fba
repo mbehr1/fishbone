@@ -24,7 +24,7 @@ attributes:
         source: 'ext:mbehr1.dlt-logs/get/docs?ecu=${attributes.ecu}'
         jsonPath: '$..attributes.ecus[0].attributes.lifecycles[*].attributes.startTimeUtc'
 fishbone:
-  - name: effect 1
+  - name: first effect
     categories:
       - name: category1
         rootCauses:
@@ -84,7 +84,9 @@ fishbone:
           - type: nested
             title: nested FB...
             data:
-              - name: nested effect 1
+              - name: |-
+                  third effect on 
+                  multiple lines...
                 categories:
                   - name: nested cat 1
                     rootCauses:
@@ -117,7 +119,7 @@ fishbone:
                           tooltip: see edit on details for this rootcause1
                           comments: c comment
                           value: error
-              - name: effect 2
+              - name: 4th effect
                 categories:
                   - name: category 1
                     rootCauses: []
@@ -125,7 +127,7 @@ fishbone:
         rootCauses:
           - rootcause 4 1
           - root cause 4 2
-  - name: effect 2
+  - name: 2nd effect
     categories:
       - name: category1
         rootCauses:
