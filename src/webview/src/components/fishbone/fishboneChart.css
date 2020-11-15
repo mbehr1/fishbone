@@ -38,7 +38,7 @@
     display: flex;
     justify-content: center; 
     align-items: center;   
-    width: 60%;
+    width: 80%;
     font-size: 0.95em;
     font-weight: 400;        
     color: #4f4f4f;
@@ -302,6 +302,6 @@
     flex: 1;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 50%;
 }

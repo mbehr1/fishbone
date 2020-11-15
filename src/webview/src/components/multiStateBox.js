@@ -62,12 +62,11 @@ export default function MultiStateBox(props) {
 
     return (
         <Tooltip title={props.tooltip || 'no tooltip provided'}>
-            <FormControlLabel control={
+            <FormControlLabel style={{ 'flex': 'auto', 'text-align': 'initial', 'align-self': 'initial' }} control={
                 <IconButton {...props} color={curColor} onClick={handleClick}>{curValuePair.icon}</IconButton>
             } label={props.label}
             />
         </Tooltip >
-
     );
 }
 

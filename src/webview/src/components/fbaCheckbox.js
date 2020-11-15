@@ -2,6 +2,8 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Container from '@material-ui/core/Container';
+import Grid from '@material-ui/core/Grid';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
 import IconButton from '@material-ui/core/IconButton';
 import EditIcon from '@material-ui/icons/Edit';
 import FilterListIcon from '@material-ui/icons/FilterList';
@@ -17,7 +19,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import Button from '@material-ui/core/Button';
 import Badge from '@material-ui/core/Badge';
 import MuiAlert from '@material-ui/lab/Alert';
-import { ButtonGroup, Snackbar, TextField } from '@material-ui/core';
+import { Snackbar, TextField } from '@material-ui/core';
 import MultiStateBox from './multiStateBox';
 import { triggerRestQuery } from './../util';
 
@@ -218,14 +220,20 @@ export default function FBACheckbox(props) {
 
     return (
         <Container>
+            <Grid container spacing={1}>
+                <Grid item flex>
             <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || !props?.filter?.badge || badgeStatus < 2}>
                 <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={!props?.filter?.badge2 || badge2Status < 2}>
                     <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
                 </Badge>
             </Badge>
+                </Grid>
+                <Grid style={{ 'max-width': 26 }}>
             <IconButton size="small" aria-label="edit" onClick={handleClickOpen}>
                 <EditIcon fontSize="small" color="primary" />
             </IconButton>
+                </Grid>
+            </Grid>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
                 <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>Edit '{props.label}'</DialogTitle>
                 <DialogContent>

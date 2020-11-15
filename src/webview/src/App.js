@@ -36,11 +36,11 @@ class MyCheckbox extends Component {
       <Container>
         <Tooltip title={`a tooltip for ${this.props.name}`}>
           <FormControlLabel control={
-            <Checkbox {...this.props} color="primary"></Checkbox>
+            <Checkbox {...this.props} size="small" color="primary"></Checkbox>
           } label={this.props.label}
           />
         </Tooltip >
-        <IconButton aria-label="edit">
+        <IconButton size="small" aria-label="edit">
           <EditIcon fontSize="small" color="primary" />
         </IconButton>
       </Container>
@@ -411,6 +411,34 @@ export default class App extends Component {
     }
   }
 
+  /**
+   * Callback to delete a rootcause
+   * @param {*} rootcause object to the rootcause
+   * @param {*} event event that triggered it
+   */
+  onDeleteRootCause(rootCause, event) {
+    console.log(`onDeleteRootCause() object=`, rootCause);
+    console.log(`onDeleteRootCause() event=`, event);
+
+    // search for this rootcause: (could search in active effect only... but searching all)
+    let found = false;
+    this.state.data.forEach(effect => {
+      effect.categories.forEach(category => {
+        for (let i = 0; !found && i < category.rootCauses.length; ++i) {
+          const rc2 = category.rootCauses[i];
+          if (rc2 === rootCause) {
+            category.rootCauses.splice(i, 1);
+            this.setAllStates();
+            found = true;
+          }
+        }
+      });
+    });
+    if (!found) {
+      console.warn(`onDeleteRootCause didn't found rc to delete!`);
+    }
+  }
+
   render() {
     console.log(`App render () `); // state.data: ${JSON.stringify(this.state.data)}`);
 
@@ -541,6 +569,9 @@ export default class App extends Component {
                     { text: 'add root-cause', cb: this.onAddRootCause.bind(this) },
                     { text: 'add category', cb: this.onAddCategory.bind(this) },
                     { text: 'delete category', cb: this.onDeleteCategory.bind(this) }
+                  ]}
+                  rootCauseContextMenu={[
+                    { text: 'delete root-cause', cb: this.onDeleteRootCause.bind(this) },
                   ]}
                   data={this.getCurData(this.state.fbPath, this.state.data)}
                   effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />

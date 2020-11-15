@@ -81,21 +81,32 @@ export default function FishboneChart(props) {
     
         return colors[index];
       }
-    
 
-  const effectIndexColor = getColor(effectIndex);
+      const handleMenuClick = (event) => {
+        console.log(`handleMenuClick event.currentTarget.id=${event.currentTarget.id}`, event.currentTarget);
+        setMenuAnchorEl(event.currentTarget);
+        setMenuOpen(event.currentTarget.id);
+      };
+    
+      const handleMenuClose = () => {
+        setMenuOpen(0)
+        //setMenuAnchorEl(null);
+      };
+    
+      const effectIndexColor = getColor(effectIndex);
 
     const getRootCauses = (rootCauses) => {
         const causes = rootCauses.map((rootCause, index) => {
+          let fragment = null;
           if (typeof rootCause === 'string') {
-            return (<div key={`root_causes_${rootCause}_${index}`}>{rootCause}</div>);
+            fragment = (<div key={`root_causes_${rootCause}_${index}`}>{rootCause}</div>);
           } else { // todo check for Object
             switch (rootCause.type) {
               case 'Url':
-                return (<div key={`root_causes_${rootCause.title}_${index}`} >{React.createElement(FishboneElementUrl, rootCause, null)} </div>);
+                fragment =  (<div key={`root_causes_${rootCause.title}_${index}`} >{React.createElement(FishboneElementUrl, rootCause, null)} </div>);
+                break;
               case 'react':
                 // console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
-                let fragment = null;
                 try {
                   //console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})elementsAdder=${props.reactInlineElementsAdder} `);
                   if (!rootCause.elementName && props.reactInlineElementsAdder) {
@@ -110,28 +121,37 @@ export default function FishboneChart(props) {
                 } catch (e) {
                   console.error(`got error while creating rootcause.type 'react' elementName=${rootCause.elementName}. e=${e}`);
                 }
-                return fragment;
+                break;
               case 'nested':
                 console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
-                return (<button class="nestedRootCauses" key={`root_causes_${index}`} type="button" onClick={() => props?.onStateChange({ childFBData: [rootCause.data, rootCause.title] })} >{rootCause.title}</button>);
+                fragment= (<button class="nestedRootCauses" key={`root_causes_${index}`} type="button" onClick={() => props?.onStateChange({ childFBData: [rootCause.data, rootCause.title] })} >{rootCause.title}</button>);
+                break;
               default:
-                return (<div key={`root_causes_${rootCause.title}_${index}`} >`unsupported type='{rootCause.type}'` </div>);
+                fragment= (<div key={`root_causes_${rootCause.title}_${index}`} >`unsupported type='{rootCause.type}'` </div>);
+                break;
             }
+          }
+          // context menu?
+          if (props.rootCauseContextMenu && props.rootCauseContextMenu.length>0) {
+            return (
+              <div style={{height: '100%', width:'100%', display:'flex', 'align-items':'baseline'}}>
+                <div style={{position: 'relative', width:'95%'}}>
+                {fragment}
+                </div>
+                <div style={{position: 'relative', width:'5%'}}>
+                <IconButton id={`rcMore_${index}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
+                <Menu anchorEl={menuAnchorEl} keepMounted open={menuOpen === `rcMore_${index}`} onClose={handleMenuClose}>
+                  {props.rootCauseContextMenu.map((menuItem, index) => <MenuItem onClick={(event) => { handleMenuClose(); menuItem?.cb(rootCause, event); }}>{menuItem.text}</MenuItem>)}
+                </Menu>
+                </div>
+              </div>
+            );
+          }else{
+            return fragment;
           }
         });
         return (<div className="rootCauses">{causes}</div>);
       }
-
-  const handleMenuClick = (event) => {
-    console.log(`handleMenuClick event.currentTarget.id=${event.currentTarget.id}`, event.currentTarget);
-    setMenuAnchorEl(event.currentTarget);
-    setMenuOpen(event.currentTarget.id);
-  };
-
-  const handleMenuClose = () => {
-    setMenuOpen(0)
-    //setMenuAnchorEl(null);
-  };
 
   const getHalfCategories = (categories, top) => {
         // we want them sorted from left to right always changing top/down, e.g.
