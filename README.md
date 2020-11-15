@@ -2,28 +2,45 @@
 
 [![Version](https://vsmarketplacebadge.apphb.com/version/mbehr1.fishbone.svg)](https://marketplace.visualstudio.com/items?itemName=mbehr1.fishbone)
 
-This Visual Studio Code(tm) extension adds support create interactive fishbone charts that can be used to analyse failures, defect reports, root cause analysis.
+This Visual Studio Code(tm) extension adds support to create interactive fishbone aka [Ishikawa](https://en.wikipedia.org/wiki/Ishikawa_diagram) diagrams that can be used to 
+- analyse failures or
+- defect reports / perform root cause analysis or
+- support FMEAs.
 
 **Note:** It works well with [![Version](https://vsmarketplacebadge.apphb.com/version/mbehr1.dlt-logs.svg)](https://marketplace.visualstudio.com/items?itemName=mbehr1.dlt-logs) **dlt-logs** extension and supports e.g. querying data directly from the DLT log or applying filter automatically in the DLT log. 
 
+**Note:** To start you can use the command *New fishbone* or create an empty file with extension .fba and simpy open that via regular "Open...".
+
+**Note:** Title, effects and categories can be directly changed via the UI. Simply click into the corresponding area.
+
+**Note:** The document supports regular **Undo**. That's why e.g. commands like "delete effect", "delete rootcause",... are not asking whether you do really want to delete.
+
 ## Features
 
-- allows to create interactive fishbone diagrams
-- diagrams can be nested
-- supports restQuery from other extensions (currently dlt-logs)
+- allows to create interactive fishbone diagrams with
+  - multiple effects
+  - causes/categories to aid clustering root causes
+  - root causes that
+    - can be checked/unchecked or marked as failing
+    - can have a background description
+    - can have processing instructions.
+
+- diagrams can be nested (currently only via direct yaml file modification in the serialized .fba file)
+- supports restQuery from other extensions (currently dlt-logs and via direct yaml file modification)
 
 <!-- todo add image \!\[feature X\]\(images/feature-x.png\) -->
 
 ## Planned features
 
-- add/edit/delete effects/categories/root-causes via UI (currently only in YAML format in the serialized .fba files)
+- add nested diagrams via UI
+- add dlt-logs "badge", "apply filter" via UI
 - support a "template-workflow" (e.g. reset values, comments,... or clone)
-- add JIRA data provider support
+- JIRA data provider support via UI
 - add markdown support for descriptive fields like background, instructions, comments
 
 ## Known Issues
 
-- not ready yet, proof-of-concept status
+- first version, proof-of-concept status. Expect (and pls report) bugs.
 
 ## Contributions
 

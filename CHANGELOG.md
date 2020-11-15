@@ -2,6 +2,6 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
-## [Unreleased]
+## [0.1]
 
-- Initial release
+- Initial released version

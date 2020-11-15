@@ -26,6 +26,7 @@ import Grid from '@material-ui/core/Grid';
 //import MenuItem from '@material-ui/core/MenuItem';
 import InputDataProvided from './components/dataProvider';
 import FBACheckbox from './components/fbaCheckbox';
+import OnBlurInputBase from './components/onBlurInputBase';
 import { receivedResponse } from './util';
 import HomeIcon from '@material-ui/icons/Home';
 import { createMuiTheme } from '@material-ui/core/styles';
@@ -440,7 +441,7 @@ export default class App extends Component {
   }
 
   render() {
-    console.log(`App render () `); // state.data: ${JSON.stringify(this.state.data)}`);
+    console.log(`App render (title=${this.state.title}) `); // state.data: ${JSON.stringify(this.state.data)}`);
 
     // hack to get the css variables from vscode:
     const vscodeStyles = window.getComputedStyle(document.body);
@@ -522,19 +523,30 @@ export default class App extends Component {
       this.setState({ fbPath: curPath });
     }
 
-    const breadcrumbFragment = this.state.fbPath.map((path, index, arr) => {
-      const icon = index === -1 ? <HomeIcon /> : null; // disabled for now
-      if (index < arr.length - 1) {
-        return (
-          <Link component="button" key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
-            {icon}{path.title}
-          </Link>);
-      } else {
-        return (<Typography variant="subtitle1" key={index} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="inherit" >
-          {icon}{path.title}
-        </Typography>);
+    const handleChangeTitle = (value) => {
+      console.log(`handleChangeTitle value='${value}'`);
+      if (this.state.fbPath.length === 1) {
+        this.setAllStates({ title: value });
+      } else { // todo
+        return;
+        const curPath = this.state.fbPath; // 
+        curPath[this.state.fbPath.length - 1].title = value;
+        this.setState({ fbPath: curPath });
       }
-    });
+    }
+
+    const breadcrumbFragment = this.state.fbPath.map((path, index, arr) => {
+        const icon = index === -1 ? <HomeIcon /> : null; // disabled for now
+        if (index < arr.length - 1) {
+          return (
+            <Link component="button" key={`br_${index}_${path.title}`} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
+              {icon}{path.title}
+            </Link>);
+        } else {
+          console.log(`breadcrumbFragment(${this.state.title}) path.title =${path.title}}`);
+          return (<OnBlurInputBase value={path.title} key={`br_${index}_${path.title}`} name="title" onChange={(event) => handleChangeTitle(event.target.value)} />);
+        }
+      });
 
     // alignItems = vertical alignment
     // justify = horiz.
@@ -552,7 +564,7 @@ export default class App extends Component {
                 <Grid container spacing={2} justify="center">
                   <Grid item gutterBottom>
                     <Breadcrumbs>
-                      {breadcrumbFragment}
+                        {breadcrumbFragment}
                     </Breadcrumbs>
                   </Grid>
                 </Grid>

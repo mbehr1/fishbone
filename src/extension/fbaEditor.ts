@@ -430,7 +430,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             } else {
                 yamlObj = yaml.safeLoad(text); // JSON.parse(text);
             }
-            if (typeof yamlObj !== 'object') { return []; }
+            if (typeof yamlObj !== 'object') { return []; } // todo throw error
             console.log(`getFBDataFromDoc type=${yamlObj.type}, version=${yamlObj.version}`);
             console.log(`getFBDataFromDoc title=${yamlObj.title}`);
 
