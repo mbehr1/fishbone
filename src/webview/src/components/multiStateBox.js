@@ -5,10 +5,6 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
 
-// todo
-// - remove tooltip completely when undefined
-
-
 /**
  * MultiStateBox is like a Checkbox but with multiple states (useful if 3 or more)
  * It toggles between them or can be set.
@@ -60,14 +56,20 @@ export default function MultiStateBox(props) {
         props.onChange({ target: { type: 'MultiStateBox', value: nextValue, name: props.name, id: props.id } }, props.propsFieldName);
     }
 
-    return (
-        <Tooltip title={props.tooltip || 'no tooltip provided'}>
-            <FormControlLabel style={{ 'flex': 'auto', 'text-align': 'initial', 'align-self': 'initial' }} control={
+    const innerFragment = (
+        <FormControlLabel style={{ 'flex': 'auto', 'text-align': 'initial', 'align-self': 'initial' }} control={
                 <IconButton {...props} color={curColor} onClick={handleClick}>{curValuePair.icon}</IconButton>
             } label={props.label}
-            />
-        </Tooltip >
+        />
     );
+
+    if (props.tooltip) {
+        return (
+            <Tooltip title={props.tooltip}>{innerFragment}</Tooltip>
+        );
+    } else {
+        return (innerFragment);
+    }
 }
 
 MultiStateBox.propTypes = {
