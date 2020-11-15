@@ -220,10 +220,10 @@ export default function FBACheckbox(props) {
         <Container>
             <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || !props?.filter?.badge || badgeStatus < 2}>
                 <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={!props?.filter?.badge2 || badge2Status < 2}>
-                    <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon /> }, { value: 'ok', icon: <CheckBoxIcon /> }, { value: 'error', icon: <ErrorIcon />, color: 'secondary' }]} {...props} color="primary" />
+                    <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
                 </Badge>
             </Badge>
-            <IconButton aria-label="edit" onClick={handleClickOpen}>
+            <IconButton size="small" aria-label="edit" onClick={handleClickOpen}>
                 <EditIcon fontSize="small" color="primary" />
             </IconButton>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
