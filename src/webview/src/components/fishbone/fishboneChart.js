@@ -16,6 +16,8 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Input from '@material-ui/core/Input';
 import InputBase from '@material-ui/core/InputBase';
+import IconButton from '@material-ui/core/IconButton';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 
 // const INITIAL_STATE = {causes: undefined, effect: undefined, index: 0};
 
@@ -51,8 +53,9 @@ export default function FishboneChart(props) {
 
   const categories = effect.categories;
 
-  const initialCMState = { mouseX: null, mouseY: null };
-  const [contextMenuState, setContextMenuState] = React.useState(initialCMState);
+  // popup menu e.g. for category del,...
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState(null);
+  const [menuOpen, setMenuOpen] = React.useState(0);
 
   if (!categories) {
       console.log(`FishboneChart render no causes!`);
@@ -119,6 +122,17 @@ export default function FishboneChart(props) {
         return (<div className="rootCauses">{causes}</div>);
       }
 
+  const handleMenuClick = (event) => {
+    console.log(`handleMenuClick event.currentTarget.id=${event.currentTarget.id}`, event.currentTarget);
+    setMenuAnchorEl(event.currentTarget);
+    setMenuOpen(event.currentTarget.id);
+  };
+
+  const handleMenuClose = () => {
+    setMenuOpen(0)
+    //setMenuAnchorEl(null);
+  };
+
   const getHalfCategories = (categories, top) => {
         // we want them sorted from left to right always changing top/down, e.g.
         // 1 3 5
@@ -133,10 +147,20 @@ export default function FishboneChart(props) {
         const color = effectIndexColor;
         const halfCauses = halfArray.map((category, index) => {
           if (top) {
+            // todo optimize so that we do use only one menu instance?
             return (
               <div key={`top_causes_${category.name}_${index}`} className="causeContent">
                 <div className={`cause top ${color}_ ${color}Border`}>
                   <InputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
+                  {props.categoryContextMenu && props.categoryContextMenu.length > 0 &&
+                    <React.Fragment>
+                      <IconButton id={`top_cat_${index}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
+                      <Menu id={`top_cat_${index}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `top_cat_${index}`} onClose={handleMenuClose}>
+                        {props.categoryContextMenu.map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
+                      </Menu>
+                    </React.Fragment>
+                  }
+
                 </div>
                 <div className="causeAndLine">
                   {getRootCauses(category.rootCauses)}
@@ -153,6 +177,14 @@ export default function FishboneChart(props) {
                 </div>
                 <div className={`cause bottom ${color}_ ${color}Border`}>
                   <InputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
+                  {props.categoryContextMenu && props.categoryContextMenu.length > 0 &&
+                    <React.Fragment>
+                      <IconButton id={`bottom_cat_${index}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
+                      <Menu id={`bottom_cat_${index}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `bottom_cat_${index}`} onClose={handleMenuClose}>
+                        {props.categoryContextMenu.map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
+                      </Menu>
+                    </React.Fragment>
+                  }
                 </div>
               </div>
             );
@@ -172,32 +204,20 @@ export default function FishboneChart(props) {
         );
     };
 
-  // context menu support
-  const cmHandleClick = (event) => {
-    event.preventDefault();
-    setContextMenuState({
-      mouseX: event.clientX - 2,
-      mouseY: event.clientY - 4
-    });
-  };
-
-  const cmHandleClose = () => {
-    setContextMenuState(initialCMState);
-  };
-
     const getEffect = ()=> {
         const color = effectIndexColor;
         return (
-          <div className={`effect left ${color}_ ${color}Border`} onContextMenu={cmHandleClick} style={{ cursor: 'context-menu' }}>
+          <div className={`effect left ${color}_ ${color}Border`}>
             <div className={`effectValue`}>
               <Input multiline value={effect.name} style={{ width: 100 }} onChange={(event) => props.onChange(effect, event, 'name')} />
             </div>
             {props.effectContextMenu && props.effectContextMenu.length > 0 &&
-              <Menu keepMounted open={contextMenuState.mouseY != null} onClose={cmHandleClose} anchorReference="anchorPosition"
-                anchorPosition={contextMenuState.mouseY !== null && contextMenuState.mouseX !== null ? { top: contextMenuState.mouseY, left: contextMenuState.mouseX } : undefined}
-              >
-                {props.effectContextMenu.map((menuItem, index) => <MenuItem onClick={() => { cmHandleClose(); menuItem?.cb(props.data, effectIndex); }}>{menuItem.text}</MenuItem>)}
+              <React.Fragment>
+                <IconButton id={`effect_${effectIndex}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
+                <Menu anchorEl={menuAnchorEl} keepMounted open={menuOpen === `effect_${effectIndex}`} onClose={handleMenuClose}>
+                  {props.effectContextMenu.map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex); }}>{menuItem.text}</MenuItem>)}
               </Menu>
+            </React.Fragment>
             }
           </div>
         );

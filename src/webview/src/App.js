@@ -327,10 +327,46 @@ export default class App extends Component {
     });
   }
 
-  onAddCategory(data, effectIndex) {
-    console.log(`onAddEffect called. effectIndex = ${effectIndex} data=`, data);
-    data[effectIndex].categories.push({ name: `category ${data[effectIndex].categories.length + 1}`, rootCauses: [] });
+  /**
+   * Add a new root cause to category...
+   * @param {*} data 
+   * @param {*} effectIndex 
+   * @param {*} category category to add the root cause to
+   */
+  onAddRootCause(data, effectIndex, category) {
+    console.log(`onAddRootCause at category=${category?.name}`);
+    if (!category) return;
+    const rootCauses = category.rootCauses;
+    let insertIndex = rootCauses.length;
+    const newRootCause = {
+      type: 'react',
+      element: 'FBACheckbox',
+      props: { // todo do we need name?
+        label: `root cause ${rootCauses.length + 1}`,
+        value: null
+      }
+    };
+    rootCauses.splice(insertIndex, 0, newRootCause);
+    this.setAllStates();
+  }
 
+  /**
+   * add a category to the effect indexed by data[effectIndex]
+   * @param {*} data 
+   * @param {*} effectIndex 
+   * @param {*} category category used to select command, can be undefined!
+   * The new category will be added before this one if provided.
+   */
+  onAddCategory(data, effectIndex, category) {
+    console.log(`onAddCategory called. effectIndex = ${effectIndex} data=`, data);
+    console.log(`onAddCategory called. category=`, category);
+    let insertIndex = data[effectIndex].categories.length;
+    if (category) {
+      // find the category and delete it:
+      const catIdx = data[effectIndex].categories.findIndex((element) => element === category);
+      if (catIdx >= 0) { insertIndex = catIdx; }
+    }
+    data[effectIndex].categories.splice(insertIndex, 0, { name: `category ${data[effectIndex].categories.length + 1}`, rootCauses: [] });
     this.setAllStates();
   }
 
@@ -359,6 +395,21 @@ export default class App extends Component {
     this.setAllStates();
   }
 
+  onDeleteCategory(data, effectIndex, category) {
+    console.log(`onDeleteCategory called. effectIndex = ${effectIndex} data=`, data);
+    console.log(`onDeleteCategory called. category.name=${category.name}`, category);
+
+    // don't support deleting the last category:
+    if (data[effectIndex].categories.length <= 1) return;
+
+    // find the category and delete it:
+    const catIdx = data[effectIndex].categories.findIndex((element) => element === category);
+    if (catIdx >= 0) {
+      console.log(`found element ${catIdx} to delete:`, data[effectIndex].categories[catIdx]);
+      data[effectIndex].categories.splice(catIdx, 1);
+      this.setAllStates();
+    }
+  }
 
   render() {
     console.log(`App render () `); // state.data: ${JSON.stringify(this.state.data)}`);
@@ -486,6 +537,11 @@ export default class App extends Component {
                     { text: 'add category', cb: this.onAddCategory.bind(this) },
                     { text: 'add effect', cb: this.onAddEffect.bind(this) },
                     { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
+                  categoryContextMenu={[
+                    { text: 'add root-cause', cb: this.onAddRootCause.bind(this) },
+                    { text: 'add category', cb: this.onAddCategory.bind(this) },
+                    { text: 'delete category', cb: this.onDeleteCategory.bind(this) }
+                  ]}
                   data={this.getCurData(this.state.fbPath, this.state.data)}
                   effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
             </Paper>
