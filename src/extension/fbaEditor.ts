@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import { getNonce } from './util';
 import * as yaml from 'js-yaml';
 import * as request from 'request';
+import TelemetryReporter from 'vscode-extension-telemetry';
 
 interface AssetManifest {
     files: {
@@ -26,8 +27,8 @@ interface AssetManifest {
  */
 export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscode.Disposable {
 
-    public static register(context: vscode.ExtensionContext): vscode.Disposable {
-        const provider = new FBAEditorProvider(context);
+    public static register(context: vscode.ExtensionContext, reporter?: TelemetryReporter): vscode.Disposable {
+        const provider = new FBAEditorProvider(context, reporter);
         const providerRegistration = vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider);
         return providerRegistration;
     }
@@ -41,7 +42,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     private _checkExtensionsLastActive = 0;
 
     constructor(
-        private readonly context: vscode.ExtensionContext
+        private readonly context: vscode.ExtensionContext,
+        private readonly reporter?: TelemetryReporter
     ) {
         console.log(`FBAEditorProvider constructor() called...`);
 
@@ -119,6 +121,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         webviewPanel: vscode.WebviewPanel,
         _token: vscode.CancellationToken
     ): Promise<void> {
+
+        this.reporter?.sendTelemetryEvent("resolveCustomTextEditor", undefined, { 'lineCount': document.lineCount });
+
         // Setup initial content for the webview
         webviewPanel.webview.options = {
             enableScripts: true,
