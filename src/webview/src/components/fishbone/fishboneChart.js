@@ -97,6 +97,7 @@ export default function FishboneChart(props) {
       const effectIndexColor = getColor(effectIndex);
 
     const getRootCauses = (rootCauses) => {
+      // todo do we need unique keys everywhere?
         const causes = rootCauses.map((rootCause, index) => {
           let fragment = null;
           if (typeof rootCause === 'string') {
@@ -133,15 +134,17 @@ export default function FishboneChart(props) {
             }
           }
           // context menu?
+          // todo the key for Menu needs to be unique! add uuid?
           if (props.rootCauseContextMenu && props.rootCauseContextMenu.length>0) {
+            const keyFrag = typeof rootCause === 'string' ? `${rootCause}_${index}` : `${JSON.stringify(rootCause)}_${index}`;
             return (
               <div style={{height: '100%', width:'100%', display:'flex', 'align-items':'baseline'}}>
                 <div style={{position: 'relative', width:'95%'}}>
                 {fragment}
                 </div>
                 <div style={{position: 'relative', width:'5%'}}>
-                <IconButton id={`rcMore_${index}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
-                <Menu anchorEl={menuAnchorEl} keepMounted open={menuOpen === `rcMore_${index}`} onClose={handleMenuClose}>
+                  <IconButton id={`rcMore_${keyFrag}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
+                  <Menu key={`cm_root_causes_${keyFrag}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `rcMore_${keyFrag}`} onClose={handleMenuClose}>
                   {props.rootCauseContextMenu.map((menuItem, index) => <MenuItem onClick={(event) => { handleMenuClose(); menuItem?.cb(rootCause, event); }}>{menuItem.text}</MenuItem>)}
                 </Menu>
                 </div>
