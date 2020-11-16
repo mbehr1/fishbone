@@ -330,25 +330,48 @@ export default class App extends Component {
 
   /**
    * Add a new root cause to category...
+   * @param {*} type type to be added. 'FBACheckbox' or 'nested'
    * @param {*} data 
    * @param {*} effectIndex 
    * @param {*} category category to add the root cause to
    */
-  onAddRootCause(data, effectIndex, category) {
-    console.log(`onAddRootCause at category=${category?.name}`);
+  onAddRootCause(type, data, effectIndex, category) {
+    console.log(`onAddRootCause (type='${type}' at category=${category?.name}`);
     if (!category) return;
     const rootCauses = category.rootCauses;
     let insertIndex = rootCauses.length;
-    const newRootCause = {
-      type: 'react',
-      element: 'FBACheckbox',
-      props: { // todo do we need name?
-        label: `root cause ${rootCauses.length + 1}`,
-        value: null
-      }
-    };
+    let newRootCause = undefined;
+    switch (type) {
+      case 'FBACheckbox':
+        newRootCause = {
+          type: 'react',
+          element: 'FBACheckbox',
+          props: { // todo do we need name?
+            label: `root cause ${rootCauses.length + 1}`,
+            value: null
+          }
+        };
+        break;
+      case 'nested':
+        newRootCause = {
+          type: 'nested',
+          title: `nested fb ${rootCauses.length + 1}`,
+          data: [
+            {
+              name: 'effect 1',
+              categories: [{ name: 'category 1', rootCauses: [] }]
+            }
+          ]
+        };
+        break;
+      default:
+        console.warn(`onAddRootCause unknown type '${type}'`);
+        break;
+    }
+    if (newRootCause !== undefined) { 
     rootCauses.splice(insertIndex, 0, newRootCause);
     this.setAllStates();
+    }
   }
 
   /**
@@ -527,11 +550,28 @@ export default class App extends Component {
       console.log(`handleChangeTitle value='${value}'`);
       if (this.state.fbPath.length === 1) {
         this.setAllStates({ title: value });
-      } else { // todo
-        return;
-        const curPath = this.state.fbPath; // 
-        curPath[this.state.fbPath.length - 1].title = value;
-        this.setState({ fbPath: curPath });
+      } else {
+        // it's a bit tricky to get to the current title...
+        // its the title of the rootcause with .title property...
+        // so we do need to search for that root cause:
+        const parentData = this.getCurData(this.state.fbPath.slice(0, -1), this.state.data);
+        // search all effects and categories:
+        parentData.forEach((effect) => {
+          effect.categories.forEach((category) => {
+            category.rootCauses.forEach((rootCause) => {
+              if (typeof rootCause === 'object' && rootCause.type === 'nested' &&
+                rootCause.title === this.state.fbPath[this.state.fbPath.length - 1].title) {
+                console.log(`found nested fb. Cur title=${rootCause.title}`);
+                // modify the obj directly
+                rootCause.title = value;
+                // and update fbPath: (directly)
+                const fbPathTemp = this.state.fbPath;
+                fbPathTemp[this.state.fbPath.length - 1].title = value;
+                this.setAllStates({ fbPath: fbPathTemp }); // even though we did modify it directly...
+              }
+            });
+          });
+        });
       }
     }
 
@@ -578,7 +618,8 @@ export default class App extends Component {
                     { text: 'add effect', cb: this.onAddEffect.bind(this) },
                     { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
                   categoryContextMenu={[
-                    { text: 'add root-cause', cb: this.onAddRootCause.bind(this) },
+                    { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
+                    { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
                     { text: 'add category', cb: this.onAddCategory.bind(this) },
                     { text: 'delete category', cb: this.onDeleteCategory.bind(this) }
                   ]}

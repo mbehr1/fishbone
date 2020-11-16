@@ -25,14 +25,13 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
     - can have a background description
     - can have processing instructions.
 
-- diagrams can be nested (currently only via direct yaml file modification in the serialized .fba file)
+- diagrams can be nested via *add nested fishbone* command from the category ... menu.
 - supports restQuery from other extensions (currently dlt-logs and via direct yaml file modification)
 
 <!-- todo add image \!\[feature X\]\(images/feature-x.png\) -->
 
 ## Planned features
 
-- add nested diagrams via UI
 - add dlt-logs "badge", "apply filter" via UI
 - support a "template-workflow" (e.g. reset values, comments,... or clone)
 - JIRA data provider support via UI

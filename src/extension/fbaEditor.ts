@@ -2,7 +2,7 @@
  * copyright (c) 2020, Matthias Behr
  *
  * todo:
- * - add "new fishbone" command
+ * - fix "new fishbone" command not opening on windows...
  * - add nonce/random ids to each element? (for smaller edits/updates)
  */
 
