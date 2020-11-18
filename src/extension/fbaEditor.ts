@@ -8,9 +8,8 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { getNonce } from './util';
+import { getNonce, performHttpRequest } from './util';
 import * as yaml from 'js-yaml';
-import * as request from 'request';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 interface AssetManifest {
@@ -229,36 +228,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                     } else {
                                         const requestObj: any = typeof e.req.request === 'object' ? e.req.request : undefined;
                                         console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via request`);
-                                        const username = requestObj && requestObj.username ? requestObj.username : undefined;
-                                        const password = requestObj && requestObj.password ? requestObj.password : undefined;
-                                        const options: any = {
-                                            url: url,
-                                            headers: {
-                                                'User-Agent': 'mbehr1.fishbone', // todo add version
-                                                'Accept': 'application/json'
-                                            }
-                                        };
 
-                                        if (username && password) {
-                                            console.log(`request using username='${username}'`);
-                                            
-                                            options.auth = {
-                                                'username': username,
-                                                'password': password,
-                                                'sendImmediately': false
-                                            };
-                                        }
-                                        console.log(`request to url='${options.url}'`);
-                                        request.get(options, (err: any, res: any, body: any) => {
-                                            if (err) {
-                                                console.warn(`request failed with err=`, err);
-                                                webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`request failed with err=${err}`] }, id: e.id });
-                                            } else {
-                                                // todo statusCode...?
-                                                console.log(`request statsCode=${res.statusCode}`);
-                                                const json = JSON.parse(body);
-                                                webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id });
-                                            }
+                                        performHttpRequest(this.context.globalState, url, { 'Accept': 'application/json' }).then((result: any) => {
+                                            console.log(`request statsCode=${result.res.statusCode}`);
+                                            const json = JSON.parse(result.body);
+                                            webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id });
+                                        }).catch(err => {
+                                            webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`request failed with err=${err}`] }, id: e.id });
                                         });
                                     }
                                 }
