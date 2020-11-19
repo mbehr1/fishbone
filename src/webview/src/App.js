@@ -446,7 +446,8 @@ export default class App extends Component {
 
     // search for this rootcause: (could search in active effect only... but searching all)
     let found = false;
-    this.state.data.forEach(effect => {
+    const data = this.getCurData(this.state.fbPath, this.state.data)
+    data.forEach(effect => {
       effect.categories.forEach(category => {
         for (let i = 0; !found && i < category.rootCauses.length; ++i) {
           const rc2 = category.rootCauses[i];
