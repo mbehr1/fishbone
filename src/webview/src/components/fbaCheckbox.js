@@ -58,6 +58,7 @@ export default function FBACheckbox(props) {
 
 
     // values that can be changed: (comments and value (ok/error...))
+    //console.log(`FBACheckbox(props.label=${props.label}, props.comments=${props.comments})`);
     const [values, setValues] = React.useState({
         'comments': props.comments,
         'value': props.value,
@@ -65,6 +66,18 @@ export default function FBACheckbox(props) {
         'instructions': props.instructions,
         'backgroundDescription': props.backgroundDescription
     });
+    // update value on props change: (e.g. if the comp. is visible already)
+    useEffect(() => {
+        setValues({
+            'comments': props.comments,
+            'value': props.value,
+            'label': props.label,
+            'instructions': props.instructions,
+            'backgroundDescription': props.backgroundDescription
+        })
+    }, [props]);
+
+    //console.log(`FBACheckbox(values.label=${values.label}, values.comments=${values.comments})`);
 
     useEffect(() => {
         console.log(`FBACheckbox applyFilterBarOpen=${applyFilterBarOpen}`, props.filter);
