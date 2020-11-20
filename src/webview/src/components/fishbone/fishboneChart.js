@@ -59,9 +59,9 @@ export default function FishboneChart(props) {
   const [menuOpen, setMenuOpen] = React.useState(0);
 
   if (!categories) {
-      console.log(`FishboneChart render no causes!`);
-      return <React.Fragment></React.Fragment>;
-    }
+    console.log(`FishboneChart render no causes! props=`, props);
+    return <React.Fragment></React.Fragment>;
+  }
 
     const getColor = (index) => {
         const colors = [
@@ -108,7 +108,7 @@ export default function FishboneChart(props) {
                 fragment =  (<div key={`root_causes_${rootCause.title}_${index}`} >{React.createElement(FishboneElementUrl, rootCause, null)} </div>);
                 break;
               case 'react':
-                // console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
+                // console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, element=${rootCause.element} props=${JSON.stringify(rootCause.props)})`);
                 try {
                   //console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})elementsAdder=${props.reactInlineElementsAdder} `);
                   if (!rootCause.elementName && props.reactInlineElementsAdder) {
