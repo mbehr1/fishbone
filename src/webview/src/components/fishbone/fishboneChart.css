@@ -61,14 +61,14 @@
     flex: 3;
     font-size: 0.85em;
     font-weight: 400;
-    color: #4f4f4f;
+    color: var(--vscode-foreground);
     text-align: right;
     padding: 15px 0px;
 }
 
 .nestedRootCauses {
-    color: #4f4f4f;
-    background-color: inherit;
+    color: var(--vscode-textLink-foreground);
+    background-color: var(--vscode-editorWidget-background);
 }
 
 .legend {
@@ -83,7 +83,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #4f4f4f;
+    color: var(--vscode-descriptionForeground);
     font-size: 0.95em;
     font-weight: 400; 
     margin-bottom: 6px;   

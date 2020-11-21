@@ -19,7 +19,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 // import Filter1Icon from '@material-ui/icons/Filter1';
 import FishboneChart from './components/fishbone/fishboneChart'
-import { FormControlLabel, IconButton, Container, TextField, ThemeProvider } from '@material-ui/core';
+import { FormControlLabel, IconButton, Container, TextField, ThemeProvider, AppBar, Toolbar, Menu, MenuItem } from '@material-ui/core';
 // import { makeStyles } from '@material-ui/core/styles';
 import EditIcon from '@material-ui/icons/Edit';
 import Grid from '@material-ui/core/Grid';
@@ -29,6 +29,7 @@ import FBACheckbox from './components/fbaCheckbox';
 import OnBlurInputBase from './components/onBlurInputBase';
 import { receivedResponse } from './util';
 import HomeIcon from '@material-ui/icons/Home';
+import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import { createMuiTheme } from '@material-ui/core/styles';
 
 class MyCheckbox extends Component {
@@ -320,10 +321,19 @@ export default class App extends Component {
    * @param {*} newStateFragements fragment of the state that shall be updated
    */
   setAllStates(newStateFragements) {
+    //console.log(`setAllStates newStateFragments=`, newStateFragements);
+    //console.log(`setAllStates state=`, this.state);
+
     this.setState(newStateFragements || {}, () => {
-      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
+      const state = this.state;
+      //console.log(`setAllStates cb state=`, state);
+      this.props.vscode.setState({ data: state.data, title: state.title, attributes: state.attributes, fbPath: state.fbPath }); // todo shall we store any other data?
       // we parse and unparse to get rid of the elementName modifications... (functions)
       // storing all but the fbPath... (todo: why not?)
+      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(state.data)), title: state.title, attributes: state.attributes });
+    });
+  }
+
   /**
    * resets all entry values and comments
    * Does not reset the backgroundDesc, instructions.
@@ -543,6 +553,10 @@ export default class App extends Component {
         background: {
           paper: vscodeStyles.getPropertyValue('--vscode-editor-background'),
         },
+       // primary: {
+          //main: vscodeStyles.getPropertyValue('--vscode-menu-background'),
+          //contrastText: vscodeStyles.getPropertyValue('--vscode-menu-foreground'),
+        //},
         text: {
           primary: vscodeStyles.getPropertyValue('--vscode-foreground'),
           secondary: vscodeStyles.getPropertyValue('--vscode-descriptionForeground'),
@@ -654,24 +668,42 @@ export default class App extends Component {
         }
       });
 
+    const handleClick = (event) => {
+      this.setState({ anchorEl: event.currentTarget });
+    };
+
+    const handleClose = () => {
+      this.setState({ anchorEl: null });
+    }
+
+
     // alignItems = vertical alignment
     // justify = horiz.
     return (
       <div className="App">
         <ThemeProvider theme={theme}>
+          <AppBar position="static" color="transparent">
+            <Toolbar variant="dense">
+              <div style={{ flexGrow: 1 }}></div>
+              <Breadcrumbs>
+                {breadcrumbFragment}
+              </Breadcrumbs>
+              <div style={{ flexGrow: 1 }}></div>
+              <IconButton size="small" edge="end" color="inherit" onClick={handleClick}>
+                <MoreHorizIcon />
+              </IconButton>
+              <Menu id="appMoreMenu" anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={handleClose}>
+                <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(); }}>reset all entries</MenuItem>
+              </Menu>
+            </Toolbar>
+          </AppBar>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Paper>
-            </Paper>
-          </Grid>
-          <Grid item xs={12}>
-            <Paper>
+              <Paper>
               <div>
                 <Grid container spacing={2} justify="center">
                   <Grid item gutterBottom>
-                    <Breadcrumbs>
-                        {breadcrumbFragment}
-                    </Breadcrumbs>
+
                   </Grid>
                 </Grid>
                 </div>
