@@ -324,8 +324,73 @@ export default class App extends Component {
       this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: this.state.fbPath }); // todo shall we store any other data?
       // we parse and unparse to get rid of the elementName modifications... (functions)
       // storing all but the fbPath... (todo: why not?)
-      this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(this.state.data)), title: this.state.title, attributes: this.state.attributes });
+  /**
+   * resets all entry values and comments
+   * Does not reset the backgroundDesc, instructions.
+   * It's intended to reset single analyis settings.
+   * Resets all effects and all nested fishbones starting
+   * from the root one.
+   * Resets attributes as well.
+   */
+  onResetAllEntries() {
+    console.log(`onResetAllEntries called`);
+    //const data = this.getCurData(this.state.fbPath, this.state.data)
+
+    const resetData = (data) => {
+      data.forEach(effect => {
+        console.log(`effect.name=${effect.name}`);
+        effect.categories.forEach(category => {
+          for (let i = 0; i < category.rootCauses.length; ++i) {
+            const rc = category.rootCauses[i];
+            if (typeof rc === 'object') {
+              if ('props' in rc) {
+                const props = rc.props;
+                const newProps = { ...props };
+                if ('checked' in props) { newProps['checked'] = null; rc.props = newProps; }
+                if ('value' in props) { newProps['value'] = null; rc.props = newProps; }
+                if ('comments' in props) { newProps['comments'] = null; rc.props = newProps; }
+                console.log(`reset rc.props=${JSON.stringify(rc.props)}`);
+                category.rootCauses.splice(i, 1, { ...rc }); // create a new obj.
+              }
+              if (rc.type === 'nested') {
+                resetData(rc.data);
+              }
+            }
+          }
+        });
+      });
+    };
+    resetData(this.state.data);
+    // if data is not the state.date :
+    // now we have to make data a new object... to trigger a redraw of this object...
+    // it's a problem as data (except for the top level fb not a direct shallow member of state)
+    // todo find a better solution...
+    // seems its not needed as any state updates (even without changes?) retrigger a render incl. 
+    // subcomponents. (see memo to avoid that). This might change in the future...
+    /*
+    if (false && data !== this.state.data) {
+      const parData = this.getCurData(this.state.fbPath.slice(0, -1), this.state.data);
+      // now we need to find the rootcause:
+      parData.forEach(effect => {
+        effect.categories.forEach(category => {
+          category.rootCauses.forEach(rc => {
+            if (typeof rc === 'object' && rc.type === 'nested' && rc.data === data) {
+              console.log(`found rootCause to update rc.title=${rc.title}`);
+              rc.data = [...data.map(effect => { return { ...effect }; })];
+            }
+          });
+        });
+      });
+    } */
+
+    // reset attributes:
+    this.state.attributes.forEach((attribute) => {
+      const attrName = Object.keys(attribute)[0];
+      const attrObj = attribute[attrName];
+      if ('value' in attrObj) { attrObj['value'] = null; }
     });
+
+    this.setAllStates();
   }
 
   /**
@@ -669,7 +734,7 @@ export default class App extends Component {
     }
 
     // if type == datetime-local we do need to convert the values:
-    if (type === 'datetime-local' && attrValue.length > 0) {
+    if (type === 'datetime-local' && attrValue?.length > 0) {
       const tempVal = new Date(attrValue);
       const date = new Date((tempVal.valueOf() - this.timeZoneOffsetInMs));
       attrValue = date.toISOString().slice(0, 19);
