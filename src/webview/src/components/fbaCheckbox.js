@@ -23,14 +23,14 @@ import Badge from '@material-ui/core/Badge';
 import MuiAlert from '@material-ui/lab/Alert';
 import { Snackbar, TextField } from '@material-ui/core';
 import MultiStateBox from './multiStateBox';
-import { triggerRestQuery } from './../util';
+import { triggerRestQuery, triggerRestQueryDetails } from './../util';
 
+import DataProviderEditDialog from './dataProviderEditDialog';
 
 // import Grid from '@material-ui/core/Grid';
 // import Autocomplete from '@material-ui/lab/Autocomplete';
 // import CircularProgress from '@material-ui/core/CircularProgress';
 // import { sendAndReceiveMsg } from '../util';
-import jp from 'jsonpath'
 
 // todo
 //  - use Chips instead of texts (allowing always to set the <DoneIcon />?)
@@ -56,16 +56,12 @@ export default function FBACheckbox(props) {
     const [badge2Counter, setBadge2Counter] = React.useState(0);
     const [badge2Status, setBadge2Status] = React.useState(0); // 0 not queried yet, 1 = pending, 2 = done badgeCounter set!
 
+    // DataProviderEditDialog handling
+    const [dpEditOpen, setDpEditOpen] = React.useState(false);
 
     // values that can be changed: (comments and value (ok/error...))
     //console.log(`FBACheckbox(props.label=${props.label}, props.comments=${props.comments})`);
-    const [values, setValues] = React.useState({
-        'comments': props.comments,
-        'value': props.value,
-        'label': props.label,
-        'instructions': props.instructions,
-        'backgroundDescription': props.backgroundDescription
-    });
+    const [values, setValues] = React.useState({});
     // update value on props change: (e.g. if the comp. is visible already)
     useEffect(() => {
         setValues({
@@ -73,7 +69,10 @@ export default function FBACheckbox(props) {
             'value': props.value,
             'label': props.label,
             'instructions': props.instructions,
-            'backgroundDescription': props.backgroundDescription
+            'backgroundDescription': props.backgroundDescription,
+            'badge': props.badge || props?.filter?.badge,
+            'badge2': props.badge2 || props?.filter?.badge2,
+            'filter': props.filter
         })
     }, [props]);
 
@@ -99,75 +98,52 @@ export default function FBACheckbox(props) {
 
     // effect for badge processing:
     useEffect(() => {
-        console.log(`FBACheckbox effect for badge processing called (badgeStatus=${badgeStatus}, filter.badge=${JSON.stringify(props?.filter?.badge)})`);
-        if (!badgeStatus && props?.filter?.badge?.source) {
+        console.log(`FBACheckbox effect for badge processing called (badgeStatus=${badgeStatus}, badgeCounter='${badgeCounter}' badge=${JSON.stringify(values.badge)})`);
+        if (!badgeStatus && values.badge?.source) {
             const fetchdata = async () => {
                 try {
                     setBadgeStatus(1);
-                    const res = await triggerRestQuery(props.filter.badge.source);
-                    console.log(`FBACheckbox effect for badge processing got res '${JSON.stringify(res)}'`);
-                    // do we have a jsonPath?
-                    if (props.filter.badge.jsonPath) {
-                        const data = jp.query(res.data, props.filter.badge.jsonPath);
-                        console.log(`jsonPath('${props.filter.badge.jsonPath}') returned '${JSON.stringify(data)}' size==${Array.isArray(data) ? data.length : 0}`);
-                        setBadgeCounter(Array.isArray(data) ? data.length : 0);
-                    } else {
-                        // todo...?
-                        setBadgeCounter(0);
+                    const res = await triggerRestQueryDetails(values.badge);
+                    if ('result' in res) {
+                        setBadgeCounter(res.result);
+                        setBadgeStatus(2);
                     }
-
-                    setBadgeStatus(2);
                 } catch (e) {
                     console.warn(`FBACheckbox effect for badge processing got error '${e}'`);
                 }
             };
             fetchdata();
         }
-    }, [badgeStatus, props?.filter?.badge]); // todo and attribute status ecu/lifecycle... (to determine...)
+    }, [badgeStatus, badgeCounter, values.badge]); // todo and attribute status ecu/lifecycle... (to determine...)
 
     // effect for badge2 processing:
     useEffect(() => {
-        console.log(`FBACheckbox effect for badge2 processing called (badgeStatus=${badge2Status}, filter.badge=${JSON.stringify(props?.filter?.badge2)})`);
-        if (!badge2Status && props?.filter?.badge2?.source) {
+        console.log(`FBACheckbox effect for badge2 processing called (badge2Status=${badge2Status}, badge2Counter='${badge2Counter}' badge2=${JSON.stringify(values.badge2)})`);
+        if (!badge2Status && values.badge2?.source) {
             const fetchdata = async () => {
                 try {
                     setBadgeStatus(1);
-                    const res = await triggerRestQuery(props.filter.badge2.source);
-                    console.log(`FBACheckbox effect for badge2 processing got res '${JSON.stringify(res)}'`);
-                    // do we have a jsonPath?
-                    if (props.filter.badge2.jsonPath) {
-                        const data = jp.query(res, props.filter.badge2.jsonPath); // todo... .data?
-                        console.log(`jsonPath('${props.filter.badge2.jsonPath}') returned '${JSON.stringify(data)}' size==${Array.isArray(data) ? data.length : 0}`);
-
-                        // determine the data:
-                        // if its an array and the one and only array element is a string -> use as string
-                        // if its an array -> use nr of array elements
-                        // its a string -> use as string
-                        let counterValue = undefined;
-                        if (Array.isArray(data)) {
-                            if (data.length === 1 && typeof (data[0]) === 'string') { counterValue = data[0] } else {
-                                counterValue = data.length;
-                            }
-                        } else {
-                            if (typeof data === 'string') { counterValue = data; } else { counterValue = 0; }
-                        }
-
-                        setBadge2Counter(counterValue); // todo same logic for badge(1)
-                    } else {
-                        // todo...?
+                    const res = await triggerRestQueryDetails(values.badge2);
+                    if ('result' in res) {
+                        setBadge2Counter(res.result);
+                        setBadge2Status(2);
+                    } else { 
+                        setBadge2Counter(0);
                     }
-                    setBadge2Status(2);
+
                 } catch (e) {
                     console.warn(`FBACheckbox effect for badge2 processing got error '${e}'`);
                 }
             };
             fetchdata();
         }
-    }, [badge2Status, props?.filter?.badge2]); // todo and attribute status ecu/lifecycle... (to determine...)
+    }, [badge2Status, badge2Counter, values.badge2]); // todo and attribute status ecu/lifecycle... (to determine...)
 
 
     const handleValueChanges = e => {
+        console.log(`handleValueChanges e=`, e);
         const { name, value } = e.target;
+        console.log(`handleValueChanges name=${name} value=`, value);
         setValues({ ...values, [name]: value })
     }
 
@@ -194,7 +170,11 @@ export default function FBACheckbox(props) {
             (newValues.value !== props.value) ||
             (newValues.label !== props.label) ||
             (newValues.backgroundDescription !== props.backgroundDescription) ||
-            (newValues.instructions !== props.instructions)) {
+            (newValues.instructions !== props.instructions) ||
+            (newValues.badge !== props.badge) ||
+            (newValues.badge2 !== props.badge2) ||
+            (newValues.filter !== props.filter)
+        ) {
             props.onChange({ target: { type: 'textfield', values: newValues } });
         }
     };
@@ -251,8 +231,8 @@ export default function FBACheckbox(props) {
         <Container>
             <Grid container spacing={1}>
                 <Grid item flex>
-            <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || !props?.filter?.badge || badgeStatus < 2}>
-                <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={!props?.filter?.badge2 || badge2Status < 2}>
+                    <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || badgeStatus < 2}>
+                        <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={badge2Status < 2}>
                     <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
                 </Badge>
             </Badge>
@@ -265,7 +245,12 @@ export default function FBACheckbox(props) {
             </Grid>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
                 <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>
-                    <Input id={'input-label'} name='label' value={values.label} onChange={handleValueChanges} ></Input></DialogTitle>
+                    <Input id={'input-label'} name='label' value={values.label} onChange={handleValueChanges} ></Input>
+                    <IconButton size="small" onClick={() => setDpEditOpen(true)}>
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                    <DataProviderEditDialog data={values.badge || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'badge', value: newValue } })} open={dpEditOpen} onClose={() => { console.log(`dpEditOpen onClose`); setDpEditOpen(false); }} />
+                </DialogTitle>
                 <DialogContent>
                     {backgroundFragments}
                     {instructionsFragment}

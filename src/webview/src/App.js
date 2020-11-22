@@ -2,6 +2,10 @@
  * copyright (c) 2020, Matthias Behr
  * 
  * todo list:
+ * - add/edit attributes via UI
+ * - add/edit filter via UI
+ * - add/edit badges via UI
+ * - add lifecycle selection
  * - rethink "react" class support (function as string parsed to js?)
  * 
  * - use webpack (or something else) for proper react "app" bundling/generation incl. debugging support
