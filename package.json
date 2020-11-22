@@ -2,7 +2,7 @@
 	"name": "fishbone",
 	"displayName": "fishbone",
 	"description": "Create interactive fishbone diagrams",
-	"version": "0.3.0",
+	"version": "0.4.0",
 	"license": "CC-BY-NC-SA-4.0",
 	"publisher": "mbehr1",
 	"author": {
@@ -21,6 +21,8 @@
 		"vscode": "^1.50.0"
 	},
 	"categories": [
+		"Visualization",
+		"Data Science",
 		"Other"
 	],
 	"activationEvents": [

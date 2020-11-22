@@ -14,11 +14,10 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import Checkbox from '@material-ui/core/Checkbox';
 import Badge from '@material-ui/core/Badge';
 
-import { triggerRestQueryDetails } from './../util';
+import { triggerRestQueryDetails, objectShallowEq } from './../util';
 
 /* todos
-- parse current filter settings into "selected filters"
-- on load all filters check whether they are already existing
+- add manual filter entry
 - support apply mode
 - disallow esc to close?
 */
@@ -31,6 +30,33 @@ function intersection(a, b) {
     return a.filter((value) => b.indexOf(value) !== -1);
 }
 
+function filterFromObj(obj) {
+    return {
+        name: `${obj.type === 0 ? '+' : '-'}${JSON.stringify({ ...obj, type: undefined })}`,
+        value: JSON.stringify(obj)
+    }
+}
+
+function parseFilters(request) {
+    // parse a request string expecting the form:
+    // ext:mbehr1.dlt-logs/get/.../filters?query=[]
+    const indexOfQ = request?.indexOf('?query=[');
+    const queryFilters = [];
+    if (indexOfQ > 0) {
+        const queryArray = request.slice(indexOfQ + 7);
+        const qArrObj = JSON.parse(queryArray);
+        console.log(`parseFilters got from '${queryArray}:'`, qArrObj);
+        if (Array.isArray(qArrObj)) {
+            qArrObj.forEach((arrObj) => {
+                const newFilter = filterFromObj(arrObj);
+                queryFilters.push(newFilter);
+            });
+        }
+    }
+    return queryFilters;
+}
+
+
 /**
  * open a modal dialog to define DLT filter settings
  * @param {*} props (open, onChange, onClose)
@@ -41,14 +67,8 @@ export default function DLTFilterAssistantDialog(props) {
 
     const [dataSource, setDataSource] = React.useState();
 
-    useEffect(() => {
-        setDataSource(props.dataSource);
-    }, [props.dataSource]);
-    console.log(`DLTFilterAssistantDialog dataSource=${dataSource}`);
-
-
-    const [filters, setFilters] = React.useState([
-        {
+    const [filters, setFilters] = React.useState([]);
+        /* {
             name: "delete all temporary filters",
             value: 'delete={"fishbone":"temp"}'
         },
@@ -56,13 +76,23 @@ export default function DLTFilterAssistantDialog(props) {
             name: "disable all view filters",
             value: 'disableAll=view'
         }
-    ]);
+    ]);*/
 
     const [checked, setChecked] = React.useState([]);
     const [left, setLeft] = React.useState([]);
-    const [right, setRight] = React.useState([0, 1]);
+    const [right, setRight] = React.useState([]);
     const leftChecked = intersection(checked, left);
     const rightChecked = intersection(checked, right);
+
+    useEffect(() => {
+        setDataSource(props.dataSource);
+        // parse filters:
+        const queryFilters = parseFilters(props.dataSource);
+        setFilters(queryFilters);
+        setLeft(queryFilters.map((filter, index) => index));
+    }, [props.dataSource]);
+    console.log(`DLTFilterAssistantDialog dataSource=${dataSource}`);
+
 
     // preview all available filters with the list from opened dlt doc:
     const [loadAllFilters, setLoadAllFilters] = useState(0);
@@ -79,6 +109,7 @@ export default function DLTFilterAssistantDialog(props) {
                             const newFilters = [...filters];
                             const newLeft = [...left];
                             const newRight = [...right];
+                            const newChecked = [...checked];
                             res.result.forEach((filter) => {
                                 if (filter.type === 'filter') {
                                     const attr = filter.attributes;
@@ -86,10 +117,14 @@ export default function DLTFilterAssistantDialog(props) {
                                         if (!(attr?.atLoadTime)) { // ignore load time ones
                                             const enabled = attr?.enabled ? true : false;
                                             const newAttrs = { ...attr, configs: undefined, id: undefined, enabled: undefined }
-                                            newFilters.push({ name: `${newAttrs.type === 0 ? '+' : '-'}${JSON.stringify({ ...newAttrs, type: undefined })}`, value: JSON.stringify(newAttrs) });
-                                            if (enabled) {
-                                                newLeft.push(newFilters.length - 1);
-                                            } else {
+                                            const newFilter = filterFromObj(newAttrs);
+                                            // does it exist already?
+                                            const curIdx = filters.findIndex(filter => objectShallowEq(newFilter, filter));
+                                            if (curIdx < 0) {
+                                                newFilters.push(newFilter);
+                                                if (enabled) {
+                                                    newChecked.push(newFilters.length - 1);
+                                                }
                                                 newRight.push(newFilters.length - 1);
                                             }
                                         }
@@ -99,6 +134,7 @@ export default function DLTFilterAssistantDialog(props) {
                             setFilters(newFilters);
                             setLeft(newLeft);
                             setRight(newRight);
+                            setChecked(newChecked);
                         }
                         setLoadAllFilters(2); // done
                     }
@@ -108,7 +144,7 @@ export default function DLTFilterAssistantDialog(props) {
             };
             fetchdata();
         }
-    }, [props.open, loadAllFilters, filters, left, right]);
+    }, [props.open, loadAllFilters, filters, left, right, checked]);
 
 
     useEffect(() => {
@@ -205,7 +241,7 @@ export default function DLTFilterAssistantDialog(props) {
                                     inputProps={{ 'aria-labelledby': labelId }}
                                 />
                             </ListItemIcon>
-                            <ListItemText id={labelId} primary={`${filters[value].name}`} />
+                            <ListItemText id={labelId} primary={`${filters[value]?.name}`} />
                         </ListItem>
                     );
                 })}

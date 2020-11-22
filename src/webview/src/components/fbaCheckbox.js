@@ -57,7 +57,7 @@ export default function FBACheckbox(props) {
     const [badge2Status, setBadge2Status] = React.useState(0); // 0 not queried yet, 1 = pending, 2 = done badgeCounter set!
 
     // DataProviderEditDialog handling
-    const [dpEditOpen, setDpEditOpen] = React.useState(false);
+    const [dpEditOpen, setDpEditOpen] = React.useState(0);
 
     // values that can be changed: (comments and value (ok/error...))
     //console.log(`FBACheckbox(props.label=${props.label}, props.comments=${props.comments})`);
@@ -122,7 +122,7 @@ export default function FBACheckbox(props) {
         if (!badge2Status && values.badge2?.source) {
             const fetchdata = async () => {
                 try {
-                    setBadgeStatus(1);
+                    setBadge2Status(1);
                     const res = await triggerRestQueryDetails(values.badge2);
                     if ('result' in res) {
                         setBadge2Counter(res.result);
@@ -246,10 +246,14 @@ export default function FBACheckbox(props) {
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
                 <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>
                     <Input id={'input-label'} name='label' value={values.label} onChange={handleValueChanges} ></Input>
-                    <IconButton size="small" onClick={() => setDpEditOpen(true)}>
-                        <EditIcon fontSize="small" />
-                    </IconButton>
-                    <DataProviderEditDialog data={values.badge || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'badge', value: newValue } })} open={dpEditOpen} onClose={() => { console.log(`dpEditOpen onClose`); setDpEditOpen(false); }} />
+                    <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={() => setDpEditOpen(1)}>
+                        upper left badge
+                    </Button>
+                    <DataProviderEditDialog data={values.badge || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'badge', value: newValue } })} open={dpEditOpen === 1} onClose={() => { setDpEditOpen(0); }} />
+                    <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={() => setDpEditOpen(2)}>
+                        lower right badge
+                    </Button>
+                    <DataProviderEditDialog data={values.badge2 || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'badge2', value: newValue } })} open={dpEditOpen === 2} onClose={() => { setDpEditOpen(0); }} />
                 </DialogTitle>
                 <DialogContent>
                     {backgroundFragments}

@@ -18,6 +18,7 @@ import DLTFilterAssistantDialog from './dltFilterAssistant';
 import { triggerRestQueryDetails } from './../util';
 
 /* todos
+- add appy filter edit
 - disallow esc to close?
 */
 
@@ -131,7 +132,12 @@ export default function DataProviderEditDialog(props) {
                             <Button variant="outlined" color="primary" onClick={() => setDltFilterAssistantOpen(true)}>
                                 Open DLT filter assistant...
                             </Button>
-                            <DLTFilterAssistantDialog dataSource={dataSource} onChange={(newValue) => setDataSource(newValue)} open={dltFilterAssistantOpen} onClose={() => setDltFilterAssistantOpen(false)} />
+                            <DLTFilterAssistantDialog
+                                dataSource={dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource : 'ext:mbehr1.dlt-logs/get/docs/0/filters?query=[]'}
+                                onChange={(newValue) => { setDataSource(newValue); if (!dataJsonPath?.length) { setDataJsonPath('$.data[*]') } }}
+                                open={dltFilterAssistantOpen}
+                                onClose={() => setDltFilterAssistantOpen(false)}
+                            />
                             <FormControl variant="outlined" fullWidth margin="normal">
                                 <InputLabel htmlFor="dataSourceInput">
                                     Enter rest query e.g. '/get/docs/0/filters?query=[...]'
