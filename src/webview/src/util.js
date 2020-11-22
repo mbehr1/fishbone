@@ -49,7 +49,7 @@ export function triggerRestQuery(requestStr, jsonPath) {
             console.log(`triggerRestQuery triggering ${JSON.stringify(requestStr)} via extension`);
             try {
                 sendAndReceiveMsg({ type: 'restQuery', request: requestStr }).then((res) => {
-                    console.log(`triggerRestQuery got response ${JSON.stringify(res)}`);
+                    console.log(`triggerRestQuery got response ${JSON.stringify(res).slice(0, 100)}`);
                     // check for res.error... and trigger reject then...
                     // if we have errors we reject:
                     if ('errors' in res && res.errors.length > 0) {
@@ -59,7 +59,7 @@ export function triggerRestQuery(requestStr, jsonPath) {
 
                     if (jsonPath) {
                         const data = jp.query(res.data, jsonPath);
-                        console.log(`jsonPath('${jsonPath}') returned '${JSON.stringify(data)}'`);
+                        console.log(`jsonPath('${jsonPath}') returned '${JSON.stringify(data).slice(0, 100)}'`);
                         resolve(data);
                     } else resolve(res);
                 }).catch(reject);
@@ -130,4 +130,27 @@ export async function triggerRestQueryDetails(dataSourceObj) {
         answer.error = e && e.errors && Array.isArray(e.errors) ? e.errors.join(' / ') : `unknown error:'${JSON.stringify(e)}'`;
     }
     return answer;
+}
+
+/**
+ * Compare to objects for shallow equity. I.e.
+ * same amount of keys and each key has the same value.
+ * Take care: if the key has an object as value the object
+ * is compared and not whether those objects have same keys...
+ * @param {*} object a 
+ * @param {*} object b
+ * @returns true is the objects are equal on first level 
+ */
+export function objectShallowEq(a, b) {
+    //console.log(`objectShallowEq comp `, a, b);
+    if (typeof a !== typeof b) return false;
+    const objAKeys = Object.keys(a);
+    if (objAKeys.length !== Object.keys(b).length) return false;
+    let eq = true;
+    for (let i = 0; eq && i < objAKeys.length; ++i) {
+        const key = objAKeys[i];
+        eq = a[key] === b[key];
+    }
+    // console.log(`objectShallowEq eq=${eq} `, a, b);
+    return eq;
 }
