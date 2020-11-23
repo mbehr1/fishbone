@@ -32,7 +32,7 @@ function intersection(a, b) {
 
 function filterFromObj(obj) {
     return {
-        name: `${obj.type === 0 ? '+' : '-'}${JSON.stringify({ ...obj, type: undefined })}`,
+        name: `${obj.type === 0 ? '+' : '-'}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined })}`,
         value: JSON.stringify(obj)
     }
 }
