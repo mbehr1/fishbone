@@ -18,7 +18,9 @@ import { triggerRestQueryDetails, objectShallowEq } from './../util';
 
 /* todos
 - add manual filter entry
-- support apply mode
+- finish support apply mode
+- cache apply query rests (e.g. only on button press)
+- add temporary marker for add=... filters
 - disallow esc to close?
 */
 
@@ -37,33 +39,66 @@ function filterFromObj(obj) {
     }
 }
 
-function parseFilters(request) {
-    // parse a request string expecting the form:
-    // ext:mbehr1.dlt-logs/get/.../filters?query=[]
-    const indexOfQ = request?.indexOf('?query=[');
-    const queryFilters = [];
-    if (indexOfQ > 0) {
-        const queryArray = request.slice(indexOfQ + 7);
-        const qArrObj = JSON.parse(queryArray);
-        console.log(`parseFilters got from '${queryArray}:'`, qArrObj);
-        if (Array.isArray(qArrObj)) {
-            qArrObj.forEach((arrObj) => {
-                const newFilter = filterFromObj(arrObj);
-                queryFilters.push(newFilter);
-            });
+function parseFilters(request, applyMode) {
+    if (!applyMode) {
+        // parse a request string expecting the form:
+        // ext:mbehr1.dlt-logs/get/.../filters?query=[]
+        const indexOfQ = request?.indexOf('?query=[');
+        const queryFilters = [];
+        if (indexOfQ > 0) {
+            const queryArray = request.slice(indexOfQ + 7);
+            const qArrObj = JSON.parse(queryArray);
+            console.log(`parseFilters got from '${queryArray}:'`, qArrObj);
+            if (Array.isArray(qArrObj)) {
+                qArrObj.forEach((arrObj) => {
+                    const newFilter = filterFromObj(arrObj);
+                    queryFilters.push(newFilter);
+                });
+            }
         }
+        return queryFilters;
+    } else {
+        const commandList = [];
+        // parse all params into sep. "filter commands like": 
+        // /get/...filters?delete={}&enableAll=view&add={}&add={}...
+        const indexOfQ = request?.indexOf('?');
+        if (indexOfQ > 0) {
+            const options = request.slice(indexOfQ + 1);
+            const optionArr = options.split('&');
+            for (const commandStr of optionArr) {
+                const eqIdx = commandStr.indexOf('=');
+                const command = commandStr.slice(0, eqIdx);
+                const commandParams = commandStr.slice(eqIdx + 1);
+                switch (command) {
+                    case 'enableAll':
+                    case 'disableAll':
+                        commandList.push({ name: commandStr, value: commandStr });
+                        break;
+                    case 'add':
+                        commandList.push(filterFromObj(JSON.parse(commandParams)));
+                        break;
+                    case 'delete':
+                        commandList.push({ name: commandStr, value: commandStr });
+                        break;
+                    default:
+                        commandList.push({ name: `unknown '${command}'`, value: commandStr });
+                        break;
+                }
+
+            }
+        }
+        return commandList;
     }
-    return queryFilters;
 }
 
 
 /**
  * open a modal dialog to define DLT filter settings
- * @param {*} props (open, onChange, onClose)
+ * @param {*} props (open, onChange, onClose, applyMode)
  */
 export default function DLTFilterAssistantDialog(props) {
 
-    console.log(`DLTFilterAssistantDialog(open=${props.open})`);
+    console.log(`DLTFilterAssistantDialog(open=${props.open}, applyMode=${props.applyMode})`);
 
     const [dataSource, setDataSource] = React.useState();
 
@@ -87,12 +122,11 @@ export default function DLTFilterAssistantDialog(props) {
     useEffect(() => {
         setDataSource(props.dataSource);
         // parse filters:
-        const queryFilters = parseFilters(props.dataSource);
-        setFilters(queryFilters);
-        setLeft(queryFilters.map((filter, index) => index));
-    }, [props.dataSource]);
+        const parsedFilters = parseFilters(props.dataSource, props.applyMode);
+        setFilters(parsedFilters);
+        setLeft(parsedFilters.map((filter, index) => index));
+    }, [props.dataSource, props.applyMode]);
     console.log(`DLTFilterAssistantDialog dataSource=${dataSource}`);
-
 
     // preview all available filters with the list from opened dlt doc:
     const [loadAllFilters, setLoadAllFilters] = useState(0);
@@ -118,6 +152,10 @@ export default function DLTFilterAssistantDialog(props) {
                                             const enabled = attr?.enabled ? true : false;
                                             const newAttrs = { ...attr, configs: undefined, id: undefined, enabled: undefined }
                                             const newFilter = filterFromObj(newAttrs);
+                                            if (props.applyMode) {
+                                                console.log(`modifying value from '${newFilter.value}' to add...`);
+                                                newFilter.value = `add=${newFilter.value}`;
+                                            }
                                             // does it exist already?
                                             const curIdx = filters.findIndex(filter => objectShallowEq(newFilter, filter));
                                             if (curIdx < 0) {
@@ -144,26 +182,35 @@ export default function DLTFilterAssistantDialog(props) {
             };
             fetchdata();
         }
-    }, [props.open, loadAllFilters, filters, left, right, checked]);
+    }, [props.open, loadAllFilters, filters, left, right, checked, props.applyMode]);
 
 
     useEffect(() => {
         const updateDataSource = (list) => {
-            if (dataSource !== undefined) {
+            if (props.open && dataSource !== undefined) {
                 console.log(`updateDataSource(dataSource=${dataSource} list=`, list);
                 const indexOfQ = dataSource?.indexOf('?');
                 const uri = indexOfQ > 0 ? dataSource.slice(0, indexOfQ) : dataSource;
-                // calc params newly based on left ones:    
-                let params = list.map((idx) => { return `${filters[idx].value}`; }).join(',');
-                const newDataSource = uri + `?query=[${params}]`;
-                if (newDataSource !== dataSource) {
-                    setDataSource(newDataSource); // todo query or apply as parameter
-                    setPreviewBadgeStatus(0);
+                if (props.applyMode) {
+                    let commands = list.map((idx) => { return `${filters[idx].value}`; }).join('&');
+                    const newDataSource = uri + `?${commands}`;
+                    if (newDataSource !== dataSource) {
+                        setDataSource(newDataSource);
+                        setPreviewBadgeStatus(0);
+                    }
+                } else { // !applyMode -> queryMode
+                    // calc params newly based on left ones:    
+                    let params = list.map((idx) => { return `${filters[idx].value}`; }).join(',');
+                    const newDataSource = uri + `?query=[${params}]`;
+                    if (newDataSource !== dataSource) {
+                        setDataSource(newDataSource);
+                        setPreviewBadgeStatus(0);
+                    }
                 }
             }
         }
         updateDataSource(left);
-    }, [left, dataSource, filters]);
+    }, [props.open, left, dataSource, filters, props.applyMode]);
 
     // preview badge content
     const [previewBadgeContent, setPreviewBadgeContent] = React.useState();
@@ -326,5 +373,6 @@ DLTFilterAssistantDialog.propTypes = {
     dataSource: PropTypes.string.isRequired,
     open: PropTypes.bool.isRequired,
     onChange: PropTypes.func.isRequired, // otherwise the option won't be stored
-    onClose: PropTypes.func.isRequired
+    onClose: PropTypes.func.isRequired,
+    applyMode: PropTypes.bool // default to false
 };

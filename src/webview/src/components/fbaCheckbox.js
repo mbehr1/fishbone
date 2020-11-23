@@ -70,21 +70,22 @@ export default function FBACheckbox(props) {
             'label': props.label,
             'instructions': props.instructions,
             'backgroundDescription': props.backgroundDescription,
-            'badge': props.badge || props?.filter?.badge,
+            'badge': props.badge || props?.filter?.badge, // todo remove filter.badge and filter.badge2
             'badge2': props.badge2 || props?.filter?.badge2,
             'filter': props.filter
-        })
+        });
+        setApplyFilterBarOpen(false);
     }, [props]);
 
     //console.log(`FBACheckbox(values.label=${values.label}, values.comments=${values.comments})`);
 
     useEffect(() => {
         console.log(`FBACheckbox applyFilterBarOpen=${applyFilterBarOpen}`, props.filter);
-        if (applyFilterBarOpen && props.filter) {
+        if (applyFilterBarOpen && props?.filter?.source?.length > 0) {
             setApplyFilterResult('filter settings triggered...');
             const fetchdata = async () => {
                 try {
-                    const res = await triggerRestQuery(props.filter.apply);
+                    const res = await triggerRestQuery(props.filter.source);
                     console.log(`res=`, res);
                     setApplyFilterResult('filter settings applied');
                 } catch (e) {
@@ -214,9 +215,9 @@ export default function FBACheckbox(props) {
         setApplyFilterBarOpen(true)
     }
 
-    const applyFilterFragment = props.filter ? (
+    const applyFilterFragment = (props.filter &&
         <React.Fragment>
-            <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(props.filter.apply)}>
+        <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(props.filter)}>
                 Apply filter
             </Button>
             <Snackbar open={applyFilterBarOpen} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} onClose={handleFilterBarClose}>
@@ -225,7 +226,7 @@ export default function FBACheckbox(props) {
                 </Alert>
             </Snackbar>
         </React.Fragment>
-    ) : null; // todo or an "disable button to tease the feature!"
+    );
 
     return (
         <Container>
@@ -233,9 +234,9 @@ export default function FBACheckbox(props) {
                 <Grid item flex>
                     <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || badgeStatus < 2}>
                         <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={badge2Status < 2}>
-                    <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
-                </Badge>
-            </Badge>
+                            <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
+                        </Badge>
+                    </Badge>
                 </Grid>
                 <Grid style={{ 'max-width': 26 }}>
             <IconButton size="small" aria-label="edit" onClick={handleClickOpen}>
@@ -244,7 +245,7 @@ export default function FBACheckbox(props) {
                 </Grid>
             </Grid>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
-                <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>
+                <DialogTitle disableTypography id={'form-edit-' + props.name} align='left' gutterBottom>
                     <Input id={'input-label'} name='label' value={values.label} onChange={handleValueChanges} ></Input>
                     <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={() => setDpEditOpen(1)}>
                         upper left badge
@@ -254,6 +255,10 @@ export default function FBACheckbox(props) {
                         lower right badge
                     </Button>
                     <DataProviderEditDialog data={values.badge2 || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'badge2', value: newValue } })} open={dpEditOpen === 2} onClose={() => { setDpEditOpen(0); }} />
+                    <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={() => setDpEditOpen(3)}>
+                        apply filter
+                    </Button>
+                    <DataProviderEditDialog applyMode={true} data={values.filter || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'filter', value: newValue } })} open={dpEditOpen === 3} onClose={() => { setDpEditOpen(0); }} />
                 </DialogTitle>
                 <DialogContent>
                     {backgroundFragments}

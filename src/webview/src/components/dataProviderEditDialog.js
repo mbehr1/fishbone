@@ -38,9 +38,9 @@ export default function DataProviderEditDialog(props) {
     useEffect(() => {
         setDataSource(props.data?.source);
         setDataJsonPath(props.data?.jsonPath);
-        setDataConv(props.data?.conv ? props.data?.conv : 'length:')
+        setDataConv(props.data?.conv ? props.data?.conv : (props.applyMode ? undefined : 'length:'))
         setDataType(props.data?.source?.startsWith("ext:mbehr1.dlt-logs") ? "ext:dlt" : "http")
-    }, [props.data]);
+    }, [props.data, props.applyMode]);
 
     // DLTFilterAssistantDialog handling
     const [dltFilterAssistantOpen, setDltFilterAssistantOpen] = React.useState(false);
@@ -52,8 +52,8 @@ export default function DataProviderEditDialog(props) {
     const [previewQueryResult, setPreviewQueryResult] = React.useState('');
 
     useEffect(() => {
-        console.log(`FBACheckbox effect for badge processing called (badgeStatus=${previewBadgeStatus}, source=${JSON.stringify(dataSource)})`);
-        if (!previewBadgeStatus && dataSource) {
+        console.log(`DLTFilterAssistant effect for badge processing called (badgeStatus=${previewBadgeStatus}, source=${JSON.stringify(dataSource)})`);
+        if (props.open && !previewBadgeStatus && dataSource) {
             const fetchdata = async () => {
                 try {
                     setPreviewBadgeError('querying...');
@@ -76,7 +76,7 @@ export default function DataProviderEditDialog(props) {
             };
             fetchdata();
         }
-    }, [previewBadgeStatus, dataSource, dataJsonPath, dataConv, previewBadgeError]);
+    }, [props.open, previewBadgeStatus, dataSource, dataJsonPath, dataConv, previewBadgeError]);
 
     const handleClose = () => {
 
@@ -104,7 +104,7 @@ export default function DataProviderEditDialog(props) {
     return (
         <Dialog fullScreen open={props.open} onClose={handleClose}>
             <DialogTitle id="dpEditDialogTitle">
-                Edit badge and filter settings...
+                {props.applyMode ? 'Edit appy filter settings...' : 'Edit badge and filter settings...'}
                 <IconButton onClick={handleClose} color="primary" style={{ position: 'absolute', right: 1 }}>
                     <CloseIcon />
                 </IconButton>
@@ -133,6 +133,7 @@ export default function DataProviderEditDialog(props) {
                                 Open DLT filter assistant...
                             </Button>
                             <DLTFilterAssistantDialog
+                                applyMode={props.applyMode}
                                 dataSource={dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource : 'ext:mbehr1.dlt-logs/get/docs/0/filters?query=[]'}
                                 onChange={(newValue) => { setDataSource(newValue); if (!dataJsonPath?.length) { setDataJsonPath('$.data[*]') } }}
                                 open={dltFilterAssistantOpen}
@@ -140,13 +141,12 @@ export default function DataProviderEditDialog(props) {
                             />
                             <FormControl variant="outlined" fullWidth margin="normal">
                                 <InputLabel htmlFor="dataSourceInput">
-                                    Enter rest query e.g. '/get/docs/0/filters?query=[...]'
+                                    {props.applyMode ? "Enter rest query e.g. '/get/docs/0/filters?delete={...}&add={...}'" : "Enter rest query e.g. '/get/docs/0/filters?query=[...]"}
                                 </InputLabel>
                                 <OnBlurInputBase fullWidth id="dataSourceInput" value={dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource.slice(19) : dataSource} onChange={(event) => { setPreviewBadgeStatus(0); setDataSource('ext:mbehr1.dlt-logs' + event.target.value); }} />
                             </FormControl>
-
                         </Paper>}
-                        <Paper>
+                        {!props.applyMode && <Paper>
                             <FormControl variant='outlined' fullWidth margin="normal">
                                 <InputLabel htmlFor="dataJsonPathInput">enter a jsonPath expression to extract results e.g. $.state</InputLabel>
                                 <Input id="dataJsonPathInput"
@@ -154,12 +154,12 @@ export default function DataProviderEditDialog(props) {
                                     inputProps={{ value: dataJsonPath, onChange: (event) => { setPreviewBadgeStatus(0); setDataJsonPath(event.target.value); } }}
                                 />
                             </FormControl>
-                            <RadioGroup row value={dataConv.split(':')[0]} onChange={(event) => {
+                            <RadioGroup row value={dataConv?.split(':')[0]} onChange={(event) => {
                                 setPreviewBadgeStatus(0);
                                 switch (event.target.value) {
                                     case 'index': setDataConv('index:0'); break;
                                     case 'length': setDataConv('length:'); break;
-                                    case 'func': setDataConv('func:' + dataConv.slice(dataConv.indexOf(':') + 1)); break;
+                                    case 'func': setDataConv('func:' + dataConv?.slice(dataConv.indexOf(':') + 1)); break;
                                     default: break;
                                 }
                             }}>
@@ -172,13 +172,13 @@ export default function DataProviderEditDialog(props) {
                                     <TextField label="javascript function body e.g. '{return result.message;}'" multiline value={dataConv.slice(dataConv.indexOf(':') + 1)} onChange={(event) => { setDataConv('func:' + event.target.value); }} />
                                 </FormControl>
                             }
-                        </Paper>
+                        </Paper>}
                     </Grid>
                     <Grid item>
                         <Paper>
-                            <Badge badgeContent={previewBadgeContent} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999}>
+                            {!props.applyMode && <Badge badgeContent={previewBadgeContent} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999}>
                                 badge content='{JSON.stringify(previewBadgeContent)}'
-                            </Badge>
+                            </Badge>}
                             <div>
                                 badge error='{previewBadgeError}'
                                 badge status='{previewBadgeStatus}'
@@ -205,5 +205,6 @@ DataProviderEditDialog.propTypes = {
     data: PropTypes.object.isRequired,
     open: PropTypes.bool.isRequired,
     onChange: PropTypes.func.isRequired, // otherwise the option won't be stored
-    onClose: PropTypes.func.isRequired
+    onClose: PropTypes.func.isRequired,
+    applyMode: PropTypes.bool
 };

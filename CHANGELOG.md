@@ -2,6 +2,9 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.4.1]
+- draft version for applyFilter edit. still poc-alike/buggy...
+
 ## [0.4.0]
 - edit dialogs for badges incl. first DLT filter assistant
 - Appbar with "reset all entries" button
