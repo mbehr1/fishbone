@@ -12,6 +12,7 @@ export default function OnBlurInputBase(props) {
 
     return (
         <InputBase {...props} value={value} onChange={(event) => setValue(event.target.value)} onBlur={() => {
+            props?.onBlur(); 
             if (value !== props.value) { props.onChange({ target: { value: value } }); } // todo id,...?
         }} />
     );
