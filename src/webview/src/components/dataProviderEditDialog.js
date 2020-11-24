@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
-import { Button, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, TextField } from '@material-ui/core';
+import { Button, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, TextField, Typography } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
@@ -114,22 +114,24 @@ export default function DataProviderEditDialog(props) {
                     <Grid item>
                         <Paper>
                             <RadioGroup row value={dataType} onChange={(event) => setDataType(event.target.value)}>
-                                <FormControlLabel value="http" control={<Radio color="primary" />} label="https rest query" labelPlacement="top" />
-                                <FormControlLabel value="ext:dlt" control={<Radio color="primary" />} label="extension dlt-logs rest query" labelPlacement="top" />
+                                <FormControlLabel value="http" control={<Radio size="small" color="primary" />} label={<Typography variant="body1">https rest query</Typography>} />
+                                <FormControlLabel value="ext:dlt" control={<Radio size="small" color="primary" />} label="extension dlt-logs rest query" />
                             </RadioGroup>
                         </Paper>
                     </Grid>
                     <Grid item>
                         {dataType === 'http' && <Paper>
                             <FormControl variant="outlined" fullWidth margin="normal">
-                                <InputLabel htmlFor="dataSourceInput">
-                                    Enter https URL e.g. https://api.github.com/repos/mbehr1/fishbone/issues
+                                <InputLabel shrink color="primary" htmlFor="dataSourceInput">
+                                    Enter https URL
                                 </InputLabel>
-                                <OnBlurInputBase fullWidth id="dataSourceInput" value={dataSource} onChange={(event) => { setPreviewBadgeStatus(0); setDataSource(event.target.value); }} />
+                                <Input id="dataSourceInput" inputComponent={OnBlurInputBase}
+                                    placeholder="e.g. 'https://api.github.com/repos/mbehr1/fishbone/issues'"
+                                    inputProps={{ value: dataSource, onChange: (event) => { setPreviewBadgeStatus(0); setDataSource(event.target.value); } }} />
                             </FormControl>
                         </Paper>}
                         {dataType === 'ext:dlt' && <Paper>
-                            <Button variant="outlined" color="primary" onClick={() => setDltFilterAssistantOpen(true)}>
+                            <Button size="small" variant="outlined" color="primary" onClick={() => setDltFilterAssistantOpen(true)}>
                                 Open DLT filter assistant...
                             </Button>
                             <DLTFilterAssistantDialog
@@ -139,18 +141,20 @@ export default function DataProviderEditDialog(props) {
                                 open={dltFilterAssistantOpen}
                                 onClose={() => setDltFilterAssistantOpen(false)}
                             />
-                            <FormControl variant="outlined" fullWidth margin="normal">
-                                <InputLabel htmlFor="dataSourceInput">
-                                    {props.applyMode ? "Enter rest query e.g. '/get/docs/0/filters?delete={...}&add={...}'" : "Enter rest query e.g. '/get/docs/0/filters?query=[...]"}
+                            <FormControl variant="outlined" color="primary" fullWidth margin="normal">
+                                <InputLabel htmlFor="dataSourceInput" shrink color="primary">
+                                    "Enter dlt-logs rest query"
                                 </InputLabel>
-                                <OnBlurInputBase fullWidth id="dataSourceInput" value={dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource.slice(19) : dataSource} onChange={(event) => { setPreviewBadgeStatus(0); setDataSource('ext:mbehr1.dlt-logs' + event.target.value); }} />
+                                <Input id="dataSourceInput" inputComponent={OnBlurInputBase}
+                                    placeholder={props.applyMode ? "e.g. '/get/docs/0/filters?delete={...}&add={...}'" : "e.g. '/get/docs/0/filters?query=[...]'"}
+                                    inputProps={{ value: dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource.slice(19) : dataSource, onChange: (event) => { setPreviewBadgeStatus(0); setDataSource('ext:mbehr1.dlt-logs' + event.target.value); } }} />
                             </FormControl>
                         </Paper>}
                         {!props.applyMode && <Paper>
                             <FormControl variant='outlined' fullWidth margin="normal">
-                                <InputLabel htmlFor="dataJsonPathInput">enter a jsonPath expression to extract results e.g. $.state</InputLabel>
-                                <Input id="dataJsonPathInput"
-                                    inputComponent={OnBlurInputBase}
+                                <InputLabel shrink htmlFor="dataJsonPathInput">Enter jsonPath expression to extract results</InputLabel>
+                                <Input id="dataJsonPathInput" inputComponent={OnBlurInputBase}
+                                    placeholder="e.g. '$.state' or '$.data[*]"
                                     inputProps={{ value: dataJsonPath, onChange: (event) => { setPreviewBadgeStatus(0); setDataJsonPath(event.target.value); } }}
                                 />
                             </FormControl>
@@ -163,13 +167,13 @@ export default function DataProviderEditDialog(props) {
                                     default: break;
                                 }
                             }}>
-                                <FormControlLabel value="length" control={<Radio color="primary" />} label="number of array elements" labelPlacement="top" />
-                                <FormControlLabel value="index" control={<Radio color="primary" />} label="first element" labelPlacement="top" />
-                                <FormControlLabel value="func" control={<Radio color="primary" />} label="javascript function" labelPlacement="top" />
+                                <FormControlLabel value="length" control={<Radio size="small" color="primary" />} label="number of array elements" />
+                                <FormControlLabel value="index" control={<Radio size="small" color="primary" />} label="first element" />
+                                <FormControlLabel value="func" control={<Radio size="small" color="primary" />} label="javascript function" />
                             </RadioGroup>
                             {dataConv?.startsWith("func") &&
                                 <FormControl variant="outlined" fullWidth margin="normal">
-                                    <TextField label="javascript function body e.g. '{return result.message;}'" multiline value={dataConv.slice(dataConv.indexOf(':') + 1)} onChange={(event) => { setDataConv('func:' + event.target.value); }} />
+                                <TextField InputLabelProps={{ shrink: true }} label="javascript function body" placeholder="e.g. '{return result.message;}'" multiline value={dataConv.slice(dataConv.indexOf(':') + 1)} onChange={(event) => { setDataConv('func:' + event.target.value); }} />
                                 </FormControl>
                             }
                         </Paper>}
