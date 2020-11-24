@@ -20,7 +20,6 @@ import { triggerRestQueryDetails, objectShallowEq } from './../util';
 - add manual filter entry
 - finish support apply mode
 - cache apply query rests (e.g. only on button press)
-- add temporary marker for add=... filters
 - disallow esc to close?
 */
 
@@ -32,10 +31,11 @@ function intersection(a, b) {
     return a.filter((value) => b.indexOf(value) !== -1);
 }
 
-function filterFromObj(obj) {
+function filterFromObj(obj, applyMode) {
+
     return {
-        name: `${obj.type === 0 ? '+' : '-'}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined })}`,
-        value: JSON.stringify(obj)
+        name: `${obj.type === 0 ? '+' : '-'}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined, tmpFb: undefined })}`,
+        value: applyMode ? `add=${JSON.stringify({ ...obj, tmpFb: 1 })}` : JSON.stringify(obj)
     }
 }
 
@@ -75,7 +75,7 @@ function parseFilters(request, applyMode) {
                         commandList.push({ name: commandStr, value: commandStr });
                         break;
                     case 'add':
-                        commandList.push(filterFromObj(JSON.parse(commandParams)));
+                        commandList.push(filterFromObj(JSON.parse(commandParams), true));
                         break;
                     case 'delete':
                         commandList.push({ name: commandStr, value: commandStr });
@@ -116,8 +116,9 @@ export default function DLTFilterAssistantDialog(props) {
     const [checked, setChecked] = React.useState([]);
     const [left, setLeft] = React.useState([]);
     const [right, setRight] = React.useState([]);
-    const leftChecked = intersection(checked, left);
-    const rightChecked = intersection(checked, right);
+
+    // preview all available filters with the list from opened dlt doc:
+    const [loadAllFilters, setLoadAllFilters] = useState(0);
 
     useEffect(() => {
         setDataSource(props.dataSource);
@@ -125,11 +126,10 @@ export default function DLTFilterAssistantDialog(props) {
         const parsedFilters = parseFilters(props.dataSource, props.applyMode);
         setFilters(parsedFilters);
         setLeft(parsedFilters.map((filter, index) => index));
+        setRight([]);
+        setLoadAllFilters(0);
     }, [props.dataSource, props.applyMode]);
     console.log(`DLTFilterAssistantDialog dataSource=${dataSource}`);
-
-    // preview all available filters with the list from opened dlt doc:
-    const [loadAllFilters, setLoadAllFilters] = useState(0);
 
     useEffect(() => {
         if (props.open && !loadAllFilters) {
@@ -151,11 +151,7 @@ export default function DLTFilterAssistantDialog(props) {
                                         if (!(attr?.atLoadTime)) { // ignore load time ones
                                             const enabled = attr?.enabled ? true : false;
                                             const newAttrs = { ...attr, configs: undefined, id: undefined, enabled: undefined }
-                                            const newFilter = filterFromObj(newAttrs);
-                                            if (props.applyMode) {
-                                                console.log(`modifying value from '${newFilter.value}' to add...`);
-                                                newFilter.value = `add=${newFilter.value}`;
-                                            }
+                                            const newFilter = filterFromObj(newAttrs, props.applyMode);
                                             // does it exist already?
                                             const curIdx = filters.findIndex(filter => objectShallowEq(newFilter, filter));
                                             if (curIdx < 0) {
@@ -273,7 +269,7 @@ export default function DLTFilterAssistantDialog(props) {
     }
 
     const customList = (items) => (
-        <Paper style={{ width: 300, height: 350, overflow: 'auto' }}>
+        <Paper style={{ width: 400, height: 350, overflow: 'auto' }}>
             <List dense component="div" role="list">
                 {items.map((value) => {
                     const labelId = `transfer-list-item-${value}-label`;
@@ -297,7 +293,8 @@ export default function DLTFilterAssistantDialog(props) {
         </Paper>
     );
 
-
+    const leftChecked = intersection(checked, left);
+    const rightChecked = intersection(checked, right);
 
     const handleCheckedRight = () => {
         setRight(right.concat(leftChecked));
@@ -310,6 +307,11 @@ export default function DLTFilterAssistantDialog(props) {
         setRight(not(right, rightChecked));
         setChecked(not(checked, rightChecked));
     }
+
+    //console.log(`DltFilterAssistant render() filters=`, filters);
+    //console.log(`DltFilterAssistant render() checked=`, checked);
+    //console.log(`DltFilterAssistant render() left   =`, left);
+    //console.log(`DltFilterAssistant render() right  =`, right);
 
     return (
         <Dialog fullScreen open={props.open} onClose={handleClose}>

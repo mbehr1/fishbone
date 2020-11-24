@@ -2,6 +2,9 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.4.2]
+- first set of fixes for applyFilter.
+
 ## [0.4.1]
 - draft version for applyFilter edit. still poc-alike/buggy...
 

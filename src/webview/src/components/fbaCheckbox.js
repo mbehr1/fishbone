@@ -33,6 +33,8 @@ import DataProviderEditDialog from './dataProviderEditDialog';
 // import { sendAndReceiveMsg } from '../util';
 
 // todo
+// - make applyFilter a state to appear directly after editing.
+// - allow to remove applyFilter (e.g. by source.length=0)
 //  - use Chips instead of texts (allowing always to set the <DoneIcon />?)
 // - highlight current selection with a different text. e.g. "keep as OK", ...
 // - add id= to buttons...
