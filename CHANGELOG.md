@@ -2,6 +2,10 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.4.3]
+- first onBlur not called on leaving OnBlurInputBase
+- minor style changes for DataProviderEditDialog
+
 ## [0.4.2]
 - first set of fixes for applyFilter.
 
