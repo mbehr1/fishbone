@@ -49,7 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				const newFileUri = vscode.Uri.parse(`untitled:${uri.fsPath}`);
 				await vscode.workspace.openTextDocument(newFileUri);
-				vscode.commands.executeCommand('vscode.open', newFileUri);
+				vscode.commands.executeCommand('vscode.openWith', newFileUri, 'fishbone.fba');
 			}
 		});
 	}));
