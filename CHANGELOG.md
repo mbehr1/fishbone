@@ -2,6 +2,13 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.4.5]
+- fix change title not working after onBlur fix
+- add error message when changes could not be applied to the document.
+
+## [0.4.4]
+ - fix "New fishbone..." not working under Windows.
+
 ## [0.4.3]
 - first onBlur not called on leaving OnBlurInputBase
 - minor style changes for DataProviderEditDialog

@@ -198,9 +198,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
             switch (e.type) {
                 case 'update':
-                    FBAEditorProvider.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
-                        console.log(`updateTextDocument fulfilled=${fulfilled}`);
-                    }); // same as update webview
+                    try {
+                        FBAEditorProvider.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
+                            console.log(`updateTextDocument fulfilled=${fulfilled}`);
+                        }); // same as update webview
+                    } catch (e) {
+                        vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e}.`);
+                    }
                     break;
                 case 'sAr':
                     {  // vscode.postMessage({ type: 'sAr', req: req, id: reqId });
