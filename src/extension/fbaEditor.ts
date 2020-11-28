@@ -2,7 +2,7 @@
  * copyright (c) 2020, Matthias Behr
  *
  * todo:
- * - fix "new fishbone" command not opening on windows...
+ * change to "request-light" (npm i request-light) for https requests
  * - add nonce/random ids to each element? (for smaller edits/updates)
  */
 

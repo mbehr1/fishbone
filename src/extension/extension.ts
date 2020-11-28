@@ -1,4 +1,5 @@
 // todo add copyright, 2020 Matthias Behr
+// - inform webview of extension (restquery provider or document changes)
 
 import * as fs from 'fs';
 import * as vscode from 'vscode';
