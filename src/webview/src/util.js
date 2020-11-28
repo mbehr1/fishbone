@@ -75,10 +75,39 @@ export function triggerRestQuery(requestStr, jsonPath) {
  * @param {*} dataSourceObj object with source, jsonPath, conv
  * @returns object with error| result and restQueryResult, jsonPathResult, convResult
  */
-export async function triggerRestQueryDetails(dataSourceObj) {
+export async function triggerRestQueryDetails(dataSourceObj, attributes) {
     const answer = {};
     try {
-        const res = await triggerRestQuery(dataSourceObj.source);
+        const reqSource = dataSourceObj.source;
+        const requestStr = reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => {
+            //console.log(`replacing '${match}' '${p1}' at offset ${offset}`);
+            if (p1.startsWith("attributes.")) { // currently only attribute supported
+                let attrName = p1.slice(p1.indexOf('.') + 1);
+                let attrKey = undefined;
+                const dotPos = attrName.indexOf('.');
+                if (dotPos >= 1) {
+                    attrKey = attrName.slice(dotPos + 1);
+                    attrName = attrName.slice(0, dotPos);
+                }
+                console.log(`triggerRestQueryDetails attrName='${attrName}' attrKey='${attrKey}'`);
+                const attribute = attributes?.find(attr => Object.keys(attr)[0] === attrName);
+                if (attribute !== undefined) {
+                    const attrValue = attribute[attrName].value;
+                    const attrKeyValue = Array.isArray(attrValue) ? attrValue.map(e => attrKey ? e[attrKey] : e) : attrKey ? attrValue[attrKey] : attrValue;
+                    if (typeof attrKeyValue === 'string') {
+                        // console.log(`attrKeyValue='${attrKeyValue}'`, attribute);
+                        return `"${attrKeyValue}"`; // need to wrap the string in ""
+                    } else {
+                        // console.log(`attrKeyValue='${JSON.stringify(attrKeyValue)}'`, attribute);
+                        return JSON.stringify(attrKeyValue);
+                    }
+                }
+                return `<unknown attribute:${attrName}>`;
+            }
+            return `<unknown ${p1}>`;
+        });
+
+        const res = await triggerRestQuery(requestStr);
         answer.restQueryResult = res;
 
         let result = res;

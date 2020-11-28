@@ -13,7 +13,7 @@
  * 
  */
 
-import React, { Component } from 'react';
+import React, { Component, createContext } from 'react';
 import './App.css';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import Link from '@material-ui/core/Link';
@@ -35,6 +35,8 @@ import { receivedResponse } from './util';
 import HomeIcon from '@material-ui/icons/Home';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import { createMuiTheme } from '@material-ui/core/styles';
+
+export const AttributesContext = createContext();
 
 class MyCheckbox extends Component {
   render() {
@@ -684,6 +686,7 @@ export default class App extends Component {
     // alignItems = vertical alignment
     // justify = horiz.
     return (
+      <AttributesContext.Provider value={this.state.attributes}>
       <div className="App">
         <ThemeProvider theme={theme}>
           <AppBar position="static" color="transparent">
@@ -738,6 +741,7 @@ export default class App extends Component {
         </Grid>
         </ThemeProvider>
       </div>
+      </AttributesContext.Provider>
     );
   }
 

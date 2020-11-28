@@ -1,5 +1,5 @@
 // copyright (c) 2020, Matthias Behr
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -15,6 +15,7 @@ import Input from '@material-ui/core/Input';
 import OnBlurInputBase from './onBlurInputBase';
 import DLTFilterAssistantDialog from './dltFilterAssistant';
 
+import { AttributesContext } from './../App';
 import { triggerRestQueryDetails } from './../util';
 
 /* todos
@@ -29,6 +30,8 @@ import { triggerRestQueryDetails } from './../util';
 export default function DataProviderEditDialog(props) {
 
     console.log(`DataProviderEditDialog(open=${props.open})`);
+
+    const attributes = useContext(AttributesContext);
 
     const [dataType, setDataType] = React.useState();
     const [dataSource, setDataSource] = React.useState();
@@ -58,7 +61,7 @@ export default function DataProviderEditDialog(props) {
                 try {
                     setPreviewBadgeError('querying...');
                     setPreviewBadgeStatus(1);
-                    const res = await triggerRestQueryDetails({ source: dataSource, jsonPath: dataJsonPath, conv: dataConv });
+                    const res = await triggerRestQueryDetails({ source: dataSource, jsonPath: dataJsonPath, conv: dataConv }, attributes);
                     if ('error' in res) { setPreviewBadgeError(res.error); } else { setPreviewBadgeError(''); }
                     let details = '';
                     if ('jsonPathResult' in res) { details += 'jsonPath results:\n' + JSON.stringify(res.jsonPathResult, null, 2); }
@@ -76,7 +79,7 @@ export default function DataProviderEditDialog(props) {
             };
             fetchdata();
         }
-    }, [props.open, previewBadgeStatus, dataSource, dataJsonPath, dataConv, previewBadgeError]);
+    }, [props.open, previewBadgeStatus, dataSource, dataJsonPath, dataConv, previewBadgeError, attributes]);
 
     const handleClose = () => {
 

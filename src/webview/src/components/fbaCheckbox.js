@@ -1,5 +1,5 @@
 // copyright (c) 2020, Matthias Behr
-import React, { useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
@@ -25,6 +25,7 @@ import { Snackbar, TextField } from '@material-ui/core';
 import MultiStateBox from './multiStateBox';
 import { triggerRestQuery, triggerRestQueryDetails } from './../util';
 
+import { AttributesContext } from './../App';
 import DataProviderEditDialog from './dataProviderEditDialog';
 
 // import Grid from '@material-ui/core/Grid';
@@ -45,6 +46,9 @@ function Alert(props) {
 }
 
 export default function FBACheckbox(props) {
+
+    const attributes = useContext(AttributesContext);
+    //console.warn(`FBACheckbox attributes=${JSON.stringify(attributes, null, 2)}`);
 
     const [editOpen, setEditOpen] = React.useState(false);
     const [applyFilterBarOpen, setApplyFilterBarOpen] = React.useState(false);
@@ -99,6 +103,12 @@ export default function FBACheckbox(props) {
         }
     }, [applyFilterBarOpen, props.filter]);
 
+    // if attributes change we do reset the badgestatus
+    useEffect(() => {
+        setBadgeStatus(0);
+        setBadge2Status(0);
+    }, [attributes]);
+
     // effect for badge processing:
     useEffect(() => {
         console.log(`FBACheckbox effect for badge processing called (badgeStatus=${badgeStatus}, badgeCounter='${badgeCounter}' badge=${JSON.stringify(values.badge)})`);
@@ -106,7 +116,7 @@ export default function FBACheckbox(props) {
             const fetchdata = async () => {
                 try {
                     setBadgeStatus(1);
-                    const res = await triggerRestQueryDetails(values.badge);
+                    const res = await triggerRestQueryDetails(values.badge, attributes);
                     if ('result' in res) {
                         setBadgeCounter(res.result);
                         setBadgeStatus(2);
@@ -117,7 +127,7 @@ export default function FBACheckbox(props) {
             };
             fetchdata();
         }
-    }, [badgeStatus, badgeCounter, values.badge]); // todo and attribute status ecu/lifecycle... (to determine...)
+    }, [badgeStatus, badgeCounter, values.badge, attributes]); // todo and attribute status ecu/lifecycle... (to determine...)
 
     // effect for badge2 processing:
     useEffect(() => {
@@ -126,7 +136,7 @@ export default function FBACheckbox(props) {
             const fetchdata = async () => {
                 try {
                     setBadge2Status(1);
-                    const res = await triggerRestQueryDetails(values.badge2);
+                    const res = await triggerRestQueryDetails(values.badge2, attributes);
                     if ('result' in res) {
                         setBadge2Counter(res.result);
                         setBadge2Status(2);
@@ -140,7 +150,7 @@ export default function FBACheckbox(props) {
             };
             fetchdata();
         }
-    }, [badge2Status, badge2Counter, values.badge2]); // todo and attribute status ecu/lifecycle... (to determine...)
+    }, [badge2Status, badge2Counter, values.badge2, attributes]); // todo and attribute status ecu/lifecycle... (to determine...)
 
 
     const handleValueChanges = e => {

@@ -1,5 +1,5 @@
 // copyright (c) 2020, Matthias Behr
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -14,6 +14,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import Checkbox from '@material-ui/core/Checkbox';
 import Badge from '@material-ui/core/Badge';
 
+import { AttributesContext } from './../App';
 import { triggerRestQueryDetails, objectShallowEq } from './../util';
 
 /* todos
@@ -47,13 +48,17 @@ function parseFilters(request, applyMode) {
         const queryFilters = [];
         if (indexOfQ > 0) {
             const queryArray = request.slice(indexOfQ + 7);
-            const qArrObj = JSON.parse(queryArray);
-            console.log(`parseFilters got from '${queryArray}:'`, qArrObj);
-            if (Array.isArray(qArrObj)) {
-                qArrObj.forEach((arrObj) => {
-                    const newFilter = filterFromObj(arrObj);
-                    queryFilters.push(newFilter);
-                });
+            try {
+                const qArrObj = JSON.parse(queryArray);
+                console.log(`parseFilters got from '${queryArray}:'`, qArrObj);
+                if (Array.isArray(qArrObj)) {
+                    qArrObj.forEach((arrObj) => {
+                        const newFilter = filterFromObj(arrObj);
+                        queryFilters.push(newFilter);
+                    });
+                }
+            } catch (e) {
+                console.warn(`parseFilters parsing '${queryArray}' got e=${e}`);
             }
         }
         return queryFilters;
@@ -100,6 +105,8 @@ export default function DLTFilterAssistantDialog(props) {
 
     console.log(`DLTFilterAssistantDialog(open=${props.open}, applyMode=${props.applyMode})`);
 
+    const attributes = useContext(AttributesContext);
+
     const [dataSource, setDataSource] = React.useState();
 
     const [filters, setFilters] = React.useState([]);
@@ -136,7 +143,7 @@ export default function DLTFilterAssistantDialog(props) {
             const fetchdata = async () => {
                 try {
                     setLoadAllFilters(1); // running
-                    const res = await triggerRestQueryDetails({ source: 'ext:mbehr1.dlt-logs/get/docs/0/filters', jsonPath: '$.data[*]' });
+                    const res = await triggerRestQueryDetails({ source: 'ext:mbehr1.dlt-logs/get/docs/0/filters', jsonPath: '$.data[*]' }, attributes);
                     if ('result' in res) {
                         console.log(`got res.result=`, res.result);
                         if (Array.isArray(res.result)) {
@@ -178,7 +185,7 @@ export default function DLTFilterAssistantDialog(props) {
             };
             fetchdata();
         }
-    }, [props.open, loadAllFilters, filters, left, right, checked, props.applyMode]);
+    }, [props.open, loadAllFilters, filters, left, right, checked, props.applyMode, attributes]);
 
 
     useEffect(() => {
@@ -221,7 +228,7 @@ export default function DLTFilterAssistantDialog(props) {
                 try {
                     setPreviewBadgeError('querying...');
                     setPreviewBadgeStatus(1);
-                    const res = await triggerRestQueryDetails({ source: dataSource, jsonPath: '$.data[*]', conv: 'length:' });
+                    const res = await triggerRestQueryDetails({ source: dataSource, jsonPath: '$.data[*]', conv: 'length:' }, attributes);
                     if ('error' in res) { setPreviewBadgeError(res.error); } else { setPreviewBadgeError(''); }
                     let details = '';
                     if ('jsonPathResult' in res) { details += 'jsonPath results:\n' + JSON.stringify(res.jsonPathResult, null, 2); }
@@ -239,7 +246,7 @@ export default function DLTFilterAssistantDialog(props) {
             };
             fetchdata();
         }
-    }, [props.open, previewBadgeStatus, dataSource, previewBadgeError]);
+    }, [props.open, previewBadgeStatus, dataSource, previewBadgeError, attributes]);
 
     const handleClose = () => {
         props.onClose();
