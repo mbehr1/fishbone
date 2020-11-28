@@ -593,7 +593,7 @@ export default class App extends Component {
 
       const formStyle = {
         margin: 3,
-        width: '25ch',
+        width: '80ch',
         spacing: 2
       }
 
@@ -605,7 +605,7 @@ export default class App extends Component {
         <Paper>
           <Grid container spacing={2}>
             <Grid item sm={6} container>
-              <Typography align="left" gutterBottom variant="h5">
+              <Typography align="left" gutterBottom variant="h4">
                 Attributes:
                 </Typography>
               <form style={formStyle} noValidate autoComplete="off">
@@ -754,17 +754,19 @@ export default class App extends Component {
     let label = attrName;
 
     let useSelect = undefined;
+    let multiple = undefined;
 
     if (typeof attrObj === 'object') {
-      attrValue = attrObj.value;
-      if (attrObj.type) { type = attrObj.type; }
-      if (attrObj.label) { label = attrObj.label; }
-
-      // dataProvider?
-      if (attrObj.dataProvider) {
-        useSelect = true
-      }
-
+      if (attrObj !== null) {
+        attrValue = attrObj?.value;
+        if ('type' in attrObj) { type = attrObj.type; }
+        if ('label' in attrObj) { label = attrObj.label; }
+        if ('multiple' in attrObj) { multiple = attrObj.multiple; }
+        // dataProvider?
+        if (attrObj.dataProvider) {
+          useSelect = true
+        }
+      } else { attrValue = undefined; }
     } else {
       attrValue = attrObj; // assert string
     }
@@ -781,6 +783,7 @@ export default class App extends Component {
         <Grid item>
           <InputDataProvided
             id={`attribute_${attrName}`}
+            multiple={multiple}
             dataProvider={attrObj.dataProvider}
             attributes={this.state.attributes}
             label={label}
