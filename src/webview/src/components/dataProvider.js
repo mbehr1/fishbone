@@ -36,6 +36,7 @@ export default function InputDataProvided(props) {
         (async () => {
             // the source can contain attributes referred to as e.g. ${attribute.name} for a reference to "name" attribute 
             // need to replace them here
+            // todo use restQueryDetails here as well...
             const requestStr = props.dataProvider.source.replace(/\$\{(.*?)\}/g, (match, p1, offset) => {
                 //console.log(`replacing '${match}' '${p1}' at offset ${offset}`);
                 if (p1.startsWith("attributes.")) { // currently only attribute supported
@@ -43,7 +44,7 @@ export default function InputDataProvided(props) {
                     console.log(`attrName='${attrName}'`);
                     const attribute = props.attributes.find(attr => Object.keys(attr)[0] === attrName);
                     if (attribute !== undefined) {
-                        const attrValue = attribute[attrName].value;
+                        const attrValue = attribute[attrName].value || "";
                         console.log(`attrValue='${attrValue}'`, attribute);
                         return attrValue;
                     }

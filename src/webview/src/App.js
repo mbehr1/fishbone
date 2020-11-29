@@ -410,6 +410,51 @@ export default class App extends Component {
   }
 
   /**
+   * add dlt attributes for ecu and lifecycles
+   */
+  onAddDLTAttributes() {
+    console.log(`onAddDLTAttributes()`);
+    const newAttrs = [...this.state.attributes];
+    newAttrs.push({
+      ecu: {
+        label: "ECU identifier",
+        dataProvider: {
+          source: 'ext:mbehr1.dlt-logs/get/docs',
+          jsonPath: '$..attributes.ecus[*].attributes.name'
+        },
+        value: null
+      }
+    });
+
+    newAttrs.push({
+      sw: {
+        label: "SW name",
+        dataProvider: {
+          // eslint-disable-next-line no-template-curly-in-string
+          source: 'ext:mbehr1.dlt-logs/get/docs?ecu="${attributes.ecu}"',
+          jsonPath: '$..attributes.ecus[*].attributes.sws[*]'
+        },
+        value: null
+      }
+    });
+
+    newAttrs.push({
+      lifecycles: {
+        label: "Lifecycles",
+        multiple: true,
+        dataProvider: {
+          // eslint-disable-next-line no-template-curly-in-string
+          source: 'ext:mbehr1.dlt-logs/get/docs?ecu="${attributes.ecu}"',
+          jsonPath: '$..attributes.ecus[*].attributes.lifecycles[*].attributes'
+        },
+        value: null
+      }
+    });
+
+    this.setAllStates({ attributes: newAttrs })
+  }
+
+  /**
    * Add a new root cause to category...
    * @param {*} type type to be added. 'FBACheckbox' or 'nested'
    * @param {*} data 
@@ -686,7 +731,7 @@ export default class App extends Component {
     // alignItems = vertical alignment
     // justify = horiz.
     return (
-      <AttributesContext.Provider value={this.state.attributes}>
+      <AttributesContext.Provider value={this.state.attributes || []}>
       <div className="App">
         <ThemeProvider theme={theme}>
           <AppBar position="static" color="transparent">
@@ -700,7 +745,8 @@ export default class App extends Component {
                 <MoreHorizIcon />
               </IconButton>
               <Menu id="appMoreMenu" anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={handleClose}>
-                <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(); }}>reset all entries</MenuItem>
+                  <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(); }}>reset all entries</MenuItem>
+                  {this.state?.attributes?.findIndex(attr => attr.hasOwnProperty('lifecycles')) < 0 && <MenuItem onClick={() => { handleClose(); this.onAddDLTAttributes(); }}>add DLT attributes</MenuItem>}
               </Menu>
             </Toolbar>
           </AppBar>
