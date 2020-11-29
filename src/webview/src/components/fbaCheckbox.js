@@ -23,7 +23,7 @@ import Badge from '@material-ui/core/Badge';
 import MuiAlert from '@material-ui/lab/Alert';
 import { Snackbar, TextField } from '@material-ui/core';
 import MultiStateBox from './multiStateBox';
-import { triggerRestQuery, triggerRestQueryDetails } from './../util';
+import { triggerRestQueryDetails } from './../util';
 
 import { AttributesContext } from './../App';
 import DataProviderEditDialog from './dataProviderEditDialog';
@@ -91,7 +91,7 @@ export default function FBACheckbox(props) {
             setApplyFilterResult('filter settings triggered...');
             const fetchdata = async () => {
                 try {
-                    const res = await triggerRestQuery(props.filter.source);
+                    const res = await triggerRestQueryDetails({ source: props.filter.source }, attributes);
                     console.log(`res=`, res);
                     setApplyFilterResult('filter settings applied');
                 } catch (e) {
@@ -101,7 +101,7 @@ export default function FBACheckbox(props) {
             };
             fetchdata();
         }
-    }, [applyFilterBarOpen, props.filter]);
+    }, [applyFilterBarOpen, props.filter, attributes]);
 
     // if attributes change we do reset the badgestatus
     useEffect(() => {
