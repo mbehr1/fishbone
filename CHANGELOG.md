@@ -2,6 +2,10 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.5.0]
+- add DLT attributes: added an option in App bar to add DLT attributes (ecu, sw, lifecycles)
+- DLT filter assistant will add a lifecycle filter automatically if DLT attribute "lifecycles" is defined
+
 ## [0.4.5]
 - fix change title not working after onBlur fix
 - add error message when changes could not be applied to the document.
