@@ -120,11 +120,11 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
             const indexFirstC = dataConv.indexOf(':');
             const convType = dataConv.slice(0, indexFirstC);
             const convParam = dataConv.slice(indexFirstC + 1);
-            //console.log(`convType='${convType}' convParam='${convParam}'`);
+            // console.log(`convType='${convType}' convParam='${convParam}' result=`, result);
             switch (convType) {
                 case 'length':
                     answer.convResult = Array.isArray(result) ? result.length : 0;
-                    //console.log(`conv length from ${JSON.stringify(result)} returns '${answer.convResult}'`);
+                    // console.log(`conv length from ${JSON.stringify(result)} returns '${JSON.stringify(answer.convResult)}'`);
                     break;
                 case 'index':
                     answer.convResult = Array.isArray(result) && result.length > Number(convParam) ? (typeof result[Number(convParam)] === 'string' ? result[Number(convParam)] : JSON.stringify(result[Number(convParam)])) : 0;
@@ -154,6 +154,7 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
             }
         }
         answer.result = answer.convResult !== undefined ? answer.convResult : (answer.jsonPathResult !== undefined ? answer.jsonPathResult : answer.restQueryResult);
+        // console.log(`triggerRestQueryDetails got result='${JSON.stringify(answer.result)}'`);
     } catch (e) {
         console.log(`triggerRestQueryDetails got error=`, e);
         answer.error = e && e.errors && Array.isArray(e.errors) ? e.errors.join(' / ') : `unknown error:'${JSON.stringify(e)}'`;

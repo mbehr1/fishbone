@@ -2,6 +2,10 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.5.1]
+- dont show upper badge if value is 0 (number). If you want a 0 use '0' (string).
+- dont show lower badge if value is checked/error.
+
 ## [0.5.0]
 - add DLT attributes: added an option in App bar to add DLT attributes (ecu, sw, lifecycles)
 - DLT filter assistant will add a lifecycle filter automatically if DLT attribute "lifecycles" is defined

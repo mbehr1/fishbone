@@ -118,6 +118,7 @@ export default function FBACheckbox(props) {
                     setBadgeStatus(1);
                     const res = await triggerRestQueryDetails(values.badge, attributes);
                     if ('result' in res) {
+                        // console.warn(`FBACheckbox effect for badge processing got res.result '${JSON.stringify(res.result)}'`);
                         setBadgeCounter(res.result);
                         setBadgeStatus(2);
                     }
@@ -244,8 +245,8 @@ export default function FBACheckbox(props) {
         <Container>
             <Grid container spacing={1}>
                 <Grid item flex>
-                    <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || badgeStatus < 2}>
-                        <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={badge2Status < 2}>
+                    <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
+                        <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={props.value !== null || badge2Status < 2}>
                             <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
                         </Badge>
                     </Badge>
