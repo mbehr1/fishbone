@@ -5,10 +5,18 @@ import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import IconButton from '@material-ui/core/IconButton';
+import Divider from '@material-ui/core/Divider'
+import Typography from '@material-ui/core/Typography'
 import EditIcon from '@material-ui/icons/Edit';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+
 import ErrorIcon from '@material-ui/icons/Error';
 
 import Input from '@material-ui/core/Input';
@@ -17,7 +25,6 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import Button from '@material-ui/core/Button';
 import Badge from '@material-ui/core/Badge';
 import MuiAlert from '@material-ui/lab/Alert';
@@ -27,6 +34,9 @@ import { triggerRestQueryDetails } from './../util';
 
 import { AttributesContext } from './../App';
 import DataProviderEditDialog from './dataProviderEditDialog';
+import TextFieldEditDialog from './textFieldEditDialog';
+
+let toMarkdown = require("marked");
 
 // import Grid from '@material-ui/core/Grid';
 // import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -39,10 +49,17 @@ import DataProviderEditDialog from './dataProviderEditDialog';
 //  - use Chips instead of texts (allowing always to set the <DoneIcon />?)
 // - highlight current selection with a different text. e.g. "keep as OK", ...
 // - add id= to buttons...
-// - use e.g. react-markdown to support markdown for background, desc, comments
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
+function GetTextValue(property) {
+    if (property && property.textValue) {
+        return property.textValue;
+    }
+
+    return '';
 }
 
 export default function FBACheckbox(props) {
@@ -64,6 +81,9 @@ export default function FBACheckbox(props) {
 
     // DataProviderEditDialog handling
     const [dpEditOpen, setDpEditOpen] = React.useState(0);
+
+    // TextFieldEditDialog handling
+    const [textFieldExitOpen, setTestFieldEditOpen] = React.useState(0);
 
     // values that can be changed: (comments and value (ok/error...))
     //console.log(`FBACheckbox(props.label=${props.label}, props.comments=${props.comments})`);
@@ -202,23 +222,79 @@ export default function FBACheckbox(props) {
 
     const backgroundFragments = (
         <React.Fragment>
-            <DialogContentText paragraph>
-                <TextField name='backgroundDescription' onChange={handleValueChanges} margin="dense" id={'backgroundDescription-field-' + props.name}
-                    InputLabelProps={{ shrink: true, }} fullWidth multiline value={values.backgroundDescription}
-                    label='Background'
-                    placeholder='Please enter some background information on this root cause.' />
-            </DialogContentText>
+            <Divider variant="middle" />
+            <Accordion>
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls="panel1a-content"
+                    id="panel1a-header">
+                    <Typography gutterBottom variant="h5">Background</Typography>
+                    <IconButton size="small" aria-label="edit" onClick={() => setTestFieldEditOpen(1)} >
+                        <EditIcon fontSize="small" color="primary" />
+                    </IconButton>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <TextFieldEditDialog
+                        label='Background'
+                        placeholder='Please enter some background information on this root cause.'
+                        data={values.background || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'background', value: newValue } })} open={textFieldExitOpen === 1} onClose={() => { setTestFieldEditOpen(0); }}
+                    />
+                    <div dangerouslySetInnerHTML={{ __html: toMarkdown(GetTextValue(values.background)) }} />
+                    <Divider variant="middle" />
+                </AccordionDetails>
+            </Accordion>
         </React.Fragment>
     );
 
     const instructionsFragment = (
         <React.Fragment>
-            <DialogContentText paragraph>
-                <TextField name='instructions' onChange={handleValueChanges} margin="dense" id={'instructions-field-' + props.name}
-                    InputLabelProps={{ shrink: true, }} fullWidth multiline value={values.instructions}
-                    label='Instructions'
-                    placeholder='Please enter instructions here on how to check whether this root cause did occur.' />
-            </DialogContentText>
+            <Divider variant="middle" />
+            <Accordion>
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls="panel1a-content"
+                    id="panel1a-header">
+                    <Typography gutterBottom variant="h5">Instructions</Typography>
+                    <IconButton size="small" aria-label="edit" onClick={() => setTestFieldEditOpen(2)} >
+                        <EditIcon fontSize="small" color="primary" />
+                    </IconButton>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <TextFieldEditDialog
+                        label='Instructions'
+                        placeholder='Please enter instructions here on how to check whether this root cause did occur.'
+                        data={values.instructions || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'instructions', value: newValue } })} open={textFieldExitOpen === 2} onClose={() => { setTestFieldEditOpen(0); }}
+                    />
+                    <div dangerouslySetInnerHTML={{ __html: toMarkdown(GetTextValue(values.instructions)) }} />
+                    <Divider variant="middle" />
+                </AccordionDetails>
+            </Accordion>
+        </React.Fragment>
+    );
+
+    const processingCommentsFragment = (
+        <React.Fragment>
+            <Divider variant="middle" />
+            <Accordion>
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls="panel1a-content"
+                    id="panel1a-header">
+                    <Typography gutterBottom variant="h5">Comments</Typography>
+                    <IconButton size="small" aria-label="edit" onClick={() => setTestFieldEditOpen(3)} >
+                        <EditIcon fontSize="small" color="primary" />
+                    </IconButton>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <TextFieldEditDialog
+                        label='Processing comments'
+                        placeholder='Please enter some processing comments here.'
+                        data={values.comments || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'comments', value: newValue } })} open={textFieldExitOpen === 3} onClose={() => { setTestFieldEditOpen(0); }}
+                    />
+                    <div dangerouslySetInnerHTML={{ __html: toMarkdown(GetTextValue(values.instructions)) }} />
+                    <Divider variant="middle" />
+                </AccordionDetails>
+            </Accordion>
         </React.Fragment>
     );
 
@@ -230,7 +306,7 @@ export default function FBACheckbox(props) {
 
     const applyFilterFragment = (props.filter &&
         <React.Fragment>
-        <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(props.filter)}>
+            <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(props.filter)}>
                 Apply filter
             </Button>
             <Snackbar open={applyFilterBarOpen} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} onClose={handleFilterBarClose}>
@@ -252,9 +328,9 @@ export default function FBACheckbox(props) {
                     </Badge>
                 </Grid>
                 <Grid style={{ 'max-width': 26 }}>
-            <IconButton size="small" aria-label="edit" onClick={handleClickOpen}>
-                <EditIcon fontSize="small" color="primary" />
-            </IconButton>
+                    <IconButton size="small" aria-label="edit" onClick={handleClickOpen}>
+                        <EditIcon fontSize="small" color="primary" />
+                    </IconButton>
                 </Grid>
             </Grid>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
@@ -276,17 +352,7 @@ export default function FBACheckbox(props) {
                 <DialogContent>
                     {backgroundFragments}
                     {instructionsFragment}
-                    <TextField InputLabelProps={{ shrink: true, }}
-                        name='comments'
-                        placeholder='Please enter some processing comments here.'
-                        onChange={handleValueChanges}
-                        margin="dense"
-                        variant="outlined"
-                        id={'comments-field-' + props.name}
-                        label='Processing comments'
-                        fullWidth
-                        multiline
-                        value={values.comments} />
+                    {processingCommentsFragment}
                 </DialogContent>
                 <DialogActions>
                     {applyFilterFragment}
