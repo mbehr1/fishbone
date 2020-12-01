@@ -224,9 +224,8 @@ export default function FBACheckbox(props) {
     const backgroundFragments = (
         <React.Fragment>
             <Divider variant="middle" />
-            <Accordion>
+            <Accordion expanded={true}>
                 <AccordionSummary
-                    expanded={true}
                     expandIcon={<ExpandMoreIcon />}
                     id="background-textfield-header">
                     <Typography gutterBottom variant="h5">Background</Typography>
@@ -250,9 +249,8 @@ export default function FBACheckbox(props) {
     const instructionsFragment = (
         <React.Fragment>
             <Divider variant="middle" />
-            <Accordion>
+            <Accordion expanded={true}>
                 <AccordionSummary
-                    expanded={true}
                     expandIcon={<ExpandMoreIcon />}
                     id="instructions-textfield-header">
                     <Typography gutterBottom variant="h5">Instructions</Typography>
@@ -276,9 +274,8 @@ export default function FBACheckbox(props) {
     const processingCommentsFragment = (
         <React.Fragment>
             <Divider variant="middle" />
-            <Accordion>
+            <Accordion expanded={true}>
                 <AccordionSummary
-                    expanded={true}
                     expandIcon={<ExpandMoreIcon />}
                     id="background-textfield-header">
                     <Typography gutterBottom variant="h5">Comments</Typography>
