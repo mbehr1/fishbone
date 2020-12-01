@@ -20,7 +20,7 @@ export default function TextFieldEditDialog(props) {
     useEffect(() => {
         setDataTextValue(props.data?.textValue);
         setRenderFormat(props.data?.renderFormat);
-    }, [props.data], props.placeholder, props.label);
+    }, [props.data, props.placeholder, props.label]);
 
     const handleClose = () => {
 
@@ -61,12 +61,4 @@ export default function TextFieldEditDialog(props) {
             </DialogActions>
         </Dialog>
     );
-};
-
-TextFieldEditDialog.propTypes = {
-    data: PropTypes.object.isRequired,
-    open: PropTypes.bool.isRequired,
-    onChange: PropTypes.func.isRequired, // otherwise the option won't be stored
-    onClose: PropTypes.func.isRequired,
-    applyMode: PropTypes.bool
 };
