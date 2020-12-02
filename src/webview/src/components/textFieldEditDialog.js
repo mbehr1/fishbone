@@ -1,14 +1,11 @@
 // copyright (c) 2020, Matthias Behr
 import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import { Button, DialogContent, DialogTitle, IconButton, TextField } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
-
-
 
 /**
  * open a modal dialog to edit text field information
@@ -24,7 +21,7 @@ export default function TextFieldEditDialog(props) {
     useEffect(() => {
         setDataTextValue(props.data?.textValue);
         setMarkdownFormat(props.data?.markdownFormat);
-    }, [props.data, props.placeholder, props.label]);
+    }, [props.data]);
 
     const handleClose = () => {
 
@@ -37,7 +34,8 @@ export default function TextFieldEditDialog(props) {
 
     const handleSave = () => {
         console.log(`TextFieldEditDialog handleSave()`);
-        console.log(` testValue=${dataTextValue}`);
+        console.log(` textValue=${dataTextValue}`);
+        console.log(` markdownFormat=${markdownFormat}`);
 
         // if one differs from props.data call props.onChange
         if (typeof props.data === 'object') {
@@ -48,8 +46,6 @@ export default function TextFieldEditDialog(props) {
         }
         props.onClose();
     };
-
-
 
     return (
         <Dialog fullWidth={true} open={props.open} maxWidth='md' onClose={handleClose}>
