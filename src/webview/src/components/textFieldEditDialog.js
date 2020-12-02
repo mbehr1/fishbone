@@ -13,10 +13,10 @@ import Switch from '@material-ui/core/Switch'
  */
 export default function TextFieldEditDialog(props) {
 
-    console.log(`TextFieldEditDialog(open=${props.open})`);
+    console.log(`TextFieldEditDialog (open=${props.open})`);
 
-    const [dataTextValue, setDataTextValue] = React.useState();
-    const [markdownFormat, setMarkdownFormat] = React.useState();
+    const [dataTextValue, setDataTextValue] = React.useState(); // Contains the text that was entered into the text field
+    const [markdownFormat, setMarkdownFormat] = React.useState(); // 0 = not active normal text, 1 = active markdown format
 
     useEffect(() => {
         setDataTextValue(props.data?.textValue);
@@ -24,7 +24,6 @@ export default function TextFieldEditDialog(props) {
     }, [props.data]);
 
     const handleClose = () => {
-
         props.onClose();
     }
 
@@ -56,13 +55,13 @@ export default function TextFieldEditDialog(props) {
                 </IconButton>
             </DialogTitle>
             <DialogContent dividers>
-                <FormControlLabel
-                    control={<Switch checked={markdownFormat} onChange={toggleMarkdown} />}
-                    label="Markdown"
-                />
+                <FormControlLabel control={<Switch checked={markdownFormat} onChange={toggleMarkdown} />}
+                    label="Markdown">
+                </FormControlLabel>
                 <TextField name={props.label} margin="dense" id={'description-field-' + props.label}
                     InputLabelProps={{ shrink: true, }} fullWidth multiline value={dataTextValue} onChange={(event) => setDataTextValue(event.target.value)}
-                    placeholder={props.placeholder} />
+                    placeholder={props.placeholder} >
+                </TextField>
             </DialogContent>
             <DialogActions>
                 <Button autoFocus onClick={handleSave} color="primary">

@@ -50,18 +50,22 @@ const toMarkdown = require('marked');
 //  - use Chips instead of texts (allowing always to set the <DoneIcon />?)
 // - highlight current selection with a different text. e.g. "keep as OK", ...
 // - add id= to buttons...
+// - add tooltips 
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
 
+/**
+ * helper function to check and return the o.textValue attribute
+ */
 function GetTextValue(property) {
-    if (property && property.textValue) {
-        return property.textValue;
-    }
-    return '';
+    return property && property.textValue ? property.textValue : '';
 }
 
+/**
+ * helper function to check and return the o.markdownFormat state
+ */
 function GetMarkdownActive(property) {
     return property && property.markdownFormat ? true : false;
 }
@@ -176,7 +180,6 @@ export default function FBACheckbox(props) {
             fetchdata();
         }
     }, [badge2Status, badge2Counter, values.badge2, attributes]); // todo and attribute status ecu/lifecycle... (to determine...)
-
 
     const handleValueChanges = e => {
         console.log(`handleValueChanges e=`, e);
@@ -306,8 +309,6 @@ export default function FBACheckbox(props) {
             </Accordion>
         </React.Fragment>
     );
-
-    // todo add tooltip...
 
     const handleApplyFilter = (request) => {
         setApplyFilterBarOpen(true)
