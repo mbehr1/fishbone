@@ -84,7 +84,7 @@ export default function FBACheckbox(props) {
     const [dpEditOpen, setDpEditOpen] = React.useState(0);
 
     // TextFieldEditDialog handling
-    const [textFieldExitOpen, setTextFieldEditOpen] = React.useState(0);
+    const [textFieldEditOpen, setTextFieldEditOpen] = React.useState(0);
 
     // values that can be changed: (comments and value (ok/error...))
     //console.log(`FBACheckbox(props.label=${props.label}, props.comments=${props.comments})`);
@@ -237,7 +237,7 @@ export default function FBACheckbox(props) {
                     <TextFieldEditDialog
                         label='Background'
                         placeholder='Please enter some background information on this root cause.'
-                        data={values.background || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'background', value: newValue } })} open={textFieldExitOpen === 1} onClose={() => { setTextFieldEditOpen(0); }}
+                        data={values.background || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'background', value: newValue } })} open={textFieldEditOpen === 1} onClose={() => { setTextFieldEditOpen(0); }}
                     />
                     <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(GetTextValue(values.background))) }} />
                     <Divider variant="middle" />
@@ -262,7 +262,7 @@ export default function FBACheckbox(props) {
                     <TextFieldEditDialog
                         label='Instructions'
                         placeholder='Please enter instructions here on how to check whether this root cause did occur.'
-                        data={values.instructions || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'instructions', value: newValue } })} open={textFieldExitOpen === 2} onClose={() => { setTextFieldEditOpen(0); }}
+                        data={values.instructions || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'instructions', value: newValue } })} open={textFieldEditOpen === 2} onClose={() => { setTextFieldEditOpen(0); }}
                     />
                     <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(GetTextValue(values.instructions))) }} />
                     <Divider variant="middle" />
@@ -287,7 +287,7 @@ export default function FBACheckbox(props) {
                     <TextFieldEditDialog
                         label='Processing comments'
                         placeholder='Please enter some processing comments here.'
-                        data={values.comments || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'comments', value: newValue } })} open={textFieldExitOpen === 3} onClose={() => { setTextFieldEditOpen(0); }}
+                        data={values.comments || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'comments', value: newValue } })} open={textFieldEditOpen === 3} onClose={() => { setTextFieldEditOpen(0); }}
                     />
                     <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(GetTextValue(values.instructions))) }} />
                     <Divider variant="middle" />
