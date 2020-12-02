@@ -28,7 +28,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import Button from '@material-ui/core/Button';
 import Badge from '@material-ui/core/Badge';
 import MuiAlert from '@material-ui/lab/Alert';
-import { Snackbar, TextField } from '@material-ui/core';
+import { Snackbar } from '@material-ui/core';
 import MultiStateBox from './multiStateBox';
 import { triggerRestQueryDetails } from './../util';
 
@@ -59,8 +59,11 @@ function GetTextValue(property) {
     if (property && property.textValue) {
         return property.textValue;
     }
-
     return '';
+}
+
+function GetMarkdownActive(property) {
+    return property && property.markdownFormat ? true : false;
 }
 
 export default function FBACheckbox(props) {
@@ -221,15 +224,23 @@ export default function FBACheckbox(props) {
         setApplyFilterBarOpen(false);
     }
 
+    function RenderConditionText(props) {
+        const markdownActive = props.markdownActive;
+        if (markdownActive) {
+            return <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(props.text)) }} />;
+        }
+        return <Typography variant="body1" style={{ whiteSpace: 'pre-line' }} >{props.text}</Typography>;
+    }
+
     const backgroundFragments = (
         <React.Fragment>
             <Divider variant="middle" />
-            <Accordion expanded={true}>
+            <Accordion defaultExpanded >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
-                    id="background-textfield-header">
+                    id="backgroundDescription-textfield-header">
                     <Typography gutterBottom variant="h5">Background</Typography>
-                    <IconButton size="small" aria-label="edit" onClick={() => setTextFieldEditOpen(1)} >
+                    <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(1); }} >
                         <EditIcon fontSize="small" color="primary" />
                     </IconButton>
                 </AccordionSummary>
@@ -237,9 +248,9 @@ export default function FBACheckbox(props) {
                     <TextFieldEditDialog
                         label='Background'
                         placeholder='Please enter some background information on this root cause.'
-                        data={values.background || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'background', value: newValue } })} open={textFieldEditOpen === 1} onClose={() => { setTextFieldEditOpen(0); }}
+                        data={values.backgroundDescription || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'backgroundDescription', value: newValue } })} open={textFieldEditOpen === 1} onClose={() => { setTextFieldEditOpen(0); }}
                     />
-                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(GetTextValue(values.background))) }} />
+                    <RenderConditionText markdownActive={GetMarkdownActive(values.backgroundDescription)} text={GetTextValue(values.backgroundDescription)} />
                     <Divider variant="middle" />
                 </AccordionDetails>
             </Accordion>
@@ -249,12 +260,12 @@ export default function FBACheckbox(props) {
     const instructionsFragment = (
         <React.Fragment>
             <Divider variant="middle" />
-            <Accordion expanded={true}>
+            <Accordion defaultExpanded >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     id="instructions-textfield-header">
                     <Typography gutterBottom variant="h5">Instructions</Typography>
-                    <IconButton size="small" aria-label="edit" onClick={() => setTextFieldEditOpen(2)} >
+                    <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(2); }} >
                         <EditIcon fontSize="small" color="primary" />
                     </IconButton>
                 </AccordionSummary>
@@ -264,7 +275,7 @@ export default function FBACheckbox(props) {
                         placeholder='Please enter instructions here on how to check whether this root cause did occur.'
                         data={values.instructions || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'instructions', value: newValue } })} open={textFieldEditOpen === 2} onClose={() => { setTextFieldEditOpen(0); }}
                     />
-                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(GetTextValue(values.instructions))) }} />
+                    <RenderConditionText markdownActive={GetMarkdownActive(values.instructions)} text={GetTextValue(values.instructions)} />
                     <Divider variant="middle" />
                 </AccordionDetails>
             </Accordion>
@@ -274,12 +285,12 @@ export default function FBACheckbox(props) {
     const processingCommentsFragment = (
         <React.Fragment>
             <Divider variant="middle" />
-            <Accordion expanded={true}>
+            <Accordion defaultExpanded >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     id="background-textfield-header">
                     <Typography gutterBottom variant="h5">Comments</Typography>
-                    <IconButton size="small" aria-label="edit" onClick={() => setTextFieldEditOpen(3)} >
+                    <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(3); }} >
                         <EditIcon fontSize="small" color="primary" />
                     </IconButton>
                 </AccordionSummary>
@@ -289,7 +300,7 @@ export default function FBACheckbox(props) {
                         placeholder='Please enter some processing comments here.'
                         data={values.comments || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'comments', value: newValue } })} open={textFieldEditOpen === 3} onClose={() => { setTextFieldEditOpen(0); }}
                     />
-                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(GetTextValue(values.instructions))) }} />
+                    <RenderConditionText markdownActive={GetMarkdownActive(values.comments)} text={GetTextValue(values.comments)} />
                     <Divider variant="middle" />
                 </AccordionDetails>
             </Accordion>
