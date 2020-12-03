@@ -1,6 +1,8 @@
 # Change Log
 
 All notable changes to the "fishbone" extension will be documented in this file.
+## [0.6.0]
+- added markdown support for comments, background description and instructions.
 
 ## [0.5.1]
 - dont show upper badge if value is 0 (number). If you want a 0 use '0' (string).

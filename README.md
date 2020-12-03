@@ -32,14 +32,19 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
 
 ## Planned features
 
-- add dlt-logs "badge", "apply filter" via UI
+- summaries/reports esp. for big (deeply nested) fishbones
 - support a "template-workflow" (e.g. reset values, comments,... or clone)
-- JIRA data provider support via UI
-- add markdown support for descriptive fields like background, instructions, comments
+- support pcap filters similar to dlt log filters
+- support text document filters working with smart-logs
 
 ## Known Issues
 
 - first version, proof-of-concept status. Expect (and pls report) bugs.
+
+## Contributors
+
+Thanks a lot to :
+- [Florian Fuerst](https://github.com/flfue) for the first PR providing markdown support!
 
 ## Contributions
 
