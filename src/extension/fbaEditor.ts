@@ -384,7 +384,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         // our document is a yaml document. 
         // representing a single object with properties:
         //  type <- expect "fba"
-        //  version <- 0.2
+        //  version <- 0.3
         //  fishbone : array of effect objects
 
         try {
@@ -392,7 +392,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             if (text.trim().length === 0) {
                 yamlObj = {
                     type: 'fba',
-                    version: '0.2',
+                    version: '0.3',
                     title: '<no title>',
                     fishbone: [
                         {
@@ -437,6 +437,32 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 });
             };
 
+            // convert data from prev. version 0.2
+            const convertv02TextFields = (effects: any) => {
+                return effects.map((effectsPair: any) => {
+                    return effectsPair.categories.map((category: any) => {
+                        return category.rootCauses.map((rootCause: any) => {
+
+                            // Recursively updating nested fishbone diagrams below
+                            if (typeof rootCause === 'object' && rootCause.type === 'nested') {
+                                convertv02TextFields(rootCause.data);
+                            }
+
+                            // Updating fields
+                            if (rootCause.props && typeof rootCause.props.instructions === 'string') {
+                                rootCause.props.instructions = { textValue: rootCause.props.instructions };
+                            }
+                            if (rootCause.props && typeof rootCause.props.backgroundDescription === 'string') {
+                                rootCause.props.backgroundDescription = { textValue: rootCause.props.backgroundDescription };
+                            }
+                            if (rootCause.props && typeof rootCause.props.comments === 'string') {
+                                rootCause.props.comments = { textValue: rootCause.props.comments };
+                            }
+                        });
+                    });
+                });
+            };
+
             // convert from prev. known formats:
             if (yamlObj?.version === '0.1') {
                 // the effects storage has changed:
@@ -449,8 +475,20 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 FBAEditorProvider.updateTextDocument(doc, yamlObj);
             }
 
+            // convert from prev. known formats:
+            if (yamlObj?.version === '0.2') {
+                // the instruction, background and comment field has changed from string to object:
+                if (yamlObj.fishbone) {
+                    convertv02TextFields(yamlObj.fishbone);
+                    console.log(`fbv03=`, yamlObj.fishbone);
+                }
+                yamlObj.version = '0.3';
+                FBAEditorProvider.updateTextDocument(doc, yamlObj);
+            }
+
+
             // we're not forwards compatible. 
-            if (yamlObj?.version !== '0.2') {
+            if (yamlObj?.version !== '0.3') {
                 const msg = `Fishbone: The document uses unknown version ${yamlObj?.version}. Please check whether an extension update is available.`;
                 throw new Error(msg);
             }
