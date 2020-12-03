@@ -442,6 +442,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 return effects.map((effectsPair: any) => {
                     return effectsPair.categories.map((category: any) => {
                         return category.rootCauses.map((rootCause: any) => {
+
+                            // Recursively updating nested fishbone diagrams below
+                            if (typeof rootCause === 'object' && rootCause.type === 'nested') {
+                                convertv02TextFields(rootCause.data);
+                            }
+
+                            // Updating fields
                             if (rootCause.props && typeof rootCause.props.instructions === 'string') {
                                 rootCause.props.instructions = { textValue: rootCause.props.instructions };
                             }
