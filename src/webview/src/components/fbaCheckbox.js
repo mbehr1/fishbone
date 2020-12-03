@@ -237,12 +237,11 @@ export default function FBACheckbox(props) {
 
     const backgroundFragments = (
         <React.Fragment>
-            <Divider variant="middle" />
             <Accordion defaultExpanded >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     id="backgroundDescription-textfield-header">
-                    <Typography gutterBottom variant="h5">Background</Typography>
+                    <Typography gutterBottom variant="h6">Background</Typography>
                     <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(1); }} >
                         <EditIcon fontSize="small" color="primary" />
                     </IconButton>
@@ -254,7 +253,6 @@ export default function FBACheckbox(props) {
                         data={values.backgroundDescription || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'backgroundDescription', value: newValue } })} open={textFieldEditOpen === 1} onClose={() => { setTextFieldEditOpen(0); }}
                     />
                     <RenderConditionText markdownActive={GetMarkdownActive(values.backgroundDescription)} text={GetTextValue(values.backgroundDescription)} />
-                    <Divider variant="middle" />
                 </AccordionDetails>
             </Accordion>
         </React.Fragment>
@@ -262,12 +260,11 @@ export default function FBACheckbox(props) {
 
     const instructionsFragment = (
         <React.Fragment>
-            <Divider variant="middle" />
             <Accordion defaultExpanded >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     id="instructions-textfield-header">
-                    <Typography gutterBottom variant="h5">Instructions</Typography>
+                    <Typography gutterBottom variant="h6">Instructions</Typography>
                     <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(2); }} >
                         <EditIcon fontSize="small" color="primary" />
                     </IconButton>
@@ -279,7 +276,6 @@ export default function FBACheckbox(props) {
                         data={values.instructions || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'instructions', value: newValue } })} open={textFieldEditOpen === 2} onClose={() => { setTextFieldEditOpen(0); }}
                     />
                     <RenderConditionText markdownActive={GetMarkdownActive(values.instructions)} text={GetTextValue(values.instructions)} />
-                    <Divider variant="middle" />
                 </AccordionDetails>
             </Accordion>
         </React.Fragment>
@@ -287,12 +283,11 @@ export default function FBACheckbox(props) {
 
     const processingCommentsFragment = (
         <React.Fragment>
-            <Divider variant="middle" />
             <Accordion defaultExpanded >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     id="background-textfield-header">
-                    <Typography gutterBottom variant="h5">Comments</Typography>
+                    <Typography gutterBottom variant="h6">Comments</Typography>
                     <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(3); }} >
                         <EditIcon fontSize="small" color="primary" />
                     </IconButton>
@@ -304,7 +299,6 @@ export default function FBACheckbox(props) {
                         data={values.comments || {}} onChange={(newValue) => handleValueChanges({ target: { name: 'comments', value: newValue } })} open={textFieldEditOpen === 3} onClose={() => { setTextFieldEditOpen(0); }}
                     />
                     <RenderConditionText markdownActive={GetMarkdownActive(values.comments)} text={GetTextValue(values.comments)} />
-                    <Divider variant="middle" />
                 </AccordionDetails>
             </Accordion>
         </React.Fragment>
