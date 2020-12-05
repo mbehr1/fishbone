@@ -28,6 +28,8 @@ import Button from '@material-ui/core/Button';
 import Badge from '@material-ui/core/Badge';
 import MuiAlert from '@material-ui/lab/Alert';
 import { Snackbar } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
+
 import MultiStateBox from './multiStateBox';
 import { triggerRestQueryDetails } from './../util';
 
@@ -69,10 +71,18 @@ function GetMarkdownActive(property) {
     return property && property.markdownFormat ? true : false;
 }
 
+const useStyles = makeStyles(theme => ({
+    lowerRightBadge: {
+        padding: `${theme.spacing.unit * 0.5}px 0 0 0` // want 4px 0 0 0 as top 4, left/right/bottom 0 as we have no background color!
+    }
+}));
+
 export default function FBACheckbox(props) {
 
     const attributes = useContext(AttributesContext);
     //console.warn(`FBACheckbox attributes=${JSON.stringify(attributes, null, 2)}`);
+
+    const classes = useStyles();
 
     const [editOpen, setEditOpen] = React.useState(false);
     const [applyFilterBarOpen, setApplyFilterBarOpen] = React.useState(false);
@@ -325,7 +335,7 @@ export default function FBACheckbox(props) {
             <Grid container spacing={1}>
                 <Grid item flex>
                     <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
-                        <Badge badgeContent={badge2Counter} color="info" anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={props.value !== null || badge2Status < 2}>
+                        <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={badge2Counter} color={/* doesn't exist for badge but makes the background inherit */"info"} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={props.value !== null || badge2Status < 2} >
                             <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
                         </Badge>
                     </Badge>

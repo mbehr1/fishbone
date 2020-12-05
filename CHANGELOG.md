@@ -1,6 +1,10 @@
 # Change Log
 
 All notable changes to the "fishbone" extension will be documented in this file.
+
+## [0.6.1]
+- move lower badge a little more lower to improve readability.
+
 ## [0.6.0]
 - added markdown support for comments, background description and instructions.
 
