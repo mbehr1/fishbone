@@ -96,7 +96,7 @@ export default function FishboneChart(props) {
     
       const effectIndexColor = getColor(effectIndex);
 
-    const getRootCauses = (rootCauses) => {
+  const getRootCauses = (rootCauses, category) => {
       // todo do we need unique keys everywhere?
         const causes = rootCauses.map((rootCause, index) => {
           let fragment = null;
@@ -145,7 +145,7 @@ export default function FishboneChart(props) {
                 <div style={{position: 'relative', width:'5%'}}>
                   <IconButton id={`rcMore_${keyFrag}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
                   <Menu key={`cm_root_causes_${keyFrag}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `rcMore_${keyFrag}`} onClose={handleMenuClose}>
-                  {props.rootCauseContextMenu.map((menuItem, index) => <MenuItem onClick={(event) => { handleMenuClose(); menuItem?.cb(rootCause, event); }}>{menuItem.text}</MenuItem>)}
+                    {props.rootCauseContextMenu.filter(m => m !== undefined).map((menuItem, index) => <MenuItem onClick={(event) => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category, rootCause); }}>{menuItem.text}</MenuItem>)}
                 </Menu>
                 </div>
               </div>
@@ -176,18 +176,18 @@ export default function FishboneChart(props) {
               <div key={`top_causes_${category.name}_${index}`} className="causeContent">
                 <div className={`cause top ${color}_ ${color}Border`}>
                   <OnBlurInputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
-                  {props.categoryContextMenu && props.categoryContextMenu.length > 0 &&
+                  {props.categoryContextMenu && props.categoryContextMenu.length > 0 && /* todo race cond if all items are undefined... */
                     <React.Fragment>
                       <IconButton id={`top_cat_${index}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
                       <Menu id={`top_cat_${index}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `top_cat_${index}`} onClose={handleMenuClose}>
-                        {props.categoryContextMenu.map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
+                      {props.categoryContextMenu.filter(m => m !== undefined).map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
                       </Menu>
                     </React.Fragment>
                   }
 
                 </div>
                 <div className="causeAndLine">
-                  {getRootCauses(category.rootCauses)}
+                  {getRootCauses(category.rootCauses, category)}
                   <div className={`diagonalLine ${color}TopBottom`} />
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default function FishboneChart(props) {
             return (
               <div key={`bottom_causes_${category.name}_${index}`} className="causeContent">
                 <div className="causeAndLine">
-                  {getRootCauses(category.rootCauses)}
+                  {getRootCauses(category.rootCauses, category)}
                   <div className={`diagonalLine ${color}BottomTop`} />
                 </div>
                 <div className={`cause bottom ${color}_ ${color}Border`}>
@@ -205,7 +205,7 @@ export default function FishboneChart(props) {
                     <React.Fragment>
                       <IconButton id={`bottom_cat_${index}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
                       <Menu id={`bottom_cat_${index}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `bottom_cat_${index}`} onClose={handleMenuClose}>
-                        {props.categoryContextMenu.map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
+                      {props.categoryContextMenu.filter(m => m !== undefined).map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
                       </Menu>
                     </React.Fragment>
                   }
@@ -239,7 +239,7 @@ export default function FishboneChart(props) {
               <React.Fragment>
                 <IconButton id={`effect_${effectIndex}`} onClick={handleMenuClick} size="small"><MoreVertIcon fontSize="small" /></IconButton>
                 <Menu anchorEl={menuAnchorEl} keepMounted open={menuOpen === `effect_${effectIndex}`} onClose={handleMenuClose}>
-                  {props.effectContextMenu.map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex); }}>{menuItem.text}</MenuItem>)}
+                {props.effectContextMenu.filter(e => e !== undefined).map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex); }}>{menuItem.text}</MenuItem>)}
               </Menu>
             </React.Fragment>
             }

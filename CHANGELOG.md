@@ -2,6 +2,9 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.7.0]
+- added copy/cut/paste for root causes and categories. Cut will be disabled if any other changes are done before the paste.
+
 ## [0.6.1]
 - move lower badge a little more lower to improve readability.
 

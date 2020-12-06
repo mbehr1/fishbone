@@ -56,6 +56,52 @@ class MyCheckbox extends Component {
   }
 }
 
+/**
+ * copy a root cause element/object. Copies all but functions
+ * @param {*} rootCause 
+ */
+function deepCopyRootCause(rootCause) {
+  if (typeof rootCause === 'object') {
+    switch (rootCause.type) {
+      case 'react':
+      case 'nested':
+        try {
+          const newObj = JSON.parse(JSON.stringify(rootCause, (key, value) => {
+            if (typeof value === 'function') { return undefined; }
+            return value;
+          }));
+          return newObj;
+        } catch (err) {
+          console.warn(`deepCopyRootCause got error '${err}'`);
+        }
+        break;
+      default:
+        console.warn(`deepCopyRootCause unknown type ='${rootCause.type}'`, rootCause);
+        break;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * copy a category object. Copies all but functions.
+ * @param {*} category 
+ */
+function deepCopyCategory(category) {
+  if (typeof category === 'object') {
+    try {
+      const newObj = JSON.parse(JSON.stringify(category, (key, value) => {
+        if (typeof value === 'function') { return undefined; }
+        return value;
+      }));
+      return newObj;
+    } catch (err) {
+      console.warn(`deepCategory got error '${err}'`);
+    }
+  }
+  return undefined;
+}
+
 export default class App extends Component {
 
   logMsg(msg) {
@@ -191,7 +237,10 @@ export default class App extends Component {
 
           // we store the non-modified data in vscode.state (e.g. with react:MyCheckbox as string)
           this.props.vscode.setState({ data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath }); // todo shall we store any other data?
-          this.setState({ data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath });
+          this.setState({
+            data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath,
+            clipboard: this.state?.clipboard !== undefined && !this.state.clipboard.doCut ? this.state.clipboard : undefined
+          });
           break;
         case 'sAr':
           receivedResponse(msg);
@@ -512,7 +561,7 @@ export default class App extends Component {
     console.log(`onAddCategory called. category=`, category);
     let insertIndex = data[effectIndex].categories.length;
     if (category) {
-      // find the category and delete it:
+      // find the category and use that as insert index:
       const catIdx = data[effectIndex].categories.findIndex((element) => element === category);
       if (catIdx >= 0) { insertIndex = catIdx; }
     }
@@ -545,7 +594,7 @@ export default class App extends Component {
     this.setAllStates();
   }
 
-  onDeleteCategory(data, effectIndex, category) {
+  onDeleteCategory(data, effectIndex, category, options) {
     console.log(`onDeleteCategory called. effectIndex = ${effectIndex} data=`, data);
     console.log(`onDeleteCategory called. category.name=${category.name}`, category);
 
@@ -557,36 +606,124 @@ export default class App extends Component {
     if (catIdx >= 0) {
       console.log(`found element ${catIdx} to delete:`, data[effectIndex].categories[catIdx]);
       data[effectIndex].categories.splice(catIdx, 1);
-      this.setAllStates();
+      if (!(options?.dontCallSetAllStates)) { this.setAllStates(); }
     }
   }
 
   /**
    * Callback to delete a rootcause
-   * @param {*} rootcause object to the rootcause
-   * @param {*} event event that triggered it
+   * @param data data object
+   * @param effectIndex effectIndex used
+   * @param category category that is the parent/contains the rootcause
+   * @param {*} rootcause object to the rootcause to delete
    */
-  onDeleteRootCause(rootCause, event) {
-    console.log(`onDeleteRootCause() object=`, rootCause);
-    console.log(`onDeleteRootCause() event=`, event);
+  onDeleteRootCause(data, effectIndex, category, rootCause, options) {
+    console.log(`onDeleteRootCause() options=${JSON.stringify(options)} object=`, rootCause);
 
-    // search for this rootcause: (could search in active effect only... but searching all)
     let found = false;
-    const data = this.getCurData(this.state.fbPath, this.state.data)
-    data.forEach(effect => {
-      effect.categories.forEach(category => {
-        for (let i = 0; !found && i < category.rootCauses.length; ++i) {
-          const rc2 = category.rootCauses[i];
-          if (rc2 === rootCause) {
-            category.rootCauses.splice(i, 1);
-            this.setAllStates();
-            found = true;
-          }
+    for (let i = 0; !found && i < category.rootCauses.length; ++i) {
+      const rc2 = category.rootCauses[i];
+      if (rc2 === rootCause) {
+        category.rootCauses.splice(i, 1);
+        if (options && options.dontCallSetAllStates) {
+          console.log(`onDeleteRootCause not calling setAllStates()`);
+        } else {
+          this.setAllStates();
         }
-      });
-    });
+        found = true;
+      }
+    }
     if (!found) {
       console.warn(`onDeleteRootCause didn't found rc to delete!`);
+    }
+  }
+
+  onCopy(doCut, type, data, effectIndex, category, rootCause) {
+    console.log(`onCopy(doCut=${doCut}, type=${type}) category=`, category);
+    // console.log(`onCopy() rootCause=`, rootCause);
+    this.setState({ clipboard: { doCut: doCut, type: type, obj: rootCause !== undefined ? rootCause : category, data: data, effectIndex: effectIndex, category: category } });
+  }
+
+  /**
+   * paste the data currently contained in state.clipboard to the
+   *  rootCause if !== undefined
+   *  category if !== undefined (todo else effect?)
+   * @param {*} data 
+   * @param {*} effectIndex 
+   * @param {*} category 
+   * @param {*} rootCause 
+   */
+  onPaste(data, effectIndex, category, rootCause) { // event is passed as well?
+    //console.log(`onPaste() data=`, data);
+    console.log(`onPaste() effectIndex=`, effectIndex);
+    // console.log(`onPaste() category=`, category);
+    // console.log(`onPaste() rootCause=`, rootCause);
+    console.log(`onPaste() state.clipboard=`, this.state.clipboard);
+
+    if (this.state.clipboard === undefined) return;
+
+    const doCut = this.state.clipboard.doCut;
+    let didInsert = false;
+    switch (this.state.clipboard.type) {
+      case 'rootcause':
+        if (category !== undefined) {
+          // insert rootCauses before this rootCause
+          const rootCauses = category.rootCauses;
+          let insertIndex = rootCause !== undefined ? rootCauses.findIndex(r => r === rootCause) : rootCauses.length;
+          if (insertIndex >= 0) {
+            let newRootCause = doCut ? this.state.clipboard.obj : deepCopyRootCause(this.state.clipboard.obj);
+            if (newRootCause !== undefined) {
+              if (!doCut) {
+                switch (newRootCause.type) {
+                  case 'react':
+                    if (newRootCause?.props?.label) { newRootCause.props.label += ' copy'; }
+                    break;
+                  case 'nested':
+                    if (newRootCause?.title) { newRootCause.title += ' copy'; }
+                    break;
+                  default:
+                }
+              }
+              rootCauses.splice(insertIndex, 0, newRootCause);
+              didInsert = true;
+            }
+          }
+        }
+        break;
+      case 'category':
+        // insert category before this category (or at the end if category undefined)
+        // rootcause should be undefined here... (we do just ignore it)
+        // find the category and use that as insert index:
+        const catIdx = category !== undefined ? data[effectIndex].categories.findIndex((element) => element === category) : data[effectIndex].categories.length;
+        if (catIdx >= 0) {
+          let newCategory = doCut ? this.state.clipboard.obj : deepCopyCategory(this.state.clipboard.obj);
+          if (newCategory !== undefined) {
+            if (!doCut) {
+              if (newCategory?.name) { newCategory.name += ' copy'; }
+            }
+            data[effectIndex].categories.splice(catIdx, 0, newCategory);
+            didInsert = true;
+          }
+        }
+        break;
+      default:
+        console.warn(`onPaste with type '${this.state.clipboard.type}' not supported yet`);
+    }
+
+    if (didInsert && doCut) {
+      // delete the clipboard element...
+      switch (this.state.clipboard.type) {
+        case 'rootcause':
+          this.onDeleteRootCause(this.state.clipboard.data, this.state.clipboard.effectIndex, this.state.clipboard.category, this.state.clipboard.obj, { dontCallSetAllStates: true });
+          break;
+        case 'category':
+          this.onDeleteCategory(this.state.clipboard.data, this.state.clipboard.effectIndex, this.state.clipboard.category, { dontCallSetAllStates: true });
+          break;
+        default:
+      }
+    }
+    if (didInsert) {
+      this.setAllStates({ clipboard: undefined });
     }
   }
 
@@ -767,14 +904,21 @@ export default class App extends Component {
                   effectContextMenu={[
                     { text: 'add category', cb: this.onAddCategory.bind(this) },
                     { text: 'add effect', cb: this.onAddEffect.bind(this) },
+                    this.state.clipboard !== undefined && this.state.clipboard.type === 'category' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
                     { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
                   categoryContextMenu={[
                     { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
                     { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
                     { text: 'add category', cb: this.onAddCategory.bind(this) },
+                    { text: 'copy', cb: this.onCopy.bind(this, false, 'category') },
+                    { text: 'cut', cb: this.onCopy.bind(this, true, 'category') },
+                    this.state.clipboard !== undefined /* we allow all types (currently rootcause and category */ ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
                     { text: 'delete category', cb: this.onDeleteCategory.bind(this) }
                   ]}
                   rootCauseContextMenu={[
+                    { text: 'copy', cb: this.onCopy.bind(this, false, 'rootcause') },
+                    { text: 'cut', cb: this.onCopy.bind(this, true, 'rootcause') },
+                    this.state.clipboard !== undefined && this.state.clipboard.type === 'rootcause' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
                     { text: 'delete root-cause', cb: this.onDeleteRootCause.bind(this) },
                   ]}
                   data={this.getCurData(this.state.fbPath, this.state.data)}
