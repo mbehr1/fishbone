@@ -13,6 +13,7 @@ import Divider from '@material-ui/core/Divider'
 import TableToolbar from './tableToolbar'
 
 import {
+  useFilters,
   useGlobalFilter,
   useTable,
 } from 'react-table'
@@ -26,8 +27,50 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+// Define a default UI for filtering
+function DefaultColumnFilter({
+  column: { filterValue, preFilteredRows, setFilter }
+}) {
+  const count = preFilteredRows.length;
+
+  return (
+    <input
+      value={filterValue || ""}
+      onChange={(e) => {
+        setFilter(e.target.value || undefined); // Set undefined to remove the filter entirely
+      }}
+      placeholder={`Search ${count} records...`}
+    />
+  );
+}
+
 function Table({ onClose, columns, data }) {
   const classes = useStyles();
+
+  const filterTypes = React.useMemo(
+    () => ({
+      // Override the default text filter to use startsWith
+      textStartsWith: (rows, id, filterValue) => {
+        return rows.filter((row) => {
+          const rowValue = row.values[id];
+          return rowValue !== undefined
+            ? String(rowValue)
+              .toLowerCase()
+              .startsWith(String(filterValue).toLowerCase())
+            : true;
+        });
+      }
+    }),
+    []
+  );
+
+  const defaultColumn = React.useMemo(
+    () => ({
+      // Let's set up our default Filter UI
+      Filter: DefaultColumnFilter
+    }),
+    []
+  );
 
   const {
     getTableProps,
@@ -40,8 +83,11 @@ function Table({ onClose, columns, data }) {
   } = useTable({
     columns,
     data,
-  }
-    , useGlobalFilter
+    defaultColumn,
+    filterTypes
+  },
+    useGlobalFilter,
+    useFilters
   )
 
   return (
@@ -59,6 +105,7 @@ function Table({ onClose, columns, data }) {
               {headerGroup.headers.map(column => (
                 <TableCell className={classes.tableCell} {...column.getHeaderProps()}>
                   {column.render('Header')}
+                  <div>{column.canFilter ? column.render('Filter') : null}</div>
                 </TableCell>
               ))}
             </TableRow>

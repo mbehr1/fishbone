@@ -11,7 +11,7 @@ import { SummaryHeaderProvider, SummaryDataProvider } from './summary/dataProvid
  * - Filter for each table element
  * - Consider badges with filters and results
  * - Group and structure table elements
- * - Markdown support
+ * - Implement custom global filtering (for cells with markdown option)
  * - Jump to fishbone element on click
  * - Export as PDF
  */
