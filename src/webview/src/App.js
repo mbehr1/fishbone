@@ -30,6 +30,7 @@ import Grid from '@material-ui/core/Grid';
 //import MenuItem from '@material-ui/core/MenuItem';
 import InputDataProvided from './components/dataProvider';
 import FBACheckbox from './components/fbaCheckbox';
+import SummaryDialog from './components/summaryDialog';
 import OnBlurInputBase from './components/onBlurInputBase';
 import { receivedResponse } from './util';
 import HomeIcon from '@material-ui/icons/Home';
@@ -222,6 +223,9 @@ export default class App extends Component {
       this.state.fbPath = [{ title: this.state.title, effectIndex: 0 }]
     }
 
+    // Ensure summary dialog is initially disabled
+    this.setState({ showSummaryDialog: false })
+
     this.logMsg(`from App/constructor state.title=${this.state.title}`);
     window.addEventListener('message', event => {
       const msg = event.data;
@@ -247,8 +251,8 @@ export default class App extends Component {
           break;
         default:
           console.warn(`App received unknown type=${msg.type} msg:`);
-          console.log(msg);      
-            break;
+          console.log(msg);
+          break;
       }
     });
 
@@ -302,10 +306,10 @@ export default class App extends Component {
     if (values && propsField) {
       console.error(`logical error! only values or propsFields must be used!`);
       throw new Error(`logical error! only values or propsFields must be used!`);
-    }  
+    }
 
     const propsFieldName = (propsField !== undefined) ? propsField : (target.type === 'checkbox' ? 'checked' : 'value');
-  
+
     if (!values) {
       values = { [propsFieldName]: value }
     }
@@ -387,6 +391,13 @@ export default class App extends Component {
       // storing all but the fbPath... (todo: why not?)
       this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(state.data)), title: state.title, attributes: state.attributes });
     });
+  }
+
+  /**
+   * Opens a new modal dialog to present all data in a summary view
+   */
+  onShowSummary() {
+    this.setState({ showSummaryDialog: true })
   }
 
   /**
@@ -543,9 +554,9 @@ export default class App extends Component {
         console.warn(`onAddRootCause unknown type '${type}'`);
         break;
     }
-    if (newRootCause !== undefined) { 
-    rootCauses.splice(insertIndex, 0, newRootCause);
-    this.setAllStates();
+    if (newRootCause !== undefined) {
+      rootCauses.splice(insertIndex, 0, newRootCause);
+      this.setAllStates();
     }
   }
 
@@ -741,9 +752,9 @@ export default class App extends Component {
         background: {
           paper: vscodeStyles.getPropertyValue('--vscode-editor-background'),
         },
-       // primary: {
-          //main: vscodeStyles.getPropertyValue('--vscode-menu-background'),
-          //contrastText: vscodeStyles.getPropertyValue('--vscode-menu-foreground'),
+        // primary: {
+        //main: vscodeStyles.getPropertyValue('--vscode-menu-background'),
+        //contrastText: vscodeStyles.getPropertyValue('--vscode-menu-foreground'),
         //},
         text: {
           primary: vscodeStyles.getPropertyValue('--vscode-foreground'),
@@ -844,17 +855,17 @@ export default class App extends Component {
     }
 
     const breadcrumbFragment = this.state.fbPath.map((path, index, arr) => {
-        const icon = index === -1 ? <HomeIcon /> : null; // disabled for now
-        if (index < arr.length - 1) {
-          return (
-            <Link component="button" key={`br_${index}_${path.title}`} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
-              {icon}{path.title}
-            </Link>);
-        } else {
-          console.log(`breadcrumbFragment(${this.state.title}) path.title =${path.title}}`);
-          return (<OnBlurInputBase value={path.title} key={`br_${index}_${path.title}`} name="title" onChange={(event) => handleChangeTitle(event.target.value)} />);
-        }
-      });
+      const icon = index === -1 ? <HomeIcon /> : null; // disabled for now
+      if (index < arr.length - 1) {
+        return (
+          <Link component="button" key={`br_${index}_${path.title}`} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
+            {icon}{path.title}
+          </Link>);
+      } else {
+        console.log(`breadcrumbFragment(${this.state.title}) path.title =${path.title}}`);
+        return (<OnBlurInputBase value={path.title} key={`br_${index}_${path.title}`} name="title" onChange={(event) => handleChangeTitle(event.target.value)} />);
+      }
+    });
 
     const handleClick = (event) => {
       this.setState({ anchorEl: event.currentTarget });
@@ -869,68 +880,74 @@ export default class App extends Component {
     // justify = horiz.
     return (
       <AttributesContext.Provider value={this.state.attributes || []}>
-      <div className="App">
-        <ThemeProvider theme={theme}>
-          <AppBar position="static" color="transparent">
-            <Toolbar variant="dense">
-              <div style={{ flexGrow: 1 }}></div>
-              <Breadcrumbs>
-                {breadcrumbFragment}
-              </Breadcrumbs>
-              <div style={{ flexGrow: 1 }}></div>
-              <IconButton size="small" edge="end" color="inherit" onClick={handleClick}>
-                <MoreHorizIcon />
-              </IconButton>
-              <Menu id="appMoreMenu" anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={handleClose}>
+        <div className="App">
+          <ThemeProvider theme={theme}>
+            <AppBar position="static" color="transparent">
+              <Toolbar variant="dense">
+                <div style={{ flexGrow: 1 }}></div>
+                <Breadcrumbs>
+                  {breadcrumbFragment}
+                </Breadcrumbs>
+                <div style={{ flexGrow: 1 }}></div>
+                <IconButton size="small" edge="end" color="inherit" onClick={handleClick}>
+                  <MoreHorizIcon />
+                </IconButton>
+                <Menu id="appMoreMenu" anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={handleClose}>
                   <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(); }}>reset all entries</MenuItem>
+                  <MenuItem onClick={() => { handleClose(); this.onShowSummary(); }}>show summary</MenuItem>
                   {this.state?.attributes?.findIndex(attr => attr.hasOwnProperty('lifecycles')) < 0 && <MenuItem onClick={() => { handleClose(); this.onAddDLTAttributes(); }}>add DLT attributes</MenuItem>}
-              </Menu>
-            </Toolbar>
-          </AppBar>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-              <Paper>
-              <div>
-                <Grid container spacing={2} justify="center">
-                  <Grid item gutterBottom>
+                </Menu>
+              </Toolbar>
+            </AppBar>
+            <SummaryDialog
+              label='Summary'
+              fbdata={this.state.data}
+              open={this.state.showSummaryDialog === true} onClose={() => this.setState({ showSummaryDialog: false })}
+            />
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Paper>
+                  <div>
+                    <Grid container spacing={2} justify="center">
+                      <Grid item gutterBottom>
 
-                  </Grid>
-                </Grid>
-                </div>
-                <FishboneChart
-                  onStateChange={(fbData) => this.handleFBStateChange(fbData)}
-                  reactInlineElementsAdder={this.addInlineElements}
-                  onChange={this.handleInputChange.bind(this)}
-                  effectContextMenu={[
-                    { text: 'add category', cb: this.onAddCategory.bind(this) },
-                    { text: 'add effect', cb: this.onAddEffect.bind(this) },
-                    this.state.clipboard !== undefined && this.state.clipboard.type === 'category' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
-                    { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
-                  categoryContextMenu={[
-                    { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
-                    { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
-                    { text: 'add category', cb: this.onAddCategory.bind(this) },
-                    { text: 'copy', cb: this.onCopy.bind(this, false, 'category') },
-                    { text: 'cut', cb: this.onCopy.bind(this, true, 'category') },
-                    this.state.clipboard !== undefined /* we allow all types (currently rootcause and category */ ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
-                    { text: 'delete category', cb: this.onDeleteCategory.bind(this) }
-                  ]}
-                  rootCauseContextMenu={[
-                    { text: 'copy', cb: this.onCopy.bind(this, false, 'rootcause') },
-                    { text: 'cut', cb: this.onCopy.bind(this, true, 'rootcause') },
-                    this.state.clipboard !== undefined && this.state.clipboard.type === 'rootcause' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
-                    { text: 'delete root-cause', cb: this.onDeleteRootCause.bind(this) },
-                  ]}
-                  data={this.getCurData(this.state.fbPath, this.state.data)}
-                  effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
-            </Paper>
-          </Grid>
-          <Grid item xs={6}>
-            {attributeSection}
-          </Grid>
-        </Grid>
-        </ThemeProvider>
-      </div>
+                      </Grid>
+                    </Grid>
+                  </div>
+                  <FishboneChart
+                    onStateChange={(fbData) => this.handleFBStateChange(fbData)}
+                    reactInlineElementsAdder={this.addInlineElements}
+                    onChange={this.handleInputChange.bind(this)}
+                    effectContextMenu={[
+                      { text: 'add category', cb: this.onAddCategory.bind(this) },
+                      { text: 'add effect', cb: this.onAddEffect.bind(this) },
+                      this.state.clipboard !== undefined && this.state.clipboard.type === 'category' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
+                      { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
+                    categoryContextMenu={[
+                      { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
+                      { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
+                      { text: 'add category', cb: this.onAddCategory.bind(this) },
+                      { text: 'copy', cb: this.onCopy.bind(this, false, 'category') },
+                      { text: 'cut', cb: this.onCopy.bind(this, true, 'category') },
+                      this.state.clipboard !== undefined /* we allow all types (currently rootcause and category */ ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
+                      { text: 'delete category', cb: this.onDeleteCategory.bind(this) }
+                    ]}
+                    rootCauseContextMenu={[
+                      { text: 'copy', cb: this.onCopy.bind(this, false, 'rootcause') },
+                      { text: 'cut', cb: this.onCopy.bind(this, true, 'rootcause') },
+                      this.state.clipboard !== undefined && this.state.clipboard.type === 'rootcause' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
+                      { text: 'delete root-cause', cb: this.onDeleteRootCause.bind(this) },
+                    ]}
+                    data={this.getCurData(this.state.fbPath, this.state.data)}
+                    effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
+                </Paper>
+              </Grid>
+              <Grid item xs={6}>
+                {attributeSection}
+              </Grid>
+            </Grid>
+          </ThemeProvider>
+        </div>
       </AttributesContext.Provider>
     );
   }
