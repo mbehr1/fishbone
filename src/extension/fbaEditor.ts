@@ -29,6 +29,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     public static register(context: vscode.ExtensionContext, reporter?: TelemetryReporter): vscode.Disposable {
         const provider = new FBAEditorProvider(context, reporter);
         const providerRegistration = vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider);
+
+        // todo was only for testing. add later with e.g. nr errors, or unchecked ...
+        // context.subscriptions.push(vscode.window.registerFileDecorationProvider(provider));
+
         return providerRegistration;
     }
 
@@ -499,5 +503,17 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             throw new Error('Could not get document as yaml. Content is not valid yaml e= ' + e);
         }
         return { title: '<error>' };
+    }
+
+    provideFileDecoration(uri: vscode.Uri, token: vscode.CancellationToken): vscode.FileDecoration | undefined {
+        console.warn(`FBAEditorProvider.provideFileDecoration(uri=${uri.toString()})...`);
+        if (uri.toString().endsWith('.fba')) {
+            console.warn(` FBAEditorProvider.provideFileDecoration returning a test FileDecoration`);
+            return {
+                badge: "42", // max 2 digits
+                tooltip: "fba contains 42 errors", color: new vscode.ThemeColor('errorForeground'), propagate: true
+            };
+        }
+        return undefined;
     }
 }
