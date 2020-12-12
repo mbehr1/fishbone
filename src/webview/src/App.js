@@ -505,7 +505,7 @@ export default class App extends Component {
 
   /**
    * Add a new root cause to category...
-   * @param {*} type type to be added. 'FBACheckbox' or 'nested'
+   * @param {*} type type to be added. 'FBACheckbox','nested' or 'import'
    * @param {*} data 
    * @param {*} effectIndex 
    * @param {*} category category to add the root cause to
@@ -538,6 +538,20 @@ export default class App extends Component {
             }
           ]
         };
+        break;
+      case 'import':
+        /* we create just an empty 'import' one
+           and the fbaEditor side will handle the rest
+           i.e. add open file dialog,... and change to nested.
+           we could as well send a special command but then 
+           we have to pass the location to where to add it to as 
+           parameters...
+        */
+        newRootCause = {
+          type: 'import',
+          title: '<pending>',
+          data: []
+        }
         break;
       default:
         console.warn(`onAddRootCause unknown type '${type}'`);
@@ -909,6 +923,7 @@ export default class App extends Component {
                   categoryContextMenu={[
                     { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
                     { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
+                    { text: 'import fishbone', cb: this.onAddRootCause.bind(this, 'import') },
                     { text: 'add category', cb: this.onAddCategory.bind(this) },
                     { text: 'copy', cb: this.onCopy.bind(this, false, 'category') },
                     { text: 'cut', cb: this.onCopy.bind(this, true, 'category') },

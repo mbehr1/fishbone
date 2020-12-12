@@ -4,9 +4,11 @@
  * todo:
  * change to "request-light" (npm i request-light) for https requests
  * - add nonce/random ids to each element? (for smaller edits/updates)
+ * - add feature on reset to reload the "nested" rootcauses with relPath
  */
 
 import * as path from 'path';
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { getNonce, performHttpRequest } from './util';
 import * as yaml from 'js-yaml';
@@ -328,7 +330,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     /**
      * Write out the object to a given document.
      */
-    static updateTextDocument(document: vscode.TextDocument, docObj: any) {
+    static async updateTextDocument(document: vscode.TextDocument, docObj: any) {
         console.log(`updateTextDocument called with json.keys=${Object.keys(docObj)}`);
         Object.keys(docObj).forEach(key => {
             console.log(` ${key}=${JSON.stringify(docObj[key])}`);
@@ -350,12 +352,84 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
         // only 'title', 'attributes' and 'fishbone' are updated for now. keep the rest:
         if ('version' in docObj) { yamlObj.version = docObj.version; } else {
-            if (!('version' in yamlObj)) { yamlObj.version = '0.2'; } // todo const somewhere..
+            if (!('version' in yamlObj)) { yamlObj.version = '0.3'; } // todo const somewhere..
         }
 
         if ('title' in docObj) { yamlObj.title = docObj.title; }
         if (('attributes' in docObj) && docObj.attributes !== undefined) { yamlObj.attributes = docObj.attributes; }
-        if ('fishbone' in docObj) { yamlObj.fishbone = docObj.fishbone; }
+        if ('fishbone' in docObj) {
+            // special command handling to import other fishbones:
+            const deepRootCausesForEach = async (fishbone: any[], fn: (rc: any) => any | null | undefined) => {
+                for (const effect of fishbone) {
+                    const nrCats = effect?.categories?.length;
+                    if (nrCats > 0) {
+                        for (let c = 0; c < nrCats; ++c) {
+                            const category = effect.categories[c];
+                            let nrRcs = category?.rootCauses?.length;
+                            if (nrRcs > 0) {
+                                for (let r = 0; r < nrRcs; ++r) {
+                                    const rc = category.rootCauses[r];
+                                    let modRc = await fn(rc); // we call the callback in any case
+                                    if (modRc === undefined) { // no change
+                                        modRc = rc;
+                                    } else if (modRc === null) { // delete this rc.
+                                        category.rootCauses.splice(r, 1);
+                                        --nrRcs;
+                                        modRc = undefined;
+                                    } else { // update
+                                        category.rootCauses[r] = modRc;
+                                    }
+                                    if (modRc !== undefined) {
+                                        // and if its a nested we do nest automatically:
+                                        if (modRc?.type === 'nested') {
+                                            deepRootCausesForEach(modRc.data, fn);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            // check for root causes type "import"
+            // we do return 
+            //  null: -> rc will be deleted
+            //  modified obj -> will replace rc
+            //  undefined -> no change
+            await deepRootCausesForEach(docObj.fishbone, async (rc) => {
+                if (rc?.type === 'import') {
+                    console.warn(`got 'import' rc:`, rc);
+                    // show open file dialog:
+                    const uri = await vscode.window.showOpenDialog({ canSelectMany: false, filters: { 'Fishbone': ['fba'] }, openLabel: 'import', title: 'select fishbone to import' });
+                    if (uri && uri.length === 1) {
+                        console.warn(`shall import '${uri[0].toString()}'`);
+                        // determine relative path and store for later update
+                        const relPath = path.relative(document.uri.fsPath, uri[0].fsPath);
+                        console.log(`got relPath='${relPath}' from '${document.uri.fsPath}' and '${uri[0].fsPath}'`);
+                        try {
+                            const fileText = fs.readFileSync(uri[0].fsPath, { encoding: 'utf8' });
+                            const importYamlObj = FBAEditorProvider.getFBDataFromText(fileText, undefined);
+                            if (typeof importYamlObj === 'object') {
+                                // merge attributes (we might consider adding the new ones to the nested only and show only on entering that nested one?)
+                                FBAEditorProvider.mergeAttributes(yamlObj.attributes, importYamlObj.attributes);
+                                return {
+                                    type: 'nested',
+                                    relPath: relPath,
+                                    title: importYamlObj.title,
+                                    data: importYamlObj.fishbone
+                                };
+                            }
+                        } catch (e) {
+                            console.error(`opening file failed with err:'${e}'`);
+                        }
+                    }
+                    return null; // delete the import rc
+                }
+                return undefined;
+            });
+
+            yamlObj.fishbone = docObj.fishbone;
+        }
 
         // now store it as yaml:
         try {
@@ -377,12 +451,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         return vscode.workspace.applyEdit(edit);
     }
 
-/**
- * Parse the documents content into an object.
- */
-    static getFBDataFromDoc(doc: vscode.TextDocument): any {
-        const text = doc.getText();
-
+    static getFBDataFromText(text: string, updateFn: undefined | ((yamlObj: any) => void)) {
         // here we do return the data that we pass as data=... to the Fishbone
 
         // our document is a yaml document. 
@@ -414,9 +483,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             } else {
                 yamlObj = yaml.safeLoad(text); // JSON.parse(text);
             }
-            if (typeof yamlObj !== 'object') { return []; } // todo throw error
-            console.log(`getFBDataFromDoc type=${yamlObj.type}, version=${yamlObj.version}`);
-            console.log(`getFBDataFromDoc title=${yamlObj.title}`);
+            if (typeof yamlObj !== 'object') { throw new Error(`content is no 'object' but '${typeof yamlObj}'`); }
+            console.log(`getFBDataFromText type=${yamlObj.type}, version=${yamlObj.version}`);
+            console.log(`getFBDataFromText title=${yamlObj.title}`);
 
             // convert data from prev. versions?
             const convertv01Effects = (effects: any) => {
@@ -476,7 +545,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     yamlObj.fishbone = fbv02;
                 }
                 yamlObj.version = '0.2';
-                FBAEditorProvider.updateTextDocument(doc, yamlObj);
+                if (updateFn !== undefined) { updateFn(yamlObj); }
             }
 
             // convert from prev. known formats:
@@ -487,7 +556,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     console.log(`fbv03=`, yamlObj.fishbone);
                 }
                 yamlObj.version = '0.3';
-                FBAEditorProvider.updateTextDocument(doc, yamlObj);
+                if (updateFn !== undefined) { updateFn(yamlObj); }
             }
 
 
@@ -503,6 +572,39 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             throw new Error('Could not get document as yaml. Content is not valid yaml e= ' + e);
         }
         return { title: '<error>' };
+    }
+
+    /**
+     * Parse the documents content into an object.
+     */
+    static getFBDataFromDoc(doc: vscode.TextDocument): any {
+        const text = doc.getText();
+
+        return FBAEditorProvider.getFBDataFromText(text, (yamlObj) => {
+            FBAEditorProvider.updateTextDocument(doc, yamlObj);
+        });
+    }
+
+    /**
+     * merge attributes from newAttrs into mainAttrs.
+     * The rules are:
+     *  an attribute not existing in mainAttrs will simply be added to mainAttrs
+     *  an attribute already existing is ignored, even though parameters
+     *  might be different!
+     * @param mainAttrs 
+     * @param newAttrs 
+     */
+    static mergeAttributes(mainAttrs: any[], newAttrs: any[] | undefined) {
+        console.warn(`FBAEditorProvider.mergeAttributes mainAttrs=${JSON.stringify(mainAttrs)} newAttrs=${JSON.stringify(newAttrs)}`);
+        // attributes are arrays of objects with a single key (the name)
+        if (newAttrs === undefined) { return; }
+        const mainKeys = mainAttrs.map(a => Object.keys(a)[0]);
+        for (const newKeyObj of newAttrs) {
+            const newKey = Object.keys(newKeyObj)[0];
+            if (!mainKeys.includes(newKey)) {
+                mainAttrs.push(newKeyObj);
+            }
+        }
     }
 
     provideFileDecoration(uri: vscode.Uri, token: vscode.CancellationToken): vscode.FileDecoration | undefined {

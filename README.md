@@ -25,7 +25,9 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
     - can have a background description
     - can have processing instructions.
 
-- diagrams can be nested via *add nested fishbone* command from the category ... menu.
+- diagrams can be nested via 
+  - *add nested fishbone* command from the category ... menu or
+  - *import fishbone* command from the category ... menu. On importing new attributes defined in the imported ones will be added. Take care: attributes with same name will not be modified on import. Please check that they have the same meaning.
 - supports copy/cut/paste for root causes and categories.
 - supports restQuery from other extensions (currently dlt-logs and via direct yaml file modification)
 
@@ -35,6 +37,9 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
 
 - summaries/reports esp. for big (deeply nested) fishbones
 - support a "template-workflow" (e.g. reset values, comments,... or clone)
+  - *reset all entries* to reset values, comments and attribute values already available
+  - *import fishbone* implemented to be able to split the definition of fishbones into multiple files, e.g. per topic but to add them into one analysis file.
+  - missing: on *reset all entries* imported fishbones should be re-read to ease maintenance of files per topic.
 - support pcap filters similar to dlt log filters
 - support text document filters working with smart-logs
 

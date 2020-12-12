@@ -2,6 +2,9 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.8.0]
+- add "import fishbone" feature that adds the complete fishbone from a different file as a nested rootcause.
+
 ## [0.7.0]
 - added copy/cut/paste for root causes and categories. Cut will be disabled if any other changes are done before the paste.
 
