@@ -79,7 +79,7 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
     const answer = {};
     try {
         const reqSource = dataSourceObj.source;
-        const requestStr = reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => {
+        const requestStr = typeof reqSource !== 'string' ? '' : reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => {
             //console.log(`replacing '${match}' '${p1}' at offset ${offset}`);
             if (p1.startsWith("attributes.")) { // currently only attribute supported
                 let attrName = p1.slice(p1.indexOf('.') + 1);
