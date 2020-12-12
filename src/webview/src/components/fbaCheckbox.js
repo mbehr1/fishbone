@@ -38,7 +38,7 @@ import DataProviderEditDialog from './dataProviderEditDialog';
 import TextFieldEditDialog from './textFieldEditDialog';
 
 import DOMPurify from 'dompurify';
-const toMarkdown = require('marked');
+import toMarkdown from 'marked';
 
 // import Grid from '@material-ui/core/Grid';
 // import Autocomplete from '@material-ui/lab/Autocomplete';
