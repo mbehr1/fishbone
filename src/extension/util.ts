@@ -11,6 +11,7 @@ export function getNonce() {
     return text;
 }
 
+const httpCache = new Map<string, { validTill: Number, res: any, body: any }>();
 
 /**
  * perform a http request with support for http basic auth credential querying/caching
@@ -24,6 +25,32 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
     // check whether we do have username/password cached for that host:
     const urlObj = new URL(urlString);
     const origin = urlObj.origin;
+
+    // do we have it in cache?
+    const cachedRes = httpCache.get(urlString);
+    const dateNow = Date.now();
+    if (cachedRes !== undefined) {
+        // is it still valid?
+        if (cachedRes.validTill >= dateNow) {
+            // yes
+            console.log(`retrieved from cache: ${urlString}`);
+            return new Promise((resolve, reject) => resolve(cachedRes));
+        } else {
+            // not valid any longer, remove from cache
+            console.log(`cache too old for: ${urlString}`);
+            httpCache.delete(urlString);
+        }
+    } else {
+        console.log(`performHttpRequest not in cache: '${urlString}' cache size=${httpCache.size}`);
+    }
+    // clean up cache here for all invalid ones... could do with a timer as well.
+    httpCache.forEach((value, key, map) => {
+        if (value.validTill < dateNow) {
+            map.delete(key);
+            console.log(`deleted outdated from cache: ${urlString}`);
+        }
+    });
+
     const haveCachedAuth: any = storage.get(`http_req_${origin}`);
 
     const reqOptions: { url: string, headers: object, auth?: { username: string, password: string, sendImmediately: boolean } } = {
@@ -75,6 +102,29 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
                     });
 
                 } else {
+                    // we add to cache if cache-control is there:
+                    try {
+                        if ('headers' in res && 'cache-control' in res.headers) {
+                            const cacheControl = res.headers['cache-control'];
+                            console.log(`cacheControl='${JSON.stringify(cacheControl)}'`);
+                            if (typeof cacheControl === 'string') {
+                                const rMaxAge = /max-age=(\d+)/;
+                                const maxAge = cacheControl.match(rMaxAge);
+                                // console.log(`maxAge=${JSON.stringify(maxAge)}`);
+                                if (Array.isArray(maxAge) && maxAge.length >= 2) {
+                                    const age = Number(maxAge[1]);
+                                    if (age > 0) {
+                                        // add to cache:
+                                        console.log(`added to cache=${urlString} age=${age}`);
+                                        httpCache.set(urlString, { validTill: Date.now() + (age * 1000), res: res, body: body });
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`performHttpRequest got e='${e}' at response header parsing.`);
+                    }
+                    //console.warn(`performHttpRequest response=${JSON.stringify(res)}`);
                     resolve({ res: res, body: body });
                 }
             }
