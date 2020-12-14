@@ -5,7 +5,7 @@ import { fade, makeStyles } from '@material-ui/core/styles'
 import PropTypes from 'prop-types'
 import SearchIcon from '@material-ui/icons/Search'
 
-const useStyles = makeStyles(theme => ({
+const globalFilterStyle = makeStyles(theme => ({
     search: {
         position: 'relative',
         borderRadius: theme.shape.borderRadius,
@@ -48,12 +48,12 @@ const GlobalFilter = ({
     globalFilter,
     setGlobalFilter,
 }) => {
-    const classes = useStyles()
+    const globalSearchClass = globalFilterStyle()
     const count = preGlobalFilteredRows.length
 
     return (
-        <div className={classes.search}>
-            <div className={classes.searchIcon}>
+        <div className={globalSearchClass.search}>
+            <div className={globalSearchClass.searchIcon}>
                 <SearchIcon />
             </div>
             <InputBase
@@ -63,8 +63,8 @@ const GlobalFilter = ({
                 }}
                 placeholder={`${count} records...`}
                 classes={{
-                    root: classes.inputRoot,
-                    input: classes.inputInput,
+                    root: globalSearchClass.inputRoot,
+                    input: globalSearchClass.inputInput,
                 }}
                 inputProps={{ 'aria-label': 'search' }}
                 margin="none"

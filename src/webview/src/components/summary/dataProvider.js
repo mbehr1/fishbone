@@ -1,5 +1,8 @@
 import React from 'react'
 
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+
 import { GetMarkdownActive, GetTextValue, RenderConditionText } from './../utils/markdown'
 
 // This is a custom filter UI for selecting
@@ -19,20 +22,51 @@ function SelectColumnFilter({
 
   // Render a multi-select box
   return (
-    <select
-      value={filterValue}
-      onChange={e => {
-        setFilter(e.target.value || undefined)
-      }}
-    >
-      <option value="">All</option>
-      {options.map((option, i) => (
-        <option key={i} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
+    <FormControl>
+      <Select
+        native
+        style={{ paddingHorizontal: '2px' }}
+        value={filterValue}
+        onChange={e => {
+          setFilter(e.target.value || undefined)
+        }}
+        inputProps={{
+          id: 'select-filter-input',
+        }}
+      >
+        <option value="">&nbsp;All</option>
+        {options.map((option, i) => (
+          <option key={i} value={option} >
+            &nbsp;{option}
+          </option>
+        ))}
+      </Select>
+    </FormControl >
   )
+}
+
+function getStatusAggregator(values) {
+  var openCount = 0, okCount = 0, errorCount = 0;
+
+  values.forEach(value => {
+    if (typeof value === 'string') {
+      switch (value) {
+        case 'open':
+          openCount++;
+          break;
+        case 'ok':
+          okCount++;
+          break;
+        case 'error':
+          errorCount++;
+          break;
+        default:
+          console.log(`getStatusAggregator: Invalid status type ${value}`);
+      }
+    }
+  })
+
+  return [openCount, okCount, errorCount]
 }
 
 export function SummaryHeaderProvider() {
@@ -44,14 +78,21 @@ export function SummaryHeaderProvider() {
           {
             Header: 'Effect',
             accessor: 'effect',
+            aggregate: 'count',
+            Aggregated: ({ value }) => `${value} Effects`,
           },
           {
             Header: 'Category',
             accessor: 'category',
+            aggregate: 'count',
+            Aggregated: ({ value }) => `${value} Categories`,
           },
           {
             Header: 'Root Cause',
             accessor: 'rc',
+            disableGroupBy: true,
+            aggregate: 'count',
+            Aggregated: ({ value }) => `${value} Root Causes`,
           },
         ],
       },
@@ -63,18 +104,26 @@ export function SummaryHeaderProvider() {
             accessor: 'value',
             Filter: SelectColumnFilter,
             filter: 'includes',
+            aggregate: getStatusAggregator,
+            Aggregated: ({ value }) => `${value[0]}? / ${value[1]}✔ / ${value[2]}❌`,
           },
           {
             Header: 'Background',
             accessor: 'background',
+            filter: 'customFilter',
+            disableGroupBy: true,
           },
           {
             Header: 'Instructions',
             accessor: 'instructions',
+            filter: 'customFilter',
+            disableGroupBy: true,
           },
           {
             Header: 'Comments',
             accessor: 'comments',
+            filter: 'customFilter',
+            disableGroupBy: true,
           },
         ],
       },
@@ -83,11 +132,13 @@ export function SummaryHeaderProvider() {
   )
 }
 
-export function SummaryDataProvider(rawData) {
+export function SummaryDataProvider(rawData, nestingLevel = 0) {
+
+  console.log(rawData);
+
   var tableData = [];
 
   rawData.forEach(effect => {
-    console.log(`effect.name=${effect.name}`);
     effect.categories.forEach(category => {
       for (let i = 0; i < category.rootCauses.length; ++i) {
         const rc = category.rootCauses[i];
@@ -96,7 +147,10 @@ export function SummaryDataProvider(rawData) {
             const props = rc.props;
 
             tableData.push({
-              effect: typeof effect.name === 'string' ? effect.name : '',
+              effect: typeof effect.name === 'string' ?
+                (nestingLevel > 0 ? ' '.repeat(nestingLevel) + 'L' + nestingLevel + ': ' + effect.name : effect.name)
+                : '',
+
               category: typeof category.name === 'string' ? category.name : '',
               rc: props.label && typeof props.label === 'string' ? props.label : '',
               value: props.value && typeof props.value === 'string' ? props.value : 'open',
@@ -108,7 +162,8 @@ export function SummaryDataProvider(rawData) {
           }
 
           if (rc.type === 'nested') {
-            // TODO: walk the tree down
+            tableData = tableData.concat(SummaryDataProvider(rc.data, ++nestingLevel));
+            nestingLevel--;
           }
         }
       }
