@@ -28,6 +28,10 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
 - diagrams can be nested via *add nested fishbone* command from the category ... menu.
 - supports copy/cut/paste for root causes and categories.
 - supports restQuery from other extensions (currently dlt-logs and via direct yaml file modification)
+- summary table to provide a compact overview
+	- grouping by effect and category
+	- links to jump directly to the particular fishbone view
+	- filter for each element 
 
 <!-- todo add image \!\[feature X\]\(images/feature-x.png\) -->
 
