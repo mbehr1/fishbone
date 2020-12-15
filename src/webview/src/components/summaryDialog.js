@@ -9,7 +9,6 @@ import { SummaryHeaderProvider, SummaryDataProvider } from './summary/dataProvid
 /**
  * Planned features:
  * - Consider badges with filters and results
- * - Jump to fishbone element on click
  * - Export as PDF
  */
 
@@ -25,8 +24,8 @@ export default function SummaryDialog(props) {
         props.onClose();
     }
 
-    const header = SummaryHeaderProvider(props.fbdata);
-    const data = SummaryDataProvider(props.fbdata);
+    const header = SummaryHeaderProvider();
+    const data = SummaryDataProvider(props.fbdata, props.title, props.onFbPathChange, props.onClose);
 
     return (
         <Dialog fullScreen open={props.open} onClose={handleClose}>

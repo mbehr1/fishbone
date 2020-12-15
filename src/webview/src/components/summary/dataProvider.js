@@ -2,8 +2,14 @@ import React from 'react'
 
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import Chip from '@material-ui/core/Chip';
+
+import ErrorIcon from '@material-ui/icons/Error';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 
 import { GetMarkdownActive, GetTextValue, RenderConditionText } from './../utils/markdown'
+import { CreateTooltip, CreateLink } from './htmlHelper'
 
 // This is a custom filter UI for selecting
 // a unique option from a list
@@ -105,7 +111,48 @@ export function SummaryHeaderProvider() {
             Filter: SelectColumnFilter,
             filter: 'includes',
             aggregate: getStatusAggregator,
-            Aggregated: ({ value }) => `${value[0]}? / ${value[1]}✔ / ${value[2]}❌`,
+            Aggregated: ({ value }) => {
+              return (
+                <React.Fragment>
+                  <Chip
+                    size="small"
+                    icon={<CheckBoxOutlineBlankIcon />}
+                    color="primary"
+                    label={value[0]}
+                    variant="outlined"
+                  />
+                  <Chip
+                    size="small"
+                    icon={<CheckBoxIcon />}
+                    color="primary"
+                    label={value[1]}
+                    variant="outlined"
+                  />
+                  <Chip
+                    size="small"
+                    icon={<ErrorIcon />}
+                    color="secondary"
+                    label={value[2]}
+                    variant="outlined"
+                  />
+                </React.Fragment>
+              );
+              // return (
+              //   <React.Fragment>
+              //     <Badge badgeContent={value[0]} max={99} color="primary" overlap="circle" showZero>
+              //       <CheckBoxOutlineBlankIcon />
+              //     </Badge>
+              //     <Badge badgeContent={value[1]} max={99} color="primary" overlap="circle" showZero>
+              //       <CheckBoxIcon color="primary" />
+              //     </Badge>
+              //     <Badge badgeContent={value[2]} max={99} color="secondary" overlap="circle" showZero>
+              //       <ErrorIcon color="secondary" />
+              //     </Badge>
+              //   </React.Fragment>
+
+              // );
+            }
+
           },
           {
             Header: 'Background',
@@ -132,27 +179,50 @@ export function SummaryHeaderProvider() {
   )
 }
 
-export function SummaryDataProvider(rawData, nestingLevel = 0) {
+var FbPathChangeHook = undefined;
+var CloseHook = undefined;
 
-  console.log(rawData);
+export function SummaryDataProvider(rawData, currentTitle, onFbPathChange, onClose) {
+  console.log(`hook=${onFbPathChange}`);
+  FbPathChangeHook = onFbPathChange;
+  CloseHook = onClose;
+  return CreateTableData(rawData, currentTitle);
+}
 
+function FbPathLinkClicked(path) {
+  if (FbPathChangeHook && CloseHook) {
+    FbPathChangeHook(path)
+    CloseHook();
+  }
+}
+
+function CreateTableData(rawData, currentTitle = '', path = []) {
   var tableData = [];
 
+  var effectIndex = 0;
+
   rawData.forEach(effect => {
+    path.push({ title: currentTitle, effectIndex: effectIndex });
+    effectIndex++;
+
     effect.categories.forEach(category => {
-      for (let i = 0; i < category.rootCauses.length; ++i) {
-        const rc = category.rootCauses[i];
+      category.rootCauses.forEach(rc => {
         if (typeof rc === 'object') {
           if ('props' in rc) {
             const props = rc.props;
+            var pathString = '';
+            var levelString = path.length > 1 ? 'L' + String(path.length - 1) + ': ' + effect.name : effect.name;
+
+            path.forEach(function (e, idx, array) {
+              pathString += e.title;
+              if (idx < array.length - 1)
+                pathString += ' -> ';
+            });
 
             tableData.push({
-              effect: typeof effect.name === 'string' ?
-                (nestingLevel > 0 ? ' '.repeat(nestingLevel) + 'L' + nestingLevel + ': ' + effect.name : effect.name)
-                : '',
-
-              category: typeof category.name === 'string' ? category.name : '',
-              rc: props.label && typeof props.label === 'string' ? props.label : '',
+              effect: CreateTooltip(pathString, CreateLink(levelString, FbPathLinkClicked, JSON.parse(JSON.stringify(path))), levelString),
+              category: CreateLink(typeof category.name === 'string' ? category.name : '', FbPathLinkClicked, JSON.parse(JSON.stringify(path))),
+              rc: CreateLink(props.label && typeof props.label === 'string' ? props.label : '', FbPathLinkClicked, JSON.parse(JSON.stringify(path))),
               value: props.value && typeof props.value === 'string' ? props.value : 'open',
 
               instructions: RenderConditionText({ markdownActive: GetMarkdownActive(props.instructions), text: GetTextValue(props.instructions) }),
@@ -162,12 +232,12 @@ export function SummaryDataProvider(rawData, nestingLevel = 0) {
           }
 
           if (rc.type === 'nested') {
-            tableData = tableData.concat(SummaryDataProvider(rc.data, ++nestingLevel));
-            nestingLevel--;
+            tableData = tableData.concat(CreateTableData(rc.data, rc.title, path));
           }
         }
-      }
+      });
     });
+    path.pop();
   });
   return tableData;
 }

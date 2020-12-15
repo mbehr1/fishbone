@@ -825,6 +825,10 @@ export default class App extends Component {
       this.setState({ fbPath: curPath });
     }
 
+    const onFbPathChange = (path) => {
+      this.setState({ fbPath: path });
+    }
+
     const handleChangeTitle = (value) => {
       console.log(`handleChangeTitle value='${value}'`);
       if (this.state.fbPath.length === 1) {
@@ -902,6 +906,8 @@ export default class App extends Component {
             <SummaryDialog
               label='Summary'
               fbdata={this.state.data}
+              onFbPathChange={onFbPathChange}
+              title={this.state.title}
               open={this.state.showSummaryDialog === true} onClose={() => this.setState({ showSummaryDialog: false })}
             />
             <Grid container spacing={3}>

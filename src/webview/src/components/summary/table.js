@@ -8,9 +8,11 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableContainer from '@material-ui/core/TableContainer'
 import { makeStyles } from '@material-ui/core/styles'
-import InputAdornment from '@material-ui/core/InputAdornment';
+import InputAdornment from '@material-ui/core/InputAdornment'
 import TextField from '@material-ui/core/TextField'
 import SearchIcon from '@material-ui/icons/Search'
+import ViewHeadlineIcon from '@material-ui/icons/ViewHeadline'
+import ViewQuiltIcon from '@material-ui/icons/ViewQuilt'
 
 import TableToolbar from './tableToolbar'
 
@@ -94,11 +96,25 @@ function Table({ onClose, columns, data }) {
           return match;
         });
       },
-
-
     }),
     []
   );
+
+  function customGroupBy(rows, columnId) {
+    return rows.reduce((prev, row, i) => {
+      var resKey = '';
+
+      if (typeof row.values[columnId] === 'string') {
+        resKey = `${row.values[columnId]}`
+      } else if (typeof row.values[columnId].key === 'string') {
+        resKey = `${row.values[columnId].key}`
+      }
+
+      prev[resKey] = Array.isArray(prev[resKey]) ? prev[resKey] : []
+      prev[resKey].push(row)
+      return prev
+    }, {})
+  }
 
   const defaultColumn = React.useMemo(
     () => ({
@@ -128,6 +144,7 @@ function Table({ onClose, columns, data }) {
     },
     filterTypes,
     globalFilter: 'customFilter',
+    groupByFn: customGroupBy,
     autoResetPage: false,
     autoResetExpanded: false,
   },
@@ -141,7 +158,6 @@ function Table({ onClose, columns, data }) {
   React.useEffect(() => {
     toggleAllRowsExpanded(expandAllSubComponents);
   }, [expandAllSubComponents, toggleAllRowsExpanded]);
-
 
   return (
     <TableContainer>
@@ -158,13 +174,13 @@ function Table({ onClose, columns, data }) {
               {headerGroup.headers.map(column => (
                 <TableCell className={classes.tableCell} {...column.getHeaderProps()}>
                   <span style={{ whiteSpace: 'nowrap' }}>
+                    {column.render('Header')}
                     {column.canGroupBy ? (
                       // If the column can be grouped, let's add a toggle
                       <span {...column.getGroupByToggleProps()}>
-                        {column.isGrouped ? '🗃 ' : '📁 '}
+                        {column.isGrouped ? <ViewHeadlineIcon style={{ verticalAlign: 'middle' }} /> : <ViewQuiltIcon style={{ verticalAlign: 'middle' }} />}
                       </span>
                     ) : null}
-                    {column.render('Header')}
                   </span>
                   <div>{column.canFilter ? column.render('Filter') : null}</div>
                 </TableCell>
@@ -195,7 +211,8 @@ function Table({ onClose, columns, data }) {
                           </span>
                         ) : cell.isPlaceholder ? null : (
                           cell.render('Cell', { editable: true })
-                        )}
+                        )
+                        }
                       </TableCell>
                     )
                   })}
@@ -210,7 +227,6 @@ function Table({ onClose, columns, data }) {
 }
 
 function SummaryTable(props) {
-
   // Set all the rows index to true
   const defaultExpandedRows = props.data.map((element, index) => {
     return { index: true };
