@@ -2,7 +2,7 @@
 	"name": "fishbone",
 	"displayName": "fishbone",
 	"description": "Create interactive fishbone diagrams",
-	"version": "0.7.0",
+	"version": "0.8.1",
 	"license": "CC-BY-NC-SA-4.0",
 	"publisher": "mbehr1",
 	"author": {
@@ -18,7 +18,7 @@
 	},
 	"homepage": "https://mbehr1.github.io/fishbone/",
 	"engines": {
-		"vscode": "^1.50.0"
+		"vscode": "^1.51.0"
 	},
 	"categories": [
 		"Visualization",
@@ -65,7 +65,7 @@
 		"@types/mocha": "^7.0.2",
 		"@types/node": "^13.11.0",
 		"@types/request": "^2.48.5",
-		"@types/vscode": "^1.50.0",
+		"@types/vscode": "^1.51.0",
 		"@typescript-eslint/eslint-plugin": "^2.30.0",
 		"@typescript-eslint/parser": "^2.30.0",
 		"eslint": "^7.11.0",

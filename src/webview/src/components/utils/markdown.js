@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify';
-const toMarkdown = require('marked');
+import toMarkdown from 'marked';
 
 /**
  * helper function to check and return the o.markdownFormat state
