@@ -39,7 +39,6 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
 
 ## Planned features
 
-- summaries/reports esp. for big (deeply nested) fishbones
 - support a "template-workflow" (e.g. reset values, comments,... or clone)
   - *reset all entries* to reset values, comments and attribute values already available
   - *import fishbone* implemented to be able to split the definition of fishbones into multiple files, e.g. per topic but to add them into one analysis file.
