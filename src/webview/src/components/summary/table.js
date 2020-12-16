@@ -86,6 +86,8 @@ function Table({ onClose, columns, data }) {
                 rowString = rowValue.props.children;
               else if (rowValue.props.dangerouslySetInnerHTML && typeof rowValue.props.dangerouslySetInnerHTML.__html === 'string')
                 rowString = rowValue.props.dangerouslySetInnerHTML.__html;
+              else if (typeof rowValue.key === 'string')
+                rowString = rowValue.key;
 
               match = match || String(rowString)
                 .toLowerCase()
