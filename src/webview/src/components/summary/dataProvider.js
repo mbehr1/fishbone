@@ -84,21 +84,24 @@ export function SummaryHeaderProvider() {
           {
             Header: 'Effect',
             accessor: 'effect',
+            filter: 'customFilter',
             aggregate: 'count',
-            Aggregated: ({ value }) => `${value} Effects`,
+            Aggregated: ({ value }) => { return (value === 1 ? `${value} effect` : `${value} effects`); },
           },
           {
             Header: 'Category',
             accessor: 'category',
+            filter: 'customFilter',
             aggregate: 'count',
-            Aggregated: ({ value }) => `${value} Categories`,
+            Aggregated: ({ value }) => { return (value === 1 ? `${value} category` : `${value} categories`); },
           },
           {
             Header: 'Root Cause',
             accessor: 'rc',
+            filter: 'customFilter',
             disableGroupBy: true,
             aggregate: 'count',
-            Aggregated: ({ value }) => `${value} Root Causes`,
+            Aggregated: ({ value }) => { return (value === 1 ? `${value} root-cause` : `${value} root-causes`); },
           },
         ],
       },
@@ -137,20 +140,6 @@ export function SummaryHeaderProvider() {
                   />
                 </React.Fragment>
               );
-              // return (
-              //   <React.Fragment>
-              //     <Badge badgeContent={value[0]} max={99} color="primary" overlap="circle" showZero>
-              //       <CheckBoxOutlineBlankIcon />
-              //     </Badge>
-              //     <Badge badgeContent={value[1]} max={99} color="primary" overlap="circle" showZero>
-              //       <CheckBoxIcon color="primary" />
-              //     </Badge>
-              //     <Badge badgeContent={value[2]} max={99} color="secondary" overlap="circle" showZero>
-              //       <ErrorIcon color="secondary" />
-              //     </Badge>
-              //   </React.Fragment>
-
-              // );
             }
 
           },
@@ -179,24 +168,20 @@ export function SummaryHeaderProvider() {
   )
 }
 
-var FbPathChangeHook = undefined;
-var CloseHook = undefined;
-
 export function SummaryDataProvider(rawData, currentTitle, onFbPathChange, onClose) {
-  console.log(`hook=${onFbPathChange}`);
-  FbPathChangeHook = onFbPathChange;
-  CloseHook = onClose;
-  return CreateTableData(rawData, currentTitle);
-}
-
-function FbPathLinkClicked(path) {
-  if (FbPathChangeHook && CloseHook) {
-    FbPathChangeHook(path)
-    CloseHook();
+  const FbPathLinkClicked = (path) => {
+    if (onFbPathChange && onClose) {
+      onFbPathChange(path)
+      onClose();
+    }
   }
+
+  const hooks = { FbPathLinkClicked: FbPathLinkClicked }
+
+  return CreateTableData(rawData, hooks, currentTitle);
 }
 
-function CreateTableData(rawData, currentTitle = '', path = []) {
+function CreateTableData(rawData, hooks, currentTitle = '', path = []) {
   var tableData = [];
 
   var effectIndex = 0;
@@ -220,9 +205,9 @@ function CreateTableData(rawData, currentTitle = '', path = []) {
             });
 
             tableData.push({
-              effect: CreateTooltip(pathString, CreateLink(levelString, FbPathLinkClicked, JSON.parse(JSON.stringify(path))), levelString),
-              category: CreateLink(typeof category.name === 'string' ? category.name : '', FbPathLinkClicked, JSON.parse(JSON.stringify(path))),
-              rc: CreateLink(props.label && typeof props.label === 'string' ? props.label : '', FbPathLinkClicked, JSON.parse(JSON.stringify(path))),
+              effect: CreateTooltip(pathString, CreateLink(levelString, hooks.FbPathLinkClicked, JSON.parse(JSON.stringify(path))), levelString),
+              category: CreateLink(typeof category.name === 'string' ? category.name : '', hooks.FbPathLinkClicked, JSON.parse(JSON.stringify(path))),
+              rc: CreateLink(props.label && typeof props.label === 'string' ? props.label : '', hooks.FbPathLinkClicked, JSON.parse(JSON.stringify(path))),
               value: props.value && typeof props.value === 'string' ? props.value : 'open',
 
               instructions: RenderConditionText({ markdownActive: GetMarkdownActive(props.instructions), text: GetTextValue(props.instructions) }),
@@ -232,7 +217,7 @@ function CreateTableData(rawData, currentTitle = '', path = []) {
           }
 
           if (rc.type === 'nested') {
-            tableData = tableData.concat(CreateTableData(rc.data, rc.title, path));
+            tableData = tableData.concat(CreateTableData(rc.data, hooks, rc.title, path));
           }
         }
       });

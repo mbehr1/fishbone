@@ -224,7 +224,7 @@ export default class App extends Component {
     }
 
     // Ensure summary dialog is initially disabled
-    this.setState({ showSummaryDialog: false })
+    this.setState['showSummaryDialog'] = false;
 
     this.logMsg(`from App/constructor state.title=${this.state.title}`);
     window.addEventListener('message', event => {
