@@ -15,6 +15,8 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
 
 **Note:** The document supports regular **Undo**. That's why e.g. commands like "delete effect", "delete rootcause",... are not asking whether you do really want to delete.
 
+![example1](https://github.com/mbehr1/fishbone/blob/main/images/fishbone_example1.gif?raw=true)
+
 ## Features
 
 - allows to create interactive fishbone diagrams with
