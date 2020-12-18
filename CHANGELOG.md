@@ -2,6 +2,9 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.9.0]
+- add summary feature
+
 ## [0.8.1]
 - added http cache for rest api queries. Items will only be added if the header cache-control max-age value is >0 and stay only valid for that duration.
 
