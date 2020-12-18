@@ -30,6 +30,7 @@ import Grid from '@material-ui/core/Grid';
 //import MenuItem from '@material-ui/core/MenuItem';
 import InputDataProvided from './components/dataProvider';
 import FBACheckbox from './components/fbaCheckbox';
+import SummaryDialog from './components/summaryDialog';
 import OnBlurInputBase from './components/onBlurInputBase';
 import { receivedResponse } from './util';
 import HomeIcon from '@material-ui/icons/Home';
@@ -222,6 +223,9 @@ export default class App extends Component {
       this.state.fbPath = [{ title: this.state.title, effectIndex: 0 }]
     }
 
+    // Ensure summary dialog is initially disabled
+    this.setState['showSummaryDialog'] = false;
+
     this.logMsg(`from App/constructor state.title=${this.state.title}`);
     window.addEventListener('message', event => {
       const msg = event.data;
@@ -387,6 +391,13 @@ export default class App extends Component {
       // storing all but the fbPath... (todo: why not?)
       this.props.vscode.postMessage({ type: 'update', data: JSON.parse(JSON.stringify(state.data)), title: state.title, attributes: state.attributes });
     });
+  }
+
+  /**
+   * Opens a new modal dialog to present all data in a summary view
+   */
+  onShowSummary() {
+    this.setState({ showSummaryDialog: true })
   }
 
   /**
@@ -828,6 +839,10 @@ export default class App extends Component {
       this.setState({ fbPath: curPath });
     }
 
+    const onFbPathChange = (path) => {
+      this.setState({ fbPath: path });
+    }
+
     const handleChangeTitle = (value) => {
       console.log(`handleChangeTitle value='${value}'`);
       if (this.state.fbPath.length === 1) {
@@ -897,10 +912,18 @@ export default class App extends Component {
               </IconButton>
               <Menu id="appMoreMenu" anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={handleClose}>
                   <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(); }}>reset all entries</MenuItem>
+                  <MenuItem onClick={() => { handleClose(); this.onShowSummary(); }}>show summary</MenuItem>
                   {this.state?.attributes?.findIndex(attr => attr.hasOwnProperty('lifecycles')) < 0 && <MenuItem onClick={() => { handleClose(); this.onAddDLTAttributes(); }}>add DLT attributes</MenuItem>}
               </Menu>
             </Toolbar>
           </AppBar>
+            <SummaryDialog
+              label='Summary'
+              fbdata={this.state.data}
+              onFbPathChange={onFbPathChange}
+              title={this.state.title}
+              open={this.state.showSummaryDialog === true} onClose={() => this.setState({ showSummaryDialog: false })}
+            />
         <Grid container spacing={3}>
           <Grid item xs={12}>
               <Paper>

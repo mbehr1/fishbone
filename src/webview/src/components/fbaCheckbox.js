@@ -5,7 +5,7 @@ import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography'
+import Typography from '@material-ui/core/Typography';
 import EditIcon from '@material-ui/icons/Edit';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
@@ -30,15 +30,14 @@ import MuiAlert from '@material-ui/lab/Alert';
 import { Snackbar } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 
-import MultiStateBox from './multiStateBox';
 import { triggerRestQueryDetails } from './../util';
-
 import { AttributesContext } from './../App';
+
+import { GetMarkdownActive, GetTextValue, RenderConditionText } from './utils/markdown'
+
+import MultiStateBox from './multiStateBox';
 import DataProviderEditDialog from './dataProviderEditDialog';
 import TextFieldEditDialog from './textFieldEditDialog';
-
-import DOMPurify from 'dompurify';
-import toMarkdown from 'marked';
 
 // import Grid from '@material-ui/core/Grid';
 // import Autocomplete from '@material-ui/lab/Autocomplete';
@@ -57,19 +56,6 @@ function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
 
-/**
- * helper function to check and return the o.textValue attribute
- */
-function GetTextValue(property) {
-    return property && property.textValue ? property.textValue : '';
-}
-
-/**
- * helper function to check and return the o.markdownFormat state
- */
-function GetMarkdownActive(property) {
-    return property && property.markdownFormat ? true : false;
-}
 
 const useStyles = makeStyles(theme => ({
     lowerRightBadge: {
@@ -236,13 +222,6 @@ export default function FBACheckbox(props) {
         setApplyFilterBarOpen(false);
     }
 
-    function RenderConditionText(props) {
-        const markdownActive = props.markdownActive;
-        if (markdownActive) {
-            return <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(props.text)) }} />;
-        }
-        return <Typography variant="body1" style={{ whiteSpace: 'pre-line' }} >{props.text}</Typography>;
-    }
 
     const backgroundFragments = (
         <React.Fragment>
