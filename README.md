@@ -7,6 +7,8 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
 - defect reports / perform root cause analysis or
 - support FMEAs.
 
+![example1](https://github.com/mbehr1/fishbone/blob/main/images/fishbone_example1.gif?raw=true)
+
 **Note:** It works well with [![Version](https://vsmarketplacebadge.apphb.com/version/mbehr1.dlt-logs.svg)](https://marketplace.visualstudio.com/items?itemName=mbehr1.dlt-logs) **dlt-logs** extension and supports e.g. querying data directly from the DLT log or applying filter automatically in the DLT log. 
 
 **Note:** To start you can use the command *New fishbone* or create an empty file with extension .fba and simpy open that via regular "Open...".
@@ -14,8 +16,6 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
 **Note:** Title, effects and categories can be directly changed via the UI. Simply click into the corresponding area.
 
 **Note:** The document supports regular **Undo**. That's why e.g. commands like "delete effect", "delete rootcause",... are not asking whether you do really want to delete.
-
-![example1](https://github.com/mbehr1/fishbone/blob/main/images/fishbone_example1.gif?raw=true)
 
 ## Features
 
