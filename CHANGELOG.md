@@ -2,6 +2,9 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.9.4]
+- readme: abs path to icon and size changed to 24.
+
 ## [0.9.3]
 - add icon
 
