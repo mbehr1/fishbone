@@ -1,4 +1,4 @@
-# Fishbone README
+# <img src="fishbone-icon2.png" alt="icon" width="32"> Fishbone README
 
 [![Version](https://vsmarketplacebadge.apphb.com/version/mbehr1.fishbone.svg)](https://marketplace.visualstudio.com/items?itemName=mbehr1.fishbone)
 
