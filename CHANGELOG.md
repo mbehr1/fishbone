@@ -2,6 +2,15 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.9.3]
+- add icon
+
+## [0.9.2]
+- readme update
+
+## [0.9.1]
+- add example picture
+
 ## [0.9.0]
 - add summary feature
 
