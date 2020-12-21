@@ -1,0 +1,30 @@
+{
+    "instructions": [
+        {
+            "id": 1,
+            "text": "query https://my-json-server.typicode.com/mbehr1/fishbone/examples"
+        }
+    ],
+    "examples": [
+        {
+            "id": 1,
+            "badge1": "Closed",
+            "badge2": "a longer text for example 1"
+        },
+        {
+            "id": 2,
+            "badge1": "Integrated",
+            "badge2": "another long text for example 2"
+        },
+        {
+            "id": 3,
+            "badge1": "Closed",
+            "badge2": "running out of ideas for example 3"
+        },
+        {
+            "id": 4,
+            "badge1": "Open",
+            "badge2": "a short example 4"
+        }
+    ]
+}
