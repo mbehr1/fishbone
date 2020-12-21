@@ -1,0 +1,47 @@
+version: '0.3'
+title: 'issue #3'
+attributes: []
+fishbone:
+  - name: <enter effect to analyse>
+    categories:
+      - name: category 1
+        rootCauses:
+          - type: react
+            element: FBACheckbox
+            props:
+              label: root cause 1 with longer text
+              value: null
+              badge:
+                source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples/1'
+                jsonPath: $.badge1
+                conv: 'index:0'
+              badge2:
+                source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples/1'
+                jsonPath: $.badge2
+                conv: 'index:0'
+          - type: react
+            element: FBACheckbox
+            props:
+              label: root cause 2
+              value: null
+              badge:
+                source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples/2'
+                jsonPath: $.badge1
+                conv: 'index:0'
+              badge2:
+                source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples/2'
+                jsonPath: $.badge2
+                conv: 'index:0'
+          - type: react
+            element: FBACheckbox
+            props:
+              label: root cause 3
+              value: null
+              badge:
+                source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples/3'
+                jsonPath: $.badge1
+                conv: 'index:0'
+              badge2:
+                source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples/3'
+                jsonPath: $.badge2
+                conv: 'index:0'
