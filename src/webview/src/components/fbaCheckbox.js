@@ -2,6 +2,7 @@
 import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import Container from '@material-ui/core/Container';
+import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import IconButton from '@material-ui/core/IconButton';
@@ -58,8 +59,15 @@ function Alert(props) {
 
 
 const useStyles = makeStyles(theme => ({
+    upperLeftBadge: {
+        left: `2px`, // was 0px orig
+        transform: `scale(0.8) translate(0%, -65%)` // was scale(1) tranlate(-50%, -50%) orig. but we prefer them left aligned
+    },
     lowerRightBadge: {
-        padding: `${theme.spacing.unit * 0.5}px 0 0 0` // want 4px 0 0 0 as top 4, left/right/bottom 0 as we have no background color!
+        'justify-content': 'flex-end', // right align text
+        width: '115%', // as we move it to the right we can use more space
+        right: '-5px', // text starting right aligned a -5px over the border but not overlapping the ... button (z-index issues)
+        transform: 'scale(0.8) translate(0%, 70%)' // text a bit smaller and below
     }
 }));
 
@@ -310,21 +318,23 @@ export default function FBACheckbox(props) {
     );
 
     return (
-        <Container>
-            <Grid container spacing={1}>
-                <Grid item flex>
-                    <Badge badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
+        <Container style={{ padding: '0px 0px 0px 10px' } /* a little padding left */}>
+            <Box py='1px' /* py = padding-top+bottom <- padding around checkbox */>
+                <Grid container spacing={1} /* distance between checkbox and edit icon */ >
+                    <Grid item flex style={{ 'padding': '1px' }}>
+                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
                         <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={badge2Counter} color={/* doesn't exist for badge but makes the background inherit */"info"} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={props.value !== null || badge2Status < 2} >
                             <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
                         </Badge>
                     </Badge>
                 </Grid>
-                <Grid style={{ 'max-width': 26 }}>
-                    <IconButton size="small" aria-label="edit" onClick={handleClickOpen}>
-                        <EditIcon fontSize="small" color="primary" />
-                    </IconButton>
+                    <Grid>
+                        <IconButton size="small" aria-label="edit" onClick={handleClickOpen} zIndex={2} style={{ 'padding': '4px 0px 2px 0px' }}>
+                    <EditIcon fontSize="small" color="primary" />
+                </IconButton>
                 </Grid>
             </Grid>
+            </Box>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
                 <DialogTitle disableTypography id={'form-edit-' + props.name} align='left' gutterBottom>
                     <Input id={'input-label'} name='label' value={values.label} onChange={handleValueChanges} ></Input>

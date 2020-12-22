@@ -1,0 +1,129 @@
+version: '0.3'
+title: Factors contributing
+attributes: null
+fishbone:
+  - name: Defect XXX
+    categories:
+      - name: Measurements
+        rootCauses:
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Calibration
+              value: ok
+              instructions:
+                textValue: |-
+                  - check whether the URL is properly entered
+                  - check especially for http/https
+                  - for german umlauts
+                  - ...
+                markdownFormat: true
+              backgroundDescription:
+                textValue: Sometimes human beings type wrong data...
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Microscopes
+              value: ok
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Inspectors
+              value: null
+              badge:
+                source: >-
+                  https://api.github.com/repos/mbehr1/fishbone/issues?state=closed
+                conv: 'length:'
+              instructions:
+                textValue: >-
+                  Please check the timeplan for:
+
+                  - a...
+
+                  - b...
+
+                  - c...
+
+
+                  The upper badge queries our internal process-database and
+                  indicates....
+                markdownFormat: true
+              backgroundDescription:
+                textValue: Inspectors have the following influence on ...
+              comments:
+                textValue: ''
+      - name: Environment
+        rootCauses:
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Humidity
+              value: error
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Temperature
+              value: null
+      - name: Materials
+        rootCauses:
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Alloys
+              value: null
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Lubricants
+              value: null
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Suppliers
+              value: null
+      - name: Methods
+        rootCauses:
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Angle
+              value: null
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Engager
+              value: null
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Brake
+              value: null
+      - name: Personnel
+        rootCauses:
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Shifts
+              value: null
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Trainings
+              value: null
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Operators
+              value: null
+      - name: Machines
+        rootCauses:
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Blade wear
+              value: null
+          - type: react
+            element: FBACheckbox
+            props:
+              label: Speed
+              value: null

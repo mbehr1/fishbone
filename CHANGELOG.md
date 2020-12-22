@@ -2,6 +2,9 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.9.5]
+- improved layout for heavier usage of badges. Change/fix for issue #3.
+
 ## [0.9.4]
 - readme: abs path to icon and size changed to 24.
 

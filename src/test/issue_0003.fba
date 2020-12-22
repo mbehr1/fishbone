@@ -44,4 +44,17 @@ fishbone:
               badge2:
                 source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples/3'
                 jsonPath: $.badge2
+                conv: 'func:return (result+result).slice(0, 60)'
+          - type: react
+            element: FBACheckbox
+            props:
+              label: root cause 4 with longer title
+              value: null
+              badge:
+                source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples'
+                jsonPath: ''
+                conv: 'length:'
+              badge2:
+                source: 'https://my-json-server.typicode.com/mbehr1/fishbone/examples/3'
+                jsonPath: $.badge2
                 conv: 'index:0'

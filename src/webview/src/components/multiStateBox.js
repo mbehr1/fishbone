@@ -57,7 +57,7 @@ export default function MultiStateBox(props) {
     }
 
     const innerFragment = (
-        <FormControlLabel style={{ 'flex': 'auto', 'text-align': 'initial', 'align-self': 'initial' }} control={
+        <FormControlLabel style={{ 'flex': 'auto', 'text-align': 'initial', 'align-self': 'initial', 'min-width': '240px', "margin-right": '0px' }} control={
                 <IconButton {...props} color={curColor} onClick={handleClick}>{curValuePair.icon}</IconButton>
             } label={props.label}
         />
