@@ -214,7 +214,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     break;
                 case 'sAr':
                     {  // vscode.postMessage({ type: 'sAr', req: req, id: reqId });
-                        console.log(`fbaEditor got sAr msg(id=${e.id}}): ${JSON.stringify(e.req)}`);
+                        // console.log(`fbaEditor got sAr msg(id=${e.id}}): ${JSON.stringify(e.req)}`);
                         switch (e.req.type) {
                             case 'restQuery':
                                 { // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
@@ -237,10 +237,20 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                         }
                                     } else {
                                         const requestObj: any = typeof e.req.request === 'object' ? e.req.request : undefined;
-                                        console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via request`);
+                                        // console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via request`);
 
                                         performHttpRequest(this.context.globalState, url, { 'Accept': 'application/json' }).then((result: any) => {
-                                            console.log(`request statsCode=${result.res.statusCode}`);
+                                            if (true /* result.res.statusCode !== 200 */) { console.log(`request ${JSON.stringify(e.req.request)} got statusCode=${result.res.statusCode}`); }
+                                            if ('headers' in result.res && 'content-type' in result.res.headers) {
+                                                const contentType = result.res.headers['content-type'];
+                                                // warn if header is not application/json: e.g.
+                                                // "content-type": "application/json; charset=utf-8",
+                                                //console.log(`request statusCode=${result.res.statusCode} content-type='${contentType}'`);
+                                                if (typeof contentType === 'string' && !contentType.includes('pplication/json')) {
+                                                    console.warn(`triggerRestQuery '${JSON.stringify(e.req.request)}' returned wrong content-type : '${contentType}'`);
+                                                    console.warn(` body first 200 chars='${result.body.slice(0, 200)}'`);
+                                                }
+                                            }
                                             const json = JSON.parse(result.body);
                                             webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id });
                                         }).catch(err => {

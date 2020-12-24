@@ -33,21 +33,21 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
         // is it still valid?
         if (cachedRes.validTill >= dateNow) {
             // yes
-            console.log(`retrieved from cache: ${urlString}`);
+            //console.log(`retrieved from cache: ${urlString}`);
             return new Promise((resolve, reject) => resolve(cachedRes));
         } else {
             // not valid any longer, remove from cache
-            console.log(`cache too old for: ${urlString}`);
+            //console.log(`cache too old for: ${urlString}`);
             httpCache.delete(urlString);
         }
     } else {
-        console.log(`performHttpRequest not in cache: '${urlString}' cache size=${httpCache.size}`);
+        //console.log(`performHttpRequest not in cache: '${urlString}' cache size=${httpCache.size}`);
     }
     // clean up cache here for all invalid ones... could do with a timer as well.
     httpCache.forEach((value, key, map) => {
         if (value.validTill < dateNow) {
             map.delete(key);
-            console.log(`deleted outdated from cache: ${urlString}`);
+            //console.log(`deleted outdated from cache: ${urlString}`);
         }
     });
 
@@ -60,7 +60,7 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
             ...headers
         }
     };
-    console.log(`performHttpRequest reqOptions='${JSON.stringify(reqOptions)}'`);
+    //console.log(`performHttpRequest reqOptions='${JSON.stringify(reqOptions)}'`);
 
     if (haveCachedAuth !== undefined) {
         reqOptions.auth = {
@@ -68,7 +68,7 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
             'password': haveCachedAuth.password,
             'sendImmediately': false
         };
-        console.log(`performHttpRequest reqOptions added auth for username='${reqOptions.auth.username}'`);
+        // console.log(`performHttpRequest reqOptions added auth for username='${reqOptions.auth.username}'`);
     }
 
     return new Promise((resolve, reject) => {
@@ -77,7 +77,7 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
                 console.warn(`performHttpRequest failed with err=`, err);
                 reject(err);
             } else {
-                console.log(`performHttpRequest ${origin} got statusCode=${res.statusCode}`);
+                //console.log(`performHttpRequest ${origin} got statusCode=${res.statusCode}`);
                 if (res.statusCode === 401) {
                     console.log(`got statusCode 401, with text='${body}'`);
 
@@ -106,7 +106,7 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
                     try {
                         if ('headers' in res && 'cache-control' in res.headers) {
                             const cacheControl = res.headers['cache-control'];
-                            console.log(`cacheControl='${JSON.stringify(cacheControl)}'`);
+                            //console.log(`cacheControl='${JSON.stringify(cacheControl)}'`);
                             if (typeof cacheControl === 'string') {
                                 const rMaxAge = /max-age=(\d+)/;
                                 const maxAge = cacheControl.match(rMaxAge);
@@ -115,7 +115,7 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
                                     const age = Number(maxAge[1]);
                                     if (age > 0) {
                                         // add to cache:
-                                        console.log(`added to cache=${urlString} age=${age}`);
+                                        // console.log(`added to cache=${urlString} age=${age}`);
                                         httpCache.set(urlString, { validTill: Date.now() + (age * 1000), res: res, body: body });
                                     }
                                 }

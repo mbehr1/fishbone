@@ -2,6 +2,9 @@
 
 All notable changes to the "fishbone" extension will be documented in this file.
 
+## [0.9.6]
+- changed log output for rest queries. Less verbose except for content-type != application/json.
+
 ## [0.9.5]
 - improved layout for heavier usage of badges. Change/fix for issue #3.
 
