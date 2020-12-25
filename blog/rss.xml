@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+    <channel>
+        <title>Fishbone Visual Studio Code Extension Blog</title>
+        <link>https://mbehr1.github.io/blog</link>
+        <description>Fishbone Visual Studio Code Extension Blog</description>
+        <lastBuildDate>Fri, 25 Dec 2020 00:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[Welcome]]></title>
+            <link>https://mbehr1.github.io/fishbone/blog/welcome</link>
+            <guid>welcome</guid>
+            <pubDate>Fri, 25 Dec 2020 00:00:00 GMT</pubDate>
+            <description><![CDATA[I'll use this blog to announce new features or doc updates to my Visual Studio Code extension "fishbone" or to announce other related extensions.]]></description>
+        </item>
+    </channel>
+</rss>
