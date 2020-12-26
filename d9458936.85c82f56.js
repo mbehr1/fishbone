@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[20],{93:function(n){n.exports=JSON.parse('{"allTagsPath":"/fishbone/blog/tags","slug":"fishbone","name":"fishbone","count":1,"permalink":"/fishbone/blog/tags/fishbone"}')}}]);
