@@ -3,7 +3,7 @@ on:
   push:
     # release.yml workflow does it already there.
     branches-ignore:
-      - master
+      - main
       - gh-pages
   pull_request:
 jobs:
