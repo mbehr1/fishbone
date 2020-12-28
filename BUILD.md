@@ -212,7 +212,7 @@ jobs:
         with:
           node-version: 12
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
