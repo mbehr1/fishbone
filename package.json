@@ -102,5 +102,62 @@
 		"hooks": {
 			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
 		}
-	}
+	},
+	"release": {
+		"branches": [
+			"master"
+		],
+		"plugins": [
+			[
+				"@semantic-release/commit-analyzer",
+				{
+					"releaseRules": [
+						{
+							"type": "docs",
+							"scope": "readme",
+							"release": "patch"
+						}
+					]
+				}
+			],
+			"@semantic-release/release-notes-generator",
+			[
+				"@semantic-release/changelog",
+				{
+					"changelogFile": "CHANGELOG.md",
+					"changelogTitle": "# Change log for 'Fishbone':"
+				}
+			],
+			[
+				"@semantic-release/npm",
+				{
+					"npmPublish": false
+				}
+			],
+			[
+				"semantic-release-vsce",
+				{
+					"packageVsix": "fishbone.vsix"
+				}
+			],
+			[
+				"@semantic-release/github",
+				{
+					"assets": [
+						{
+							"path": "fishbone.vsix",
+							"label": "Fishbone Visual Studio Code extension package"
+						}
+					]
+				}
+			],
+			[
+				"@semantic-release/git",
+				{
+					"message": "chore(release): ${nextRelease.version} [skip ci]"
+				}
+			]
+		],
+		"preset": "conventionalcommits"
+	  }
 }
