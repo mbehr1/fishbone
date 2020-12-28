@@ -2,7 +2,7 @@
 	"name": "fishbone",
 	"displayName": "Fishbone / Ishikawa analysis",
 	"description": "Create interactive fishbone diagrams for a systematic defect/failure analysis.",
-	"version": "0.9.6",
+	"version": "1.0.0",
 	"license": "CC-BY-NC-SA-4.0",
 	"publisher": "mbehr1",
 	"author": {
@@ -66,6 +66,10 @@
 		"test": "node ./out/test/runTest.js"
 	},
 	"devDependencies": {
+		"@commitlint/cli": "^11.0.0",
+		"@commitlint/config-conventional": "^11.0.0",
+		"@semantic-release/changelog": "^5.0.1",
+		"@semantic-release/git": "^9.0.0",
 		"@types/glob": "^7.1.1",
 		"@types/js-yaml": "^3.12.5",
 		"@types/mocha": "^7.0.2",
@@ -76,7 +80,10 @@
 		"@typescript-eslint/parser": "^2.30.0",
 		"eslint": "^7.11.0",
 		"glob": "^7.1.6",
+		"husky": "^4.3.6",
 		"mocha": "^7.1.2",
+		"semantic-release": "^17.3.0",
+		"semantic-release-vsce": "^3.0.1",
 		"typescript": "^3.8.3",
 		"vscode-test": "^1.3.0"
 	},
@@ -85,5 +92,15 @@
 		"jsonpath": "^1.0.2",
 		"request": "^2.88.2",
 		"vscode-extension-telemetry": "^0.1.6"
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	},
+	"husky": {
+		"hooks": {
+			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+		}
 	}
 }
