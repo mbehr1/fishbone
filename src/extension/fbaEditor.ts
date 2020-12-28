@@ -248,7 +248,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                                 //console.log(`request statusCode=${result.res.statusCode} content-type='${contentType}'`);
                                                 if (typeof contentType === 'string' && !contentType.includes('pplication/json')) {
                                                     console.warn(`triggerRestQuery '${JSON.stringify(e.req.request)}' returned wrong content-type : '${contentType}'`);
-                                                    console.warn(` body first 200 chars='${result.body.slice(0, 200)}'`);
+                                                    console.warn(` body first 2000 chars='${result.body.slice(0, 2000)}'`);
                                                 }
                                             }
                                             const json = JSON.parse(result.body);
