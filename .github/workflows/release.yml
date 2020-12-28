@@ -19,6 +19,9 @@ jobs:
           node-version: 12
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+      - name: Install webview dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: ./src/webview
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
