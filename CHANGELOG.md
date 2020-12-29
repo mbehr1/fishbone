@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+## [1.1.0](https://github.com/mbehr1/fishbone/compare/v1.0.1...v1.1.0) (2020-12-29)
+
+
+### Features
+
+* **template-workflow:** add 'reset & reimport all entries' ([03855b4](https://github.com/mbehr1/fishbone/commit/03855b48d961148099cc67721b22427afe04d645))
+
 ### [1.0.1](https://github.com/mbehr1/fishbone/compare/v1.0.0...v1.0.1) (2020-12-28)
 
 
