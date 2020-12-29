@@ -21,7 +21,7 @@ A more detailed documentation is available here: [Docs](https://mbehr1.github.io
 
 ## Features
 
-- allows to create interactive fishbone diagrams with
+- allows to create ***interactive*** fishbone diagrams with
   - multiple effects
   - causes/categories to aid clustering root causes
   - root causes that
@@ -29,26 +29,32 @@ A more detailed documentation is available here: [Docs](https://mbehr1.github.io
     - can have a background description
     - can have processing instructions.
 
-- diagrams can be nested via 
+- diagrams can be ***nested*** via 
   - *add nested fishbone* command from the category ... menu or
   - *import fishbone* command from the category ... menu. On importing new attributes defined in the imported ones will be added. Take care: attributes with same name will not be modified on import. Please check that they have the same meaning.
 - supports copy/cut/paste for root causes and categories.
-- supports restQuery from other extensions (currently dlt-logs and via direct yaml file modification)
-- summary table to provide a compact overview
+- supports ***rest queries*** from
+  - https rest server (e.g. JIRA, github, ...)
+  - other extensions (currently dlt-logs).
+- The rest query results can be used for ***badges*** and automatic ***apply filter*** (dlt). Details see [Docs/Features/Badges](https://mbehr1.github.io/fishbone/docs/badges). 
+
+- ***summary table*** to provide a compact overview
 	- grouping by effect and category
 	- links to jump directly to the particular fishbone view
-	- filter for each element 
+	- filter for each element
+- ***template-worklow:***
+  - fba/fishbone analysis files can be used as templates as well. The feature ***reset all entries*** resets all values (check-marks), attribute values and comments. To start a new analysis you can simply use the one from any previous analysis, perform ***reset all entries*** and ***save as...*** with a new name.
+  - ***import fishbone*** allows to support complex analysis that can be splitted/maintained by topic or different teams. But for analysis they can be imported into a single analysis file.
+  - feature ***reset & reimport all entries*** performs same reset than *reset all entries* but at the same time tries to re-imported / update any imported fishbones. This supports multiple teams maintaining different failure templates. For the re-import the relative path is stored and the imported files are searched with those relative paths.
+
 
 <!-- todo add image \!\[feature X\]\(images/feature-x.png\) -->
 
 ## Planned features
 
-- support a "template-workflow" (e.g. reset values, comments,... or clone)
-  - *reset all entries* to reset values, comments and attribute values already available
-  - *import fishbone* implemented to be able to split the definition of fishbones into multiple files, e.g. per topic but to add them into one analysis file.
-  - missing: on *reset all entries* imported fishbones should be re-read to ease maintenance of files per topic.
-- support pcap filters similar to dlt log filters
-- support text document filters working with smart-logs
+- ***template-workflow:*** add "lock" feature/flag on imported fishbones to prevent or be aware of changes that will be overwritten/lost with next "reset & reimport".
+- support ***pcap filters*** similar to dlt log filters
+- support ***text document filters/events*** working with smart-logs extension.
 
 ## Known Issues
 

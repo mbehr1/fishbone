@@ -369,7 +369,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         if (('attributes' in docObj) && docObj.attributes !== undefined) { yamlObj.attributes = docObj.attributes; }
         if ('fishbone' in docObj) {
             // special command handling to import other fishbones:
-            const deepRootCausesForEach = async (fishbone: any[], fn: (rc: any) => any | null | undefined) => {
+            const deepRootCausesForEach = async (fishbone: any[], parents: any[], fn: (rc: any, parents: any[]) => any | null | undefined) => {
                 for (const effect of fishbone) {
                     const nrCats = effect?.categories?.length;
                     if (nrCats > 0) {
@@ -379,7 +379,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                             if (nrRcs > 0) {
                                 for (let r = 0; r < nrRcs; ++r) {
                                     const rc = category.rootCauses[r];
-                                    let modRc = await fn(rc); // we call the callback in any case
+                                    let modRc = await fn(rc, parents); // we call the callback in any case
                                     if (modRc === undefined) { // no change
                                         modRc = rc;
                                     } else if (modRc === null) { // delete this rc.
@@ -392,7 +392,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                     if (modRc !== undefined) {
                                         // and if its a nested we do nest automatically:
                                         if (modRc?.type === 'nested') {
-                                            deepRootCausesForEach(modRc.data, fn);
+                                            deepRootCausesForEach(modRc.data, [...parents, modRc], fn);
                                         }
                                     }
                                 }
@@ -401,21 +401,21 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     }
                 }
             };
-            // check for root causes type "import"
+            // check for root causes type "import" or type nested but "reimport" set:
             // we do return 
             //  null: -> rc will be deleted
             //  modified obj -> will replace rc
             //  undefined -> no change
-            await deepRootCausesForEach(docObj.fishbone, async (rc) => {
+            await deepRootCausesForEach(docObj.fishbone, [], async (rc, parents) => { // parents use [] or [docObj] or [docObj.fishbone]for first one?
                 if (rc?.type === 'import') {
-                    console.warn(`got 'import' rc:`, rc);
+                    console.log(`got 'import' rc:`, rc);
                     // show open file dialog:
                     const uri = await vscode.window.showOpenDialog({ canSelectMany: false, filters: { 'Fishbone': ['fba'] }, openLabel: 'import', title: 'select fishbone to import' });
                     if (uri && uri.length === 1) {
-                        console.warn(`shall import '${uri[0].toString()}'`);
+                        console.log(` shall import '${uri[0].toString()}'`);
                         // determine relative path and store for later update
                         const relPath = path.relative(document.uri.fsPath, uri[0].fsPath);
-                        console.log(`got relPath='${relPath}' from '${document.uri.fsPath}' and '${uri[0].fsPath}'`);
+                        console.log(` got relPath='${relPath}' from '${document.uri.fsPath}' and '${uri[0].fsPath}'`);
                         try {
                             const fileText = fs.readFileSync(uri[0].fsPath, { encoding: 'utf8' });
                             const importYamlObj = FBAEditorProvider.getFBDataFromText(fileText, undefined);
@@ -434,6 +434,53 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         }
                     }
                     return null; // delete the import rc
+                }
+                // reimport?
+                if (rc?.type === 'nested' && rc?.reimport) {
+                    if (rc.relPath) {
+                        console.log(`shall 'reimport' rc.relpath=${rc?.relPath}`, rc);
+                        // need to get the full rel path as it's relative to the parent one which is relative to the parent one...
+                        const parentRelPaths = parents.map(parent => parent.relPath ? parent.relPath : undefined);
+                        let relPath = document.uri.fsPath;
+                        for (let parentRelPath of parentRelPaths) {
+                            if (parentRelPath) {
+                                relPath = path.resolve(relPath, parentRelPath);
+                                console.log(` -> relPath='${relPath}'`);
+                            }
+                        }
+                        relPath = path.resolve(relPath, rc.relPath);
+                        console.log(` trying to reimport absPath='${relPath}'`);
+                        // now reimport that absPath file:
+                        try {
+                            const fileText = fs.readFileSync(relPath, { encoding: 'utf8' });
+                            const importYamlObj = FBAEditorProvider.getFBDataFromText(fileText, undefined);
+                            if (typeof importYamlObj === 'object') {
+                                // merge attributes (we might consider adding the new ones to the nested only and show only on entering that nested one?)
+                                FBAEditorProvider.mergeAttributes(yamlObj.attributes, importYamlObj.attributes);
+                                // we do have to mark any contained nested fishbones with reimport...
+                                await deepRootCausesForEach(importYamlObj.fishbone, [], (rc, parents) => {
+                                    if (rc?.type === 'nested') {
+                                        rc['reimport'] = true;
+                                    }
+                                });
+                                console.log(` reimport of '${rc.relPath}' done.`);
+                                return {
+                                    type: 'nested',
+                                    relPath: rc.relPath,
+                                    title: importYamlObj.title, // todo shall we keep the prev title? or append with 'was:...'?
+                                    data: importYamlObj.fishbone
+                                };
+                            }
+                        } catch (e) {
+                            console.warn(`re-importing file '${rc.relPath}' failed due to:'${e}'`);
+                            vscode.window.showWarningMessage(`re-importing file '${rc.relPath} failed due to:'${e}'`);
+                        }
+                        console.log('reimport done/failed');
+                    } else {
+                        console.error(`shall 'reimport' rc without relPath!`, rc);
+                    }
+                    delete rc.reimport; // mark as done by deleting object property
+                    return rc; // we always have to return the modified obj even if reimport failed
                 }
                 return undefined;
             });

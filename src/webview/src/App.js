@@ -408,11 +408,11 @@ export default class App extends Component {
    * from the root one.
    * Resets attributes as well.
    */
-  onResetAllEntries() {
-    console.log(`onResetAllEntries called`);
+  onResetAllEntries(reimport) {
+    console.log(`onResetAllEntries(reimport=${reimport}) called`);
     //const data = this.getCurData(this.state.fbPath, this.state.data)
 
-    const resetData = (data) => {
+    const resetData = (data, reimport) => {
       data.forEach(effect => {
         console.log(`effect.name=${effect.name}`);
         effect.categories.forEach(category => {
@@ -429,14 +429,16 @@ export default class App extends Component {
                 category.rootCauses.splice(i, 1, { ...rc }); // create a new obj.
               }
               if (rc.type === 'nested') {
-                resetData(rc.data);
+                resetData(rc.data, reimport);
+                // we do mark whether a reimport is wanted:
+                rc['reimport'] = reimport ? true : undefined;
               }
             }
           }
         });
       });
     };
-    resetData(this.state.data);
+    resetData(this.state.data, reimport);
     // if data is not the state.date :
     // now we have to make data a new object... to trigger a redraw of this object...
     // it's a problem as data (except for the top level fb not a direct shallow member of state)
@@ -911,7 +913,8 @@ export default class App extends Component {
                 <MoreHorizIcon />
               </IconButton>
               <Menu id="appMoreMenu" anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={handleClose}>
-                  <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(); }}>reset all entries</MenuItem>
+                  <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(false); }}>reset all entries</MenuItem>
+                  <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(true); }}>reset & reimport all entries</MenuItem>
                   <MenuItem onClick={() => { handleClose(); this.onShowSummary(); }}>show summary</MenuItem>
                   {this.state?.attributes?.findIndex(attr => attr.hasOwnProperty('lifecycles')) < 0 && <MenuItem onClick={() => { handleClose(); this.onAddDLTAttributes(); }}>add DLT attributes</MenuItem>}
               </Menu>
