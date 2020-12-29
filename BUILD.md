@@ -172,7 +172,7 @@ Besides that only the default rules apply:
 - fix -> patch
 - perf -> patch.
 
-the last non automatic released version (v0.30.3) was tagged via
+the last non automatic released version (v0.9.6) was tagged via
 ```sh
 git tag v0.9.6 98f0d72513e0109594c0c7a44c0d660e878f0d1a
 git push origin v0.9.6
