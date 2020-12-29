@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.0.1](https://github.com/mbehr1/fishbone/compare/v1.0.0...v1.0.1) (2020-12-28)
+
+
+### Bug Fixes
+
+* **logging:** log 2000 chars on wrong type ([f06e45c](https://github.com/mbehr1/fishbone/commit/f06e45ceec32fb4332e58eddf10ccb3c5f7d299e))
+
 ### [1.0.0]
 * prepared for semantic-release. Promoted to v1.0.0. No functional changes.
 
