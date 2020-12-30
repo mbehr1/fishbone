@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.1.2](https://github.com/mbehr1/fishbone/compare/v1.1.1...v1.1.2) (2020-12-30)
+
+
+### Bug Fixes
+
+* **newfile:** open the new file in non preview mode ([1126a52](https://github.com/mbehr1/fishbone/commit/1126a5256c09d938330ec67fd8d20dfd2f472aaf))
+
 ### [1.1.1](https://github.com/mbehr1/fishbone/compare/v1.1.0...v1.1.1) (2020-12-30)
 
 
