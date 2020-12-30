@@ -48,9 +48,12 @@ export function activate(context: vscode.ExtensionContext) {
 				if (fs.existsSync(uri.fsPath)) {
 					fs.unlinkSync(uri.fsPath);
 				}
-				const newFileUri = vscode.Uri.parse(`untitled:${uri.fsPath}`);
-				await vscode.workspace.openTextDocument(newFileUri);
-				await vscode.commands.executeCommand('vscode.openWith', newFileUri, 'fishbone.fba');
+				// lets create the file here already empty to avoid running into issue #7.
+				fs.writeFileSync(uri.fsPath, '');
+				//const newFileUri = vscode.Uri.parse(`untitled:${uri.fsPath}`);
+				//await vscode.workspace.openTextDocument(newFileUri);
+				//await vscode.commands.executeCommand('vscode.openWith', newFileUri, 'fishbone.fba');
+				await vscode.commands.executeCommand('vscode.openWith', uri, 'fishbone.fba');
 			}
 		});
 	}));

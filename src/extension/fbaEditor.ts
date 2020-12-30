@@ -206,7 +206,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 case 'update':
                     try {
                         FBAEditorProvider.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
-                            console.log(`updateTextDocument fulfilled=${fulfilled}`);
+                            if (!fulfilled) { // typically issue #7
+                                console.error(`updateTextDocument fulfilled=${fulfilled}`);
+                                vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e}. Might be known issue #7.`);
+                            }
                         }); // same as update webview
                     } catch (e) {
                         vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e}.`);
@@ -365,6 +368,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             if (!('version' in yamlObj)) { yamlObj.version = '0.3'; } // todo const somewhere..
         }
 
+        if ('type' in docObj) { yamlObj.type = docObj.type; } else {
+            if (!('type' in yamlObj)) { yamlObj.type = 'fba'; }
+        }
         if ('title' in docObj) { yamlObj.title = docObj.title; }
         if (('attributes' in docObj) && docObj.attributes !== undefined) { yamlObj.attributes = docObj.attributes; }
         if ('fishbone' in docObj) {
