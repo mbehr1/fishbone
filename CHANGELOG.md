@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.1.1](https://github.com/mbehr1/fishbone/compare/v1.1.0...v1.1.1) (2020-12-30)
+
+
+### Bug Fixes
+
+* **filehandling:** create new file before opening it ([d6b4a7e](https://github.com/mbehr1/fishbone/commit/d6b4a7ecedda74ca5c98eb1506968fca6ead30bc)), closes [#7](https://github.com/mbehr1/fishbone/issues/7) [#7](https://github.com/mbehr1/fishbone/issues/7)
+
 ## [1.1.0](https://github.com/mbehr1/fishbone/compare/v1.0.1...v1.1.0) (2020-12-29)
 
 
