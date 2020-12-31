@@ -178,6 +178,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document.uri.toString() === document.uri.toString()) {
+                console.warn(`FBAEditorProvider onDidChangeTextDocument e.contentChanges.length=${e.contentChanges.length}`, e.contentChanges.map(e => JSON.stringify({ rl: e.rangeLength, tl: e.text.length })).join(','));
+                // todo: skip update if there are no content changes? (.length=0)
                 updateWebview();
             }
         });
@@ -208,11 +210,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         FBAEditorProvider.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
                             if (!fulfilled) { // typically issue #7
                                 console.error(`updateTextDocument fulfilled=${fulfilled}`);
-                                vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e}. Might be known issue #7.`);
+                                vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error=applyWorkspace !fulfilled. Might be known issue #7.`);
                             }
                         }); // same as update webview
                     } catch (e) {
-                        vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e}.`);
+                        console.error(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${JSON.stringify(e)}.`);
+                        vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${JSON.stringify(e)}.`);
                     }
                     break;
                 case 'sAr':
@@ -511,6 +514,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             console.error(`storing as YAML failed. Error=${e}`);
             return;
         }
+        console.warn(`FBAEditorProvider.updateTextDocument will applyEdit with size=${edit.size}`); 
         return vscode.workspace.applyEdit(edit);
     }
 
@@ -547,8 +551,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 yamlObj = yaml.safeLoad(text); // JSON.parse(text);
             }
             if (typeof yamlObj !== 'object') { throw new Error(`content is no 'object' but '${typeof yamlObj}'`); }
-            console.log(`getFBDataFromText type=${yamlObj.type}, version=${yamlObj.version}`);
-            console.log(`getFBDataFromText title=${yamlObj.title}`);
+            console.log(`getFBDataFromText(len=${text.length}) type=${yamlObj.type}, version=${yamlObj.version}, title=${yamlObj.title}`);
 
             // convert data from prev. versions?
             const convertv01Effects = (effects: any) => {
