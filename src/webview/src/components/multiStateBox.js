@@ -44,6 +44,8 @@ export default function MultiStateBox(props) {
     const curColor = curValuePair.color || props.color; // we do allow to overwrite
 
     const handleClick = (event) => {
+        //console.warn(`MultiStateBox handleClick(...)`, event);
+        event.preventDefault();
         // toggle the value through the array:
         const curIdx = props.values.findIndex((valuePair) => valuePair.value === curValue);
         let nextIdx = 0;
