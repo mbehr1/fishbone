@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+## [1.2.0](https://github.com/mbehr1/fishbone/compare/v1.1.2...v1.2.0) (2020-12-31)
+
+
+### Features
+
+* **applyfilter:** very basic support of dlt reports ([c94eb8d](https://github.com/mbehr1/fishbone/commit/c94eb8d627b1c7ee6ff94b97dcd6064a844d7109))
+
 ### [1.1.2](https://github.com/mbehr1/fishbone/compare/v1.1.1...v1.1.2) (2020-12-30)
 
 
