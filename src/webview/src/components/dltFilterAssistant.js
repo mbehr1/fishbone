@@ -34,9 +34,21 @@ function intersection(a, b) {
 
 function filterFromObj(obj, applyMode) {
 
+    const typePrefix = (type) => {
+        switch (type) {
+            case 0: return '+';
+            case 1: return '-';
+            case 2: return '*';
+            case 3: return '@';
+            default: return `unknown(${type})`;
+        }
+    }
+
     return {
-        name: `${obj.type === 0 ? '+' : '-'}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined, tmpFb: undefined })}`,
-        value: applyMode ? `add=${JSON.stringify({ ...obj, tmpFb: 1 })}` : JSON.stringify(obj)
+        name: `${typePrefix(obj.type)}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined, tmpFb: undefined })}`,
+        value: applyMode ?
+            (obj.type !== 3 ? `add=${JSON.stringify({ ...obj, tmpFb: 1 })}` : `report=[${JSON.stringify({ ...obj, tmpFb: 1 })}]`) :
+            JSON.stringify(obj) // todo for report multiple ones should be put into the same report -> same array. refactor logic!
     }
 }
 
@@ -84,6 +96,13 @@ function parseFilters(request, applyMode) {
                         break;
                     case 'delete':
                         commandList.push({ name: commandStr, value: commandStr });
+                        break;
+                    case 'report':
+                        const params = JSON.parse(commandParams);
+                        if (Array.isArray(params)) {
+                            for (let i = 0; i < params.length; ++i)
+                                commandList.push(filterFromObj(params[i], true));
+                        } // todo refactor for one report with multiple filters
                         break;
                     default:
                         commandList.push({ name: `unknown '${command}'`, value: commandStr });
@@ -154,7 +173,7 @@ export default function DLTFilterAssistantDialog(props) {
                             res.result.forEach((filter) => {
                                 if (filter.type === 'filter') {
                                     const attr = filter.attributes;
-                                    if (attr.type === 0 || attr.type === 1) { // only pos and neg filters // todo? markers are nice as well
+                                    if (attr.type === 0 || attr.type === 1 || attr.type === 2 || attr.type === 3) { // only pos,neg, marker and event filters
                                         if (!(attr?.atLoadTime)) { // ignore load time ones
                                             const enabled = attr?.enabled ? true : false;
                                             const newAttrs = { ...attr, configs: undefined, id: undefined, enabled: undefined }
