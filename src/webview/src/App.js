@@ -888,6 +888,7 @@ export default class App extends Component {
       });
 
     const handleClick = (event) => {
+      event.preventDefault();
       this.setState({ anchorEl: event.currentTarget });
     };
 
