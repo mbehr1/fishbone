@@ -1,5 +1,13 @@
 # Change log for 'Fishbone':
 
+### [1.2.1](https://github.com/mbehr1/fishbone/compare/v1.2.0...v1.2.1) (2020-12-31)
+
+
+### Bug Fixes
+
+* **app:** add preventDefault ([63abbe1](https://github.com/mbehr1/fishbone/commit/63abbe1b4c13cf0d73c0a73b765c067bd6b69b0a)), closes [#7](https://github.com/mbehr1/fishbone/issues/7)
+* **multistatebox:** prevent clicking twice ([676456b](https://github.com/mbehr1/fishbone/commit/676456b1f280f14e4d9d83ac6d9b1d2bbf6b00f8)), closes [#7](https://github.com/mbehr1/fishbone/issues/7)
+
 ## [1.2.0](https://github.com/mbehr1/fishbone/compare/v1.1.2...v1.2.0) (2020-12-31)
 
 
