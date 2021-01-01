@@ -1,5 +1,17 @@
 # Change log for 'Fishbone':
 
+### [1.2.3](https://github.com/mbehr1/fishbone/compare/v1.2.2...v1.2.3) (2021-01-01)
+
+
+### Bug Fixes
+
+* proper error messages for exceptions ([0dd4f2e](https://github.com/mbehr1/fishbone/commit/0dd4f2ef9d4f3845404b88f2d59e740b21800b3b))
+
+
+### Performance
+
+* update webview only on doc version change ([d31a159](https://github.com/mbehr1/fishbone/commit/d31a159c8de912ef1b1e415c52dceb7745de41f5))
+
 ### [1.2.2](https://github.com/mbehr1/fishbone/compare/v1.2.1...v1.2.2) (2021-01-01)
 
 
