@@ -120,7 +120,51 @@
 					]
 				}
 			],
-			"@semantic-release/release-notes-generator",
+			[
+				"@semantic-release/release-notes-generator",
+				{
+					"preset": "conventionalcommits",
+					"presetConfig": {
+						"types": [
+							{
+								"type": "feat",
+								"section": "Features"
+							},
+							{
+								"type": "fix",
+								"section": "Bug Fixes"
+							},
+							{
+								"type": "chore",
+								"hidden": true
+							},
+							{
+								"type": "docs",
+								"hidden": true
+							},
+							{
+								"type": "style",
+								"section": "Other",
+								"hidden": false
+							},
+							{
+								"type": "test",
+								"hidden": true
+							},
+							{
+								"type": "perf",
+								"section": "Performance",
+								"hidden": false
+							},
+							{
+								"type": "refactor",
+								"section": "Other",
+								"hidden": false
+							}
+						]
+					}
+				}
+			],
 			[
 				"@semantic-release/changelog",
 				{
