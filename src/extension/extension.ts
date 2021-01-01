@@ -1,4 +1,4 @@
-// todo add copyright, 2020 Matthias Behr
+// todo add copyright, 2020 - 2021 Matthias Behr
 // - inform webview of extension (restquery provider or document changes)
 
 import * as fs from 'fs';

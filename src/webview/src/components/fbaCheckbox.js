@@ -1,4 +1,4 @@
-// copyright (c) 2020, Matthias Behr
+// copyright (c) 2020 - 2021, Matthias Behr
 import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import Container from '@material-ui/core/Container';

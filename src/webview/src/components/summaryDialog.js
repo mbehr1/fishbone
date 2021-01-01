@@ -1,4 +1,4 @@
-// copyright (c) 2020, Matthias Behr
+// copyright (c) 2020 - 2021, Matthias Behr
 import React from 'react';
 import Dialog from '@material-ui/core/Dialog';
 import { DialogContent } from '@material-ui/core';

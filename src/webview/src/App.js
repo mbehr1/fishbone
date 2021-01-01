@@ -1,5 +1,5 @@
 /**
- * copyright (c) 2020, Matthias Behr
+ * copyright (c) 2020 - 2021, Matthias Behr
  * 
  * todo list:
  * - add/edit attributes via UI

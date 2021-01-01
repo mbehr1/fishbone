@@ -1,4 +1,4 @@
-// copyright (c) 2020, Matthias Behr
+// copyright (c) 2020 - 2021, Matthias Behr
 // util.js
 import jp from 'jsonpath' 
 
