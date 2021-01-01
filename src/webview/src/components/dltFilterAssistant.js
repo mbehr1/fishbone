@@ -19,10 +19,14 @@ import { AttributesContext } from './../App';
 import { triggerRestQueryDetails, objectShallowEq } from './../util';
 
 /* todos
+- add manual trigger button for preview (or find better way to avoid reports constantly popping up)
+- cache apply query rests (e.g. only on button press)
+- add way for reports to contain multiple filter
+- add hover/tooltip for filters showing the full object (e.g. tmpFb...)
 - add manual filter entry
 - finish support apply mode
-- cache apply query rests (e.g. only on button press)
 - disallow esc to close?
+- add icons for report,... similar to tree-view in dlt-logs
 */
 
 const useStyles = makeStyles(theme => ({
@@ -49,20 +53,55 @@ function intersection(a, b) {
     return a.filter((value) => b.indexOf(value) !== -1);
 }
 
+export const MSTP_strs = ["log", "app_trace", "nw_trace", "control", "", "", "", ""];
+export const MTIN_LOG_strs = ["", "fatal", "error", "warn", "info", "debug", "verbose", "", "", "", "", "", "", "", "", ""];
+
+/**
+ * return a name similar as in DltFilter.ts from mbehr1/dlt-logs
+ * @param {Object} filter 
+ */
+function nameForFilterObj(filter) {
+
+    let enabled = '';
+    if (filter.name) {
+        enabled += filter.name + ' ';
+    }
+    let type;
+    switch (filter.type) {
+        case 0 /* DltFilterType.POSITIVE*/: type = "+"; break;
+        case 1 /* DltFilterType.NEGATIVE*/: type = "-"; break;
+        case 2 /* DltFilterType.MARKER*/: type = "*"; break;
+        case 3 /* DltFilterType.EVENT*/: type = "@"; break;
+        default: type = `unknown(${filter.type})`; break;
+    };
+    if (filter.negateMatch) {
+        type += '!';
+    }
+    let nameStr = "";
+    if (filter.mstp !== undefined) {
+        nameStr += MSTP_strs[filter.mstp];
+        nameStr += ' ';
+    }
+    if (filter.logLevelMin) { // we ignore 0 values here
+        nameStr += `>=${MTIN_LOG_strs[filter.logLevelMin]} `;
+    }
+    if (filter.logLevelMax) { // we ignore 0 value here
+        nameStr += `<=${MTIN_LOG_strs[filter.logLevelMax]} `;
+    }
+    if (filter.ecu) { nameStr += `ECU:${filter.ecu} `; } // we ignore empty strings
+    if (filter.apid) { nameStr += `APID:${filter.apid} `; }
+    if (filter.ctid) { nameStr += `CTID:${filter.ctid} `; }
+    if (filter.payload) { nameStr += `payload contains '${filter.payload}' `; }
+    if (filter.payloadRegex !== undefined) { nameStr += `payload matches '${filter.payloadRegex}'`; }
+    if (filter.lifecycles !== undefined) { nameStr += ` in ${filter.lifecycles.length} LCs`; }
+
+    return `${enabled}${type}${nameStr}`;
+}
+
 function filterFromObj(obj, applyMode) {
 
-    const typePrefix = (type) => {
-        switch (type) {
-            case 0: return '+';
-            case 1: return '-';
-            case 2: return '*';
-            case 3: return '@';
-            default: return `unknown(${type})`;
-        }
-    }
-
     return {
-        name: `${typePrefix(obj.type)}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined, tmpFb: undefined })}`,
+        name: nameForFilterObj(obj), // `${typePrefix(obj.type)}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined, tmpFb: undefined })}`,
         value: applyMode ?
             (obj.type !== 3 ? `add=${JSON.stringify({ ...obj, tmpFb: 1 })}` : `report=[${JSON.stringify({ ...obj, tmpFb: 1 })}]`) :
             JSON.stringify(obj) // todo for report multiple ones should be put into the same report -> same array. refactor logic!
@@ -185,7 +224,7 @@ export default function DLTFilterAssistantDialog(props) {
                                     const attr = filter.attributes;
                                     if (attr.type === 0 || attr.type === 1 || attr.type === 2 || attr.type === 3) { // only pos,neg, marker and event filters
                                         if (!(attr?.atLoadTime)) { // ignore load time ones
-                                            const enabled = attr?.enabled ? true : false;
+                                            const enabled = attr?.enabled ? (attr.type !== 3 /* event filters should not be enabled */ ? true : false) : false;
                                             const newAttrs = { ...attr, configs: undefined, id: undefined, enabled: undefined }
                                             const newFilter = filterFromObj(newAttrs, props.applyMode);
                                             // does it exist already?
