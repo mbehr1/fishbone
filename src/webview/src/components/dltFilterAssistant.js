@@ -20,6 +20,7 @@ import { triggerRestQueryDetails, objectShallowEq } from './../util';
 
 /* todos
 - add manual trigger button for preview (or find better way to avoid reports constantly popping up)
+- uri escape filter strings (to avoid problems with &,",...)
 - cache apply query rests (e.g. only on button press)
 - add way for reports to contain multiple filter
 - add hover/tooltip for filters showing the full object (e.g. tmpFb...)
@@ -419,7 +420,7 @@ export default function DLTFilterAssistantDialog(props) {
                         </Grid>
                     </Grid>
                     <Grid item>
-                        source: '{dataSource}'
+                        source:<React.Fragment>{dataSource ? dataSource.split('&').map((fra, index) => <React.Fragment><br />{index > 0 ? <React.Fragment>&emsp;</React.Fragment> : null}{index > 0 ? '&' + fra : fra}</React.Fragment>) : ''}</React.Fragment>
                     </Grid>
                     <Grid item>
                         <Paper>
