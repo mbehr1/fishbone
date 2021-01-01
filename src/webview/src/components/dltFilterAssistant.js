@@ -13,6 +13,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import Checkbox from '@material-ui/core/Checkbox';
 import Badge from '@material-ui/core/Badge';
+import { makeStyles } from '@material-ui/styles';
 
 import { AttributesContext } from './../App';
 import { triggerRestQueryDetails, objectShallowEq } from './../util';
@@ -23,6 +24,22 @@ import { triggerRestQueryDetails, objectShallowEq } from './../util';
 - cache apply query rests (e.g. only on button press)
 - disallow esc to close?
 */
+
+const useStyles = makeStyles(theme => ({
+    item: {
+        padding: 0
+    },
+    icon: {
+        'min-width': '24px'
+    },
+    checkbox: {
+        padding: 0
+    },
+    text: {
+        margin: 0
+    }
+}));
+
 
 function not(a, b) {
     return a.filter((value) => b.indexOf(value) === -1);
@@ -125,19 +142,12 @@ export default function DLTFilterAssistantDialog(props) {
     console.log(`DLTFilterAssistantDialog(open=${props.open}, applyMode=${props.applyMode})`);
 
     const attributes = useContext(AttributesContext);
+    
+    const classes = useStyles();
 
     const [dataSource, setDataSource] = React.useState();
 
     const [filters, setFilters] = React.useState([]);
-        /* {
-            name: "delete all temporary filters",
-            value: 'delete={"fishbone":"temp"}'
-        },
-        {
-            name: "disable all view filters",
-            value: 'disableAll=view'
-        }
-    ]);*/
 
     const [checked, setChecked] = React.useState([]);
     const [left, setLeft] = React.useState([]);
@@ -296,21 +306,23 @@ export default function DLTFilterAssistantDialog(props) {
 
     const customList = (items) => (
         <Paper style={{ width: 400, height: 350, overflow: 'auto' }}>
-            <List dense component="div" role="list">
+            <List dense={true} disablePadding={true} component="div" role="list">
                 {items.map((value) => {
                     const labelId = `transfer-list-item-${value}-label`;
 
                     return (
-                        <ListItem key={value} role="listitem" button onClick={handleToggle(value)}>
-                            <ListItemIcon>
+                        <ListItem classes={{ root: classes.item }} key={value} role="listitem" button onClick={handleToggle(value)} dense={true} disableGutters={true}>
+                            <ListItemIcon classes={{ root: classes.icon }}>
                                 <Checkbox
+                                    classes={{ root: classes.checkbox }}
                                     checked={checked.indexOf(value) !== -1}
                                     tabIndex={-1}
                                     disableRipple
+                                    size='small'
                                     inputProps={{ 'aria-labelledby': labelId }}
                                 />
                             </ListItemIcon>
-                            <ListItemText id={labelId} primary={`${filters[value]?.name}`} />
+                            <ListItemText classes={{ root: classes.text }} id={labelId} primary={`${filters[value]?.name}`} />
                         </ListItem>
                     );
                 })}
