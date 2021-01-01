@@ -4,7 +4,6 @@
  * todo:
  * change to "request-light" (npm i request-light) for https requests
  * - add nonce/random ids to each element? (for smaller edits/updates)
- * - add feature on reset to reload the "nested" rootcauses with relPath
  */
 
 import * as path from 'path';
