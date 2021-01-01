@@ -1,5 +1,19 @@
 # Change log for 'Fishbone':
 
+## [1.3.0](https://github.com/mbehr1/fishbone/compare/v1.2.4...v1.3.0) (2021-01-01)
+
+
+### Features
+
+* **dltfilterassistant:** show name like dlt-logs ([ec29c70](https://github.com/mbehr1/fishbone/commit/ec29c70bc5ffb8159623eff211da85047edf3488))
+* **dltfilterassistant:** show the source on multiple lines ([d8d129f](https://github.com/mbehr1/fishbone/commit/d8d129f8bb5beafd77e10204befdab817b7bfd94))
+
+
+### Other
+
+* less debug output ([669126e](https://github.com/mbehr1/fishbone/commit/669126effe4e7c3808d4cde81940b7215ba4d054))
+* **dltfilterassistant:** dense layout ([55baea7](https://github.com/mbehr1/fishbone/commit/55baea747dc21af53b4bd0639a370544c0b8739b))
+
 ### [1.2.4](https://github.com/mbehr1/fishbone/compare/v1.2.3...v1.2.4) (2021-01-01)
 
 
