@@ -227,11 +227,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 case 'update':
                     try {
                         FBAEditorProvider.updateTextDocument(docData, document, { fishbone: e.data, title: e.title, attributes: e.attributes });
-                        /*
-            // lets do two quick changes: was used to test race condition from issue #7
-            setTimeout(() =>
-                FBAEditorProvider.updateTextDocument(docData, document, { fishbone: e.data, title: e.title, attributes: e.attributes }), 1);
-                */
+
+                        // lets do two quick changes: was used to test race condition from issue #7
+                        // setTimeout(() =>
+                        //    FBAEditorProvider.updateTextDocument(docData, document, { fishbone: e.data, title: e.title, attributes: e.attributes }), 1);
+
                     } catch (e) {
                         console.error(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e.name}:${e.message}.`);
                         vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e.name}:${e.message}.`);
@@ -392,15 +392,15 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
      * To do so it calls itself recursively.
      * @param docData document specific data
      */
-    static async processEditsPendingQueue(docData: DocData) {
+    static async processEditsPendingQueue(docData: DocData): Promise<void> {
         const editToProcess = docData.editsPending[0];
         const document = editToProcess.document;
         const docObj = editToProcess.toChangeObj;
 
         console.log(`processEditsPendingQueue called with json.keys=${Object.keys(docObj)}`);
-        Object.keys(docObj).forEach(key => {
+        /*Object.keys(docObj).forEach(key => {
             console.log(` ${key}=${JSON.stringify(docObj[key])}`);
-        });
+        });*/
 
         const edit = new vscode.WorkspaceEdit();
 
@@ -553,8 +553,22 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             const yamlStr = yaml.safeDump(yamlObj);
 
             if (yamlStr === prevDocText) {
-                console.warn(`FBAEditorProvider.processEditsPendingQueue text unchanged! Could skip replace.`);
+                console.warn(`FBAEditorProvider.processEditsPendingQueue text unchanged! Skipping replace.`);
+                // need to remove this one from the queue
+                docData.editsPending.shift();
+                // if there is another one in the queue: apply that one
+                if (docData.editsPending.length > 0) {
+                    FBAEditorProvider.processEditsPendingQueue(docData);
+                }
+                return;
             }
+
+            // we could try to determine a "patch set". We could use e.g. the "google/diff-match-patch" lib but
+            // for our use case and with yaml as the file format and the range reqs (line, col)
+            // we can do a simpler approach comparing common lines at begin and end
+            // todo:  benefit would be smaller edits. so most likely less memory usage.
+            //  cost is more cpu to determine it. Mainly splitting the text into lines?
+            //  or determining later which line/col is in range.
 
             edit.replace(
                 document.uri,
@@ -566,17 +580,20 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             docData.editsPending.shift();
             console.error(`storing as YAML failed. Error=${e.name}:${e.message}`);
             vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Storing as YAML failed. Error=${e.name}:${e.message}`);
-            return false;
+            // if there is another one in the queue: apply that one
+            if (docData.editsPending.length > 0) {
+                FBAEditorProvider.processEditsPendingQueue(docData);
+            }
+            return;
         }
-        console.warn(`FBAEditorProvider.processEditsPendingQueue will apply edit with size=${edit.size}, editsPending.length=${docData.editsPending.length} version=${document.version}`);
-
+        //console.log(`FBAEditorProvider.processEditsPendingQueue will apply edit with size=${edit.size}, editsPending.length=${docData.editsPending.length} version=${document.version}`);
         // if we call applyEdit while the prev. one is not done yet, the 2nd one will be neg. fulfilled. issue #7
         vscode.workspace.applyEdit(edit).then((fulfilled) => {
             // remove the one from queue:
             const fulFilledEdit = docData.editsPending.shift();
 
             if (fulfilled) {
-                console.warn(`FBAEditorProvider.processEditsPendingQueue fulfilled (${fulFilledEdit?.docVersion}) editsPending.length=${docData.editsPending.length}`);
+                console.log(`FBAEditorProvider.processEditsPendingQueue fulfilled (${fulFilledEdit?.docVersion}) editsPending.length=${docData.editsPending.length}`);
             } else {
                 // todo we could reapply here? (but avoid endless retrying...)
                 console.error(`processEditsPendingQueue fulfilled=${fulfilled}`);
@@ -585,9 +602,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             // if there is another one in the queue: apply that one
             if (docData.editsPending.length > 0) {
                 FBAEditorProvider.processEditsPendingQueue(docData);
-                }
+            }
         });
-        return true; 
     }
 
     static getFBDataFromText(text: string, updateFn: undefined | ((yamlObj: any) => void)) {
