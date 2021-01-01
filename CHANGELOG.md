@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.2.4](https://github.com/mbehr1/fishbone/compare/v1.2.3...v1.2.4) (2021-01-01)
+
+
+### Bug Fixes
+
+* not processing queue items in error cases ([ae995d8](https://github.com/mbehr1/fishbone/commit/ae995d83a34f5f74d153976bf55535ea0a57ce24))
+
 ### [1.2.3](https://github.com/mbehr1/fishbone/compare/v1.2.2...v1.2.3) (2021-01-01)
 
 
