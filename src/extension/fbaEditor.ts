@@ -253,8 +253,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                         const rq = this._restQueryExtFunctions.get(extName);
                                         if (rq) {
                                             // call it:
-                                            const res = rq(query);
-                                            console.log(`restQuery response='${res}'`);
+                                            const res: string = rq(query);
+                                            console.log(`FBAEditorProvider.restQuery response (first 1k chars)='${res.slice(0, 1000)}'`);
                                             // todo try/catch
                                             webviewPanel.webview.postMessage({ type: e.type, res: JSON.parse(res), id: e.id });
                                         } else {
