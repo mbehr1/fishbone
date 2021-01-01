@@ -25,6 +25,7 @@ interface AssetManifest {
 interface DocData {
     gotAliveFromPanel: boolean;
     msgsToPost: any[];
+    lastPostedDocVersion: number;
     editsPending: {
         document: vscode.TextDocument, // the document to update
         docVersion: number, // the document version at the time the update was queued
@@ -151,6 +152,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         let docData: DocData = {
             gotAliveFromPanel: false,
             msgsToPost: [],
+            lastPostedDocVersion: document.version - 1, // we want one update
             editsPending: []
         };
 
@@ -166,16 +168,20 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         };
 
         function updateWebview() {
-            console.log(`updateWebview called`);
+            if (docData.lastPostedDocVersion !== document.version) {
+                console.log(`updateWebview posting to webview: lastPostedDocVersion=${docData.lastPostedDocVersion}, new docVersion=${document.version}`);
+                const docObj: any = FBAEditorProvider.getFBDataFromDoc(docData, document);
 
-            const docObj: any = FBAEditorProvider.getFBDataFromDoc(docData, document);
-
-            postMsgOnceAlive({
-                type: 'update',
-                data: docObj.fishbone,
-                title: docObj.title,
-                attributes: docObj.attributes
-            });
+                postMsgOnceAlive({
+                    type: 'update',
+                    data: docObj.fishbone,
+                    title: docObj.title,
+                    attributes: docObj.attributes
+                });
+                docData.lastPostedDocVersion = document.version;
+            } else {
+                console.log(`updateWebview skipped as version already posted.(lastPostedDocVersion=${docData.lastPostedDocVersion}`);
+            }
         }
 
         // Hook up event handlers so that we can synchronize the webview with the text document.
@@ -191,7 +197,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 // this is called when either the text changes due to edits
                 // but as well when e.g. the dirty flag changes.
                 console.warn(`FBAEditorProvider onDidChangeTextDocument isDirty=${e.document.isDirty} isClosed=${e.document.isClosed} version=${e.document.version}/${document.version}  doc.lineCount=${e.document.lineCount} e.contentChanges.length=${e.contentChanges.length}`, e.contentChanges.map(e => JSON.stringify({ rl: e.rangeLength, tl: e.text.length })).join(','));
-                // todo: skip update if there are no content changes? (.length=0 or .version the same)
+                // skip update if there are no content changes? (.length=0?) -> done inside updateWebview based on version
                 // todo: we can even skip update if its triggered by changes from the webview...
                 updateWebview();
             }
