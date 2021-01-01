@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.2.2](https://github.com/mbehr1/fishbone/compare/v1.2.1...v1.2.2) (2021-01-01)
+
+
+### Bug Fixes
+
+* refactor the update text document logic ([8c31890](https://github.com/mbehr1/fishbone/commit/8c3189077b6b66deeb25039b2114654aaffa5337)), closes [#7](https://github.com/mbehr1/fishbone/issues/7) [#7](https://github.com/mbehr1/fishbone/issues/7)
+
 ### [1.2.1](https://github.com/mbehr1/fishbone/compare/v1.2.0...v1.2.1) (2020-12-31)
 
 
