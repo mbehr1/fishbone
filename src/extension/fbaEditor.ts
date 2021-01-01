@@ -22,6 +22,16 @@ interface AssetManifest {
     };
 }
 
+interface DocData {
+    gotAliveFromPanel: boolean;
+    msgsToPost: any[];
+    editsPending: {
+        document: vscode.TextDocument, // the document to update
+        docVersion: number, // the document version at the time the update was queued
+        toChangeObj: any // the object with the changes to apply. can be just a few fields
+    }[];
+}
+
 /**
  * 
  */
@@ -138,9 +148,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         // So we do wait for the panel to send an alive
         // then we'll send our data:
 
-        let docData: { gotAliveFromPanel: boolean, msgsToPost: any[] } = {
+        let docData: DocData = {
             gotAliveFromPanel: false,
-            msgsToPost: []
+            msgsToPost: [],
+            editsPending: []
         };
 
         function postMsgOnceAlive(msg: any) {
@@ -157,7 +168,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         function updateWebview() {
             console.log(`updateWebview called`);
 
-            const docObj: any = FBAEditorProvider.getFBDataFromDoc(document);
+            const docObj: any = FBAEditorProvider.getFBDataFromDoc(docData, document);
 
             postMsgOnceAlive({
                 type: 'update',
@@ -177,8 +188,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document.uri.toString() === document.uri.toString()) {
-                console.warn(`FBAEditorProvider onDidChangeTextDocument e.contentChanges.length=${e.contentChanges.length}`, e.contentChanges.map(e => JSON.stringify({ rl: e.rangeLength, tl: e.text.length })).join(','));
-                // todo: skip update if there are no content changes? (.length=0)
+                // this is called when either the text changes due to edits
+                // but as well when e.g. the dirty flag changes.
+                console.warn(`FBAEditorProvider onDidChangeTextDocument isDirty=${e.document.isDirty} isClosed=${e.document.isClosed} version=${e.document.version}/${document.version}  doc.lineCount=${e.document.lineCount} e.contentChanges.length=${e.contentChanges.length}`, e.contentChanges.map(e => JSON.stringify({ rl: e.rangeLength, tl: e.text.length })).join(','));
+                // todo: skip update if there are no content changes? (.length=0 or .version the same)
+                // todo: we can even skip update if its triggered by changes from the webview...
                 updateWebview();
             }
         });
@@ -206,12 +220,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             switch (e.type) {
                 case 'update':
                     try {
-                        FBAEditorProvider.updateTextDocument(document, { fishbone: e.data, title: e.title, attributes: e.attributes })?.then((fulfilled) => {
-                            if (!fulfilled) { // typically issue #7
-                                console.error(`updateTextDocument fulfilled=${fulfilled}`);
-                                vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error=applyWorkspace !fulfilled. Might be known issue #7.`);
-                            }
-                        }); // same as update webview
+                        FBAEditorProvider.updateTextDocument(docData, document, { fishbone: e.data, title: e.title, attributes: e.attributes });
+                        /*
+            // lets do two quick changes: was used to test race condition from issue #7
+            setTimeout(() =>
+                FBAEditorProvider.updateTextDocument(docData, document, { fishbone: e.data, title: e.title, attributes: e.attributes }), 1);
+                */
                     } catch (e) {
                         console.error(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${JSON.stringify(e)}.`);
                         vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${JSON.stringify(e)}.`);
@@ -275,11 +289,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     console.log(e.message);
                     return;
                 default:
-                    console.log(`FBAEditorProvider.onDidReceiveMessage e=${JSON.stringify(e)}`);
+                    console.warn(`FBAEditorProvider.onDidReceiveMessage unexpected message (e.type=${e.type}): e=${JSON.stringify(e)}`);
                     break;
             }
         });
 
+        // send initial data
         updateWebview();
     }
 
@@ -343,22 +358,53 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     }
 
     /**
-     * Write out the object to a given document.
+     * Update the text document with changes mainly from the webview.
+     * This is an async operation so if the prev. one didn't finish yet
+     * the update will be queued.
+     * This allows that the edits/diffs to apply will be calculated only
+     * when the prev. pending updates are applied / reflected in the
+     * text document. This avoids a race-condition (see issue #7).
+     * @param docData document specific data. Need editsPending from it.
+     * @param document TextDocument object.
+     * @param docObj Object with the changes to apply.
      */
-    static async updateTextDocument(document: vscode.TextDocument, docObj: any) {
-        console.log(`updateTextDocument called with json.keys=${Object.keys(docObj)}`);
+    static updateTextDocument(docData: DocData, document: vscode.TextDocument, docObj: any) {
+
+        // if we had already pending edits, we just queue this edit as well:
+        docData.editsPending.push({ document: document, docVersion: document.version, toChangeObj: docObj });
+        if (docData.editsPending.length > 1) {
+            console.warn(`FBAEditorProvider.updateTextDocument will queue edit/update. editsPending.length=${docData.editsPending.length} version=${document.version}`);
+            return true; // we treat this ok
+        }
+        return FBAEditorProvider.processEditsPendingQueue(docData);
+    }
+
+    /**
+     * Apply the changes from docData.editsPending one by one e.g. waiting for
+     * WorkspaceEdit.applyEdit to finish before calculating the next
+     * delta/edit and applying that one.
+     * To do so it calls itself recursively.
+     * @param docData document specific data
+     */
+    static async processEditsPendingQueue(docData: DocData) {
+        const editToProcess = docData.editsPending[0];
+        const document = editToProcess.document;
+        const docObj = editToProcess.toChangeObj;
+
+        console.log(`processEditsPendingQueue called with json.keys=${Object.keys(docObj)}`);
         Object.keys(docObj).forEach(key => {
             console.log(` ${key}=${JSON.stringify(docObj[key])}`);
         });
 
         const edit = new vscode.WorkspaceEdit();
 
+        const prevDocText = document.getText();
         // Just replace the entire text document every time for now.
         let yamlObj: any = {};
         try {
-            yamlObj = yaml.safeLoad(document.getText()); // JSON.parse(document.getText());
+            yamlObj = yaml.safeLoad(prevDocText);
             if (typeof yamlObj !== 'object') {
-                console.error('Could not get document as json. Content is not valid yamlObj ' + JSON.stringify(yamlObj));
+                console.error('Could not get document as yaml. Content is not valid yamlObj ' + JSON.stringify(yamlObj));
                 yamlObj = {};
             }
         } catch (e) {
@@ -500,9 +546,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         try {
             const yamlStr = yaml.safeDump(yamlObj);
 
-    /*console.log(`new yaml text=
-    ${yamlStr}
-    `);*/
+            if (yamlStr === prevDocText) {
+                console.warn(`FBAEditorProvider.processEditsPendingQueue text unchanged! Could skip replace.`);
+            }
 
             edit.replace(
                 document.uri,
@@ -510,11 +556,32 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 yamlStr);
 
         } catch (e) {
+            // need to remove this one from the queue
+            docData.editsPending.shift();
             console.error(`storing as YAML failed. Error=${e}`);
-            return;
+            vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Storing as YAML failed. Error=${e}`);
+            return false;
         }
-        console.warn(`FBAEditorProvider.updateTextDocument will applyEdit with size=${edit.size}`); 
-        return vscode.workspace.applyEdit(edit);
+        console.warn(`FBAEditorProvider.processEditsPendingQueue will apply edit with size=${edit.size}, editsPending.length=${docData.editsPending.length} version=${document.version}`);
+
+        // if we call applyEdit while the prev. one is not done yet, the 2nd one will be neg. fulfilled. issue #7
+        vscode.workspace.applyEdit(edit).then((fulfilled) => {
+            // remove the one from queue:
+            const fulFilledEdit = docData.editsPending.shift();
+
+            if (fulfilled) {
+                console.warn(`FBAEditorProvider.processEditsPendingQueue fulfilled (${fulFilledEdit?.docVersion}) editsPending.length=${docData.editsPending.length}`);
+            } else {
+                // todo we could reapply here? (but avoid endless retrying...)
+                console.error(`processEditsPendingQueue fulfilled=${fulfilled}`);
+                vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error=applyWorkspace !fulfilled.`);
+            }
+            // if there is another one in the queue: apply that one
+            if (docData.editsPending.length > 0) {
+                FBAEditorProvider.processEditsPendingQueue(docData);
+                }
+        });
+        return true; 
     }
 
     static getFBDataFromText(text: string, updateFn: undefined | ((yamlObj: any) => void)) {
@@ -547,7 +614,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     attributes: []
                 };
             } else {
-                yamlObj = yaml.safeLoad(text); // JSON.parse(text);
+                yamlObj = yaml.safeLoad(text);
             }
             if (typeof yamlObj !== 'object') { throw new Error(`content is no 'object' but '${typeof yamlObj}'`); }
             console.log(`getFBDataFromText(len=${text.length}) type=${yamlObj.type}, version=${yamlObj.version}, title=${yamlObj.title}`);
@@ -642,11 +709,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     /**
      * Parse the documents content into an object.
      */
-    static getFBDataFromDoc(doc: vscode.TextDocument): any {
+    static getFBDataFromDoc(docData: DocData, doc: vscode.TextDocument): any {
         const text = doc.getText();
 
         return FBAEditorProvider.getFBDataFromText(text, (yamlObj) => {
-            FBAEditorProvider.updateTextDocument(doc, yamlObj);
+            FBAEditorProvider.updateTextDocument(docData, doc, yamlObj);
         });
     }
 
