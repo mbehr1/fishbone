@@ -3,8 +3,7 @@ import React from 'react';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { sendAndReceiveMsg } from '../util';
-import jp from 'jsonpath' 
+import { triggerRestQueryDetails } from '../util';
 import { Checkbox } from '@material-ui/core';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
@@ -34,41 +33,12 @@ export default function InputDataProvided(props) {
         }
 
         (async () => {
-            // the source can contain attributes referred to as e.g. ${attribute.name} for a reference to "name" attribute 
-            // need to replace them here
-            // todo use restQueryDetails here as well...
-            const requestStr = props.dataProvider.source.replace(/\$\{(.*?)\}/g, (match, p1, offset) => {
-                //console.log(`replacing '${match}' '${p1}' at offset ${offset}`);
-                if (p1.startsWith("attributes.")) { // currently only attribute supported
-                    const attrName = p1.slice(p1.indexOf('.') + 1);
-                    console.log(`attrName='${attrName}'`);
-                    const attribute = props.attributes.find(attr => Object.keys(attr)[0] === attrName);
-                    if (attribute !== undefined) {
-                        const attrValue = attribute[attrName].value || "";
-                        console.log(`attrValue='${attrValue}'`, attribute);
-                        return attrValue;
-                    }
-                    return `<unknown attribute:${attrName}>`;
-                }
-                return `<unknown ${p1}>`;
-            });
-
-            sendAndReceiveMsg({ type: 'restQuery', request: requestStr }).then((res) => {
+            triggerRestQueryDetails(props.dataProvider, props.attributes).then((res) => {
                 console.log(`InputDataProvided got response ${JSON.stringify(res)}`);
                 if (active) {
-                    // todo got an error?
-                    // do we have a jsonPath?
-                    if (props.dataProvider.jsonPath && res.data) {
-                        const data = jp.query(res.data, props.dataProvider.jsonPath);
-                        console.log(`jsonPath('${props.dataProvider.jsonPath}') returned '${JSON.stringify(data)}'`);
-                        setOptions(data);
-                    }
-                    //setOptions(Object.keys(countries).map((key) => countries[key].item[0]));
+                    setOptions('result' in res ? res.result : [res.error]);
                 }
             });
-            // await sleep(1e3); // For demo purposes.
-            //            const countries = await response.json();
-
         })();
 
         // this function as we return it from the hook will be called on cleanup
