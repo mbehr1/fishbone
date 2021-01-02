@@ -20,6 +20,7 @@ import { triggerRestQueryDetails, objectShallowEq } from './../util';
 
 /* todos
 - add manual trigger button for preview (or find better way to avoid reports constantly popping up)
+  - applyMode -> manual trigger only
 - uri escape filter strings (to avoid problems with &,",...)
 - cache apply query rests (e.g. only on button press)
 - add way for reports to contain multiple filter
@@ -103,8 +104,9 @@ function filterFromObj(obj, applyMode) {
 
     return {
         name: nameForFilterObj(obj), // `${typePrefix(obj.type)}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined, tmpFb: undefined })}`,
+        restCommand: applyMode ? (obj.type !== 3 ? `add` : `report`) : '',
         value: applyMode ?
-            (obj.type !== 3 ? `add=${JSON.stringify({ ...obj, tmpFb: 1 })}` : `report=[${JSON.stringify({ ...obj, tmpFb: 1 })}]`) :
+            (obj.type !== 3 ? JSON.stringify({ ...obj, tmpFb: 1 }) : `[${JSON.stringify({ ...obj, tmpFb: 1 })}]`) :
             JSON.stringify(obj) // todo for report multiple ones should be put into the same report -> same array. refactor logic!
     }
 }
@@ -112,11 +114,11 @@ function filterFromObj(obj, applyMode) {
 function parseFilters(request, applyMode) {
     if (!applyMode) {
         // parse a request string expecting the form:
-        // ext:mbehr1.dlt-logs/get/.../filters?query=[]
-        const indexOfQ = request?.indexOf('?query=[');
+        // ext:mbehr1.dlt-logs/get/.../filters?query=[] ([] is already uriencoded)
+        const indexOfQ = request?.indexOf('?query='); // the new uri encoded start with %5B the old ones with [
         const queryFilters = [];
         if (indexOfQ > 0) {
-            const queryArray = request.slice(indexOfQ + 7);
+            const queryArray = decodeURIComponent(request.slice(indexOfQ + 7));
             try {
                 const qArrObj = JSON.parse(queryArray);
                 console.log(`parseFilters got from '${queryArray}:'`, qArrObj);
@@ -134,7 +136,7 @@ function parseFilters(request, applyMode) {
     } else {
         const commandList = [];
         // parse all params into sep. "filter commands like": 
-        // /get/...filters?delete={}&enableAll=view&add={}&add={}...
+        // /get/...filters?delete={}&enableAll=view&add={}&add={}... // all params like {} are uriencoded
         const indexOfQ = request?.indexOf('?');
         if (indexOfQ > 0) {
             const options = request.slice(indexOfQ + 1);
@@ -142,17 +144,17 @@ function parseFilters(request, applyMode) {
             for (const commandStr of optionArr) {
                 const eqIdx = commandStr.indexOf('=');
                 const command = commandStr.slice(0, eqIdx);
-                const commandParams = commandStr.slice(eqIdx + 1);
+                const commandParams = decodeURIComponent(commandStr.slice(eqIdx + 1));
                 switch (command) {
                     case 'enableAll':
                     case 'disableAll':
-                        commandList.push({ name: commandStr, value: commandStr });
+                        commandList.push({ name: commandStr, restCommand: command, value: commandParams });
                         break;
                     case 'add':
                         commandList.push(filterFromObj(JSON.parse(commandParams), true));
                         break;
                     case 'delete':
-                        commandList.push({ name: commandStr, value: commandStr });
+                        commandList.push({ name: commandStr, restCommand: command, value: commandParams });
                         break;
                     case 'report':
                         const params = JSON.parse(commandParams);
@@ -162,7 +164,7 @@ function parseFilters(request, applyMode) {
                         } // todo refactor for one report with multiple filters
                         break;
                     default:
-                        commandList.push({ name: `unknown '${command}'`, value: commandStr });
+                        commandList.push({ name: `unknown '${command}'`, restCommand: command, value: commandParams });
                         break;
                 }
 
@@ -264,7 +266,7 @@ export default function DLTFilterAssistantDialog(props) {
                 const indexOfQ = dataSource?.indexOf('?');
                 const uri = indexOfQ > 0 ? dataSource.slice(0, indexOfQ) : dataSource;
                 if (props.applyMode) {
-                    let commands = list.map((idx) => { return `${filters[idx].value}`; }).join('&');
+                    let commands = list.map((idx) => { return `${filters[idx].restCommand}=${encodeURIComponent(filters[idx].value)}`; }).join('&');
                     const newDataSource = uri + `?${commands}`;
                     if (newDataSource !== dataSource) {
                         setDataSource(newDataSource);
@@ -273,7 +275,7 @@ export default function DLTFilterAssistantDialog(props) {
                 } else { // !applyMode -> queryMode
                     // calc params newly based on left ones:    
                     let params = list.map((idx) => { return `${filters[idx].value}`; }).join(',');
-                    const newDataSource = uri + `?query=[${params}]`;
+                    const newDataSource = uri + `?query=${encodeURIComponent(`[${params}]`)}`;
                     if (newDataSource !== dataSource) {
                         setDataSource(newDataSource);
                         setPreviewBadgeStatus(0);
