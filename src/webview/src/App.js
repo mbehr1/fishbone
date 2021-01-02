@@ -493,7 +493,7 @@ export default class App extends Component {
         label: "SW name",
         dataProvider: {
           // eslint-disable-next-line no-template-curly-in-string
-          source: 'ext:mbehr1.dlt-logs/get/docs?ecu="${attributes.ecu}"',
+          source: `ext:mbehr1.dlt-logs/get/docs?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
           jsonPath: '$..attributes.ecus[*].attributes.sws[*]'
         },
         value: null
@@ -506,7 +506,7 @@ export default class App extends Component {
         multiple: true,
         dataProvider: {
           // eslint-disable-next-line no-template-curly-in-string
-          source: 'ext:mbehr1.dlt-logs/get/docs?ecu="${attributes.ecu}"',
+          source: `ext:mbehr1.dlt-logs/get/docs?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
           jsonPath: '$..attributes.ecus[*].attributes.lifecycles[*].attributes'
         },
         value: null
