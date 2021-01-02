@@ -80,7 +80,7 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
     try {
         const reqSource = dataSourceObj.source;
 
-        const replaceAttr = (match, p1, offset) => {
+        const replaceAttr = (match, p1, offset, wrapStringInQuotes) => {
             //console.log(`replacing '${match}' '${p1}' at offset ${offset}`);
             if (p1.startsWith("attributes.")) { // currently only attribute supported
                 let attrName = p1.slice(p1.indexOf('.') + 1);
@@ -97,7 +97,7 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
                     const attrKeyValue = Array.isArray(attrValue) ? attrValue.map(e => attrKey ? e[attrKey] : e) : attrKey ? attrValue[attrKey] : attrValue;
                     if (typeof attrKeyValue === 'string') {
                         // console.log(`attrKeyValue='${attrKeyValue}'`, attribute);
-                        return `"${attrKeyValue}"`; // need to wrap the string in ""
+                        return wrapStringInQuotes ? `"${attrKeyValue}"` : attrKeyValue;
                     } else {
                         // console.log(`attrKeyValue='${JSON.stringify(attrKeyValue)}'`, attribute);
                         return JSON.stringify(attrKeyValue);
@@ -105,14 +105,22 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
                 }
                 return `<unknown attribute:${attrName}>`;
             }
-            return `<unknown ${p1}>`;
+            return wrapStringInQuotes ? `"${p1}"` : p1;
         };
 
         let requestStr = '';
         if (typeof reqSource === 'string') {
-            requestStr = reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => replaceAttr(match, p1, offset));
+            // rules are:
+            // "${attributes.name}"
+            //  -> "<value of attr.name" (with brackets if .name is of type string)
+            //  -> JSON representation otherwise (e.g. for arrays [...])
+            // problem is that arrays should not be "" quoted.
+
+            requestStr = reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => replaceAttr(match, p1, offset, true));
             // replace the URI encoded ones as well, but uri encode them then:
             requestStr = requestStr.replace(/%22%24%7B(.*?)%7D%22/g, (match, p1, offset) => encodeURIComponent(replaceAttr(match, p1, offset, true)));
+            // support uri encoded attrs like ${attributes.*} (w.o. being double enquoted) as well:
+            requestStr = requestStr.replace(/%24%7B(.*?)%7D/g, (match, p1, offset) => encodeURIComponent(replaceAttr(match, p1, offset, false)));
         } 
 
         const res = await triggerRestQuery(requestStr);
