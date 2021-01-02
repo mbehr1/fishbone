@@ -272,7 +272,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         switch (e.req.type) {
                             case 'restQuery':
                                 { // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
-                                    const url: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url;
+                                    const url: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url; // todo request.url should not occur any longer!
                                     if (url.startsWith('ext:')) {
 
                                         const extName = url.slice(4, url.indexOf('/'));
@@ -290,7 +290,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                             webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`extName '${extName}' does not offer restQuery (yet?)`] }, id: e.id });
                                         }
                                     } else {
-                                        const requestObj: any = typeof e.req.request === 'object' ? e.req.request : undefined;
                                         // console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via request`);
 
                                         performHttpRequest(this.context.globalState, url, { 'Accept': 'application/json' }).then((result: any) => {
@@ -711,33 +710,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 });
             };
 
-            // convert data from prev. version 0.2
-            const convertv02TextFields = (effects: any) => {
-                return effects.map((effectsPair: any) => {
-                    return effectsPair.categories.map((category: any) => {
-                        return category.rootCauses.map((rootCause: any) => {
-
-                            // Recursively updating nested fishbone diagrams below
-                            if (typeof rootCause === 'object' && rootCause.type === 'nested') {
-                                convertv02TextFields(rootCause.data);
-                            }
-
-                            // Updating fields
-                            if (rootCause.props && typeof rootCause.props.instructions === 'string') {
-                                rootCause.props.instructions = { textValue: rootCause.props.instructions };
-                            }
-                            if (rootCause.props && typeof rootCause.props.backgroundDescription === 'string') {
-                                rootCause.props.backgroundDescription = { textValue: rootCause.props.backgroundDescription };
-                            }
-                            if (rootCause.props && typeof rootCause.props.comments === 'string') {
-                                rootCause.props.comments = { textValue: rootCause.props.comments };
-                            }
-                        });
-                    });
-                });
-            };
-
-            // todo remove duplicate...
+            // todo remove duplicate... to async version
             const deepRootCausesForEachNonAsync = (fishbone: any[], parents: any[], fn: (rc: any, parents: any[]) => any | null | undefined) => {
                 for (const effect of fishbone) {
                     const nrCats = effect?.categories?.length;
@@ -771,20 +744,50 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 }
             };
 
+            // convert data from prev. version 0.2
+            const convertv02TextFields = (yamlObj: { fishbone: any[], attributes: any | undefined, version: string | undefined }) => {
+                // we have to modify directly the yamlObj passed: and not return a new obj.
+                console.warn(`FBAEditorProvider.convertv02TextFields converting from v02 to v03 ...`);
+                // update instructions, backgroundDescription and comments;
+                deepRootCausesForEachNonAsync(yamlObj.fishbone, [], rootCause => {
+                    // Updating fields
+                    try {
+                        if (rootCause.props && typeof rootCause.props.instructions === 'string') {
+                            rootCause.props.instructions = { textValue: rootCause.props.instructions };
+                        }
+                        if (rootCause.props && typeof rootCause.props.backgroundDescription === 'string') {
+                            rootCause.props.backgroundDescription = { textValue: rootCause.props.backgroundDescription };
+                        }
+                        if (rootCause.props && typeof rootCause.props.comments === 'string') {
+                            rootCause.props.comments = { textValue: rootCause.props.comments };
+                        }
+                        return rootCause;
+                    } catch (e) {
+                        console.warn(` FBAEditorProvider.convertv02TextFields got error ${e.type}:${e.message} migrating ${JSON.stringify(rootCause)}`);
+                        return null; // this root cause will be deleted!
+                    }
+                });
+                console.log(`FBAEditorProvider.convertv02TextFields converting from v02 to v03 ... done`);
+                yamlObj.version = '0.3';
+            };
+
+
             // convert data from prev v0.3:
             const convertv03RestParameters = (yamlObj: { fishbone: any[], attributes: any | undefined, version: string | undefined }) => {
                 // we have to modify directly the yamlObj passed: and not return a new obj.
                 console.assert(yamlObj.version === '0.3', `logical error! unexpected version=${yamlObj.version}`);
                 if (yamlObj.version === '0.3') {
                     console.warn(`FBAEditorProvider.convertv03RestParameters converting from v03 to v04 ...`);
-                    const updateSource = (obj: { source: string }) => {
-                        if (obj.source.startsWith('ext:mbehr1.dlt-logs')) {
+                    const updateSource = (obj: { source: string | { url: string } }) => {
+                        // old format was as well: source.url=...
+                        const srcString: string = typeof obj.source === 'string' ? obj.source : (typeof obj.source?.url === 'string' ? obj.source.url : '');
+                        if (srcString.startsWith('ext:mbehr1.dlt-logs')) {
                             // split into the components: path?cmd1=parm1&cmd2=parm2&...
                             // parmx needs to be uri encoded
-                            const indexOfQ = obj.source.indexOf('?');
+                            const indexOfQ = srcString.indexOf('?');
                             if (indexOfQ > 0) {
                                 const commandsNew: string[] = [];
-                                const options = obj.source.slice(indexOfQ + 1);
+                                const options = srcString.slice(indexOfQ + 1);
                                 const optionArr = options.split('&');
                                 for (const commandStr of optionArr) {
                                     const eqIdx = commandStr.indexOf('=');
@@ -792,22 +795,43 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                     const commandParams = commandStr.slice(eqIdx + 1);
                                     commandsNew.push(`${command}=${encodeURIComponent(commandParams)}`);
                                 }
-                                const newRequest = `${obj.source.slice(0, indexOfQ)}?${commandsNew.join('&')}`;
-                                console.warn(` converted\n'${obj.source}' to\n'${newRequest}'`);
+                                const newRequest = `${srcString.slice(0, indexOfQ)}?${commandsNew.join('&')}`;
+                                console.warn(` converted (uri encoded)\n  ${JSON.stringify(obj)} to .source=\n  '${newRequest}'`);
                                 obj.source = newRequest;
+                            }
+                        } else {
+                            if (typeof obj.source !== 'string') { // to get rid of the "source.url ones..."
+                                console.warn(` converted (.source.url to .source)\n  ${JSON.stringify(obj)} to .source=\n  '${srcString}'`);
+                                obj.source = srcString;
                             }
                         }
                     };
 
                     // update all badge.source, badge2.source, filter.source for ext...dlt-logs...
                     deepRootCausesForEachNonAsync(yamlObj.fishbone, [], rc => {
+                        try {
                         if (rc.type === 'react' && rc.element === 'FBACheckbox' && typeof rc.props === 'object') {
+                            if ('filter' in rc.props && 'badge' in rc.props.filter) { if (!('badge' in rc.props)) { rc.props.badge = rc.props.filter.badge; delete rc.props.filter['badge']; } }
+                            if ('filter' in rc.props && 'badge2' in rc.props.filter) { if (!('badge2' in rc.props)) { rc.props.badge2 = rc.props.filter.badge2; delete rc.props.filter['badge2']; } }
                             if ('badge' in rc.props && 'source' in rc.props.badge) { updateSource(rc.props.badge); }
                             if ('badge2' in rc.props && 'source' in rc.props.badge2) { updateSource(rc.props.badge2); }
                             if ('filter' in rc.props && 'source' in rc.props.filter) { updateSource(rc.props.filter); }
+                            // prev. we had filter.apply. -> change it consistently to filter.source as well.
+                            if ('filter' in rc.props && 'apply' in rc.props.filter) {
+                                if (!('source' in rc.props.filter)) { // if its there already we dont overwrite
+                                    rc.props.filter.source = rc.props.filter.apply; updateSource(rc.props.filter);
+                                } else {
+                                    console.warn(` FBAEditorProvider.convertv03RestParameters deleting filter.apply as filter.source already exists while migrating ${JSON.stringify(rc)}`);
+                                }
+                                delete rc.props.filter['apply']; // we delete anyhow to cleanup
+                            }
                             return rc;
                         }
                         return undefined; // no change
+                        } catch (e) {
+                            console.warn(` FBAEditorProvider.convertv03RestParameters got error ${e.type}:${e.message} migrating ${JSON.stringify(rc)}`);
+                            return null; // this root cause will be deleted!
+                        }
                     });
 
                     // update all attributes with 
@@ -835,21 +859,14 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 yamlObj.version = '0.2';
             }
 
-            // convert from prev. known formats:
             if (yamlObj?.version === '0.2') {
                 // the instruction, background and comment field has changed from string to object:
-                if (yamlObj.fishbone) {
-                    convertv02TextFields(yamlObj.fishbone);
-                    console.log(`fbv03=`, yamlObj.fishbone); // todo does this work? the yamlObj.fishbone is not modified/assigned?
-                }
-                yamlObj.version = '0.3';
+                convertv02TextFields(yamlObj);
             }
 
             if (yamlObj?.version === '0.3') {
                 // uri encoded parameter for dlt-logs rest queries:
                 convertv03RestParameters(yamlObj);
-                // we dont call the update fn here. so the doc remains 
-                // unmodified and will only be stored on next change. if (updateFn !== undefined) { updateFn(yamlObj); }
             }
 
             // we're not forwards compatible. 

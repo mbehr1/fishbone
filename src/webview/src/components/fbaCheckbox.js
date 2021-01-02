@@ -107,8 +107,8 @@ export default function FBACheckbox(props) {
             'label': props.label,
             'instructions': props.instructions,
             'backgroundDescription': props.backgroundDescription,
-            'badge': props.badge || props?.filter?.badge, // todo remove filter.badge and filter.badge2
-            'badge2': props.badge2 || props?.filter?.badge2,
+            'badge': props.badge,
+            'badge2': props.badge2,
             'filter': props.filter
         });
         setApplyFilterBarOpen(false);
