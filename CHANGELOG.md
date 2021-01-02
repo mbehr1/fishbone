@@ -1,5 +1,29 @@
 # Change log for 'Fishbone':
 
+## [1.4.0](https://github.com/mbehr1/fishbone/compare/v1.3.0...v1.4.0) (2021-01-02)
+
+
+### Features
+
+* **fileformat:** change format to 0.4 ([f8c27ce](https://github.com/mbehr1/fishbone/commit/f8c27cee1058f75af06fff37db187902f96bc34b))
+* **restquery:** show warning if version of dlt-logs is too old ([53c6ccb](https://github.com/mbehr1/fishbone/commit/53c6ccb4234be2acbe01884de1d0c6a48f3df522))
+
+
+### Bug Fixes
+
+* **dataprovidereditdialog:** uri encode the examples ([388bbd1](https://github.com/mbehr1/fishbone/commit/388bbd10867da663caf3ccfc05adc63dbeac12f6))
+* **dltfilterassistant:** support delete and patch ([bf1f605](https://github.com/mbehr1/fishbone/commit/bf1f605793b62f55dbc47427620f5133d5e59a6e))
+* **dltfilterassistant:** use uri en-/decode for parameter ([f638a33](https://github.com/mbehr1/fishbone/commit/f638a3306ceaf64d705b2d8607cfaf6615eb8af2))
+* **restquery:** support non quoted attributes ([79dc2b4](https://github.com/mbehr1/fishbone/commit/79dc2b46d2b55cfc6079ff34f16cb04b0a495ee2))
+* **restquery:** uri encode attribute parameters ([3c875db](https://github.com/mbehr1/fishbone/commit/3c875db669c2fe3b302244444073720c8c300be8))
+* **util:** support parameter subst for uri encoded params ([8955ee6](https://github.com/mbehr1/fishbone/commit/8955ee671b24b14f11d4142861e2de24fc3b86f9))
+
+
+### Other
+
+* **dataprovider:** use triggerRestQueryDetails ([1ee1519](https://github.com/mbehr1/fishbone/commit/1ee15190e78a8b33b1ab4207041f3f2e51d51587))
+* **format:** remove old props.filter.* ([bb9095d](https://github.com/mbehr1/fishbone/commit/bb9095de42449b243b0d7cdf1763e7761549e417))
+
 ## [1.3.0](https://github.com/mbehr1/fishbone/compare/v1.2.4...v1.3.0) (2021-01-01)
 
 
