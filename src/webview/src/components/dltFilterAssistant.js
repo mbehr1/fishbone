@@ -95,7 +95,7 @@ function nameForFilterObj(filter) {
     if (filter.ctid) { nameStr += `CTID:${filter.ctid} `; }
     if (filter.payload) { nameStr += `payload contains '${filter.payload}' `; }
     if (filter.payloadRegex !== undefined) { nameStr += `payload matches '${filter.payloadRegex}'`; }
-    if (filter.lifecycles !== undefined) { nameStr += ` in ${filter.lifecycles.length} LCs`; }
+    if (filter.lifecycles !== undefined) { nameStr += ` in sel. LCs`; }
 
     return `${enabled}${type}${nameStr}`;
 }
@@ -154,7 +154,10 @@ function parseFilters(request, applyMode) {
                         commandList.push(filterFromObj(JSON.parse(commandParams), true));
                         break;
                     case 'delete':
-                        commandList.push({ name: commandStr, restCommand: command, value: commandParams });
+                        commandList.push({ name: `delete=${commandParams}`, restCommand: command, value: commandParams });
+                        break;
+                    case 'patch':
+                        commandList.push({ name: `patch=${commandParams}`, restCommand: command, value: commandParams });
                         break;
                     case 'report':
                         const params = JSON.parse(commandParams);
@@ -422,7 +425,7 @@ export default function DLTFilterAssistantDialog(props) {
                         </Grid>
                     </Grid>
                     <Grid item>
-                        source:<React.Fragment>{dataSource ? dataSource.split('&').map((fra, index) => <React.Fragment><br />{index > 0 ? <React.Fragment>&emsp;</React.Fragment> : null}{index > 0 ? '&' + fra : fra}</React.Fragment>) : ''}</React.Fragment>
+                        source:<React.Fragment>{dataSource ? dataSource.split('&').map((fra, index) => <React.Fragment><br />{index > 0 ? <React.Fragment>&emsp;</React.Fragment> : null}{index > 0 ? '&' + decodeURIComponent(fra) : decodeURIComponent(fra)}</React.Fragment>) : ''}</React.Fragment>
                     </Grid>
                     <Grid item>
                         <Paper>
