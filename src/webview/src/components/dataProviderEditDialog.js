@@ -141,9 +141,9 @@ export default function DataProviderEditDialog(props) {
                                 applyMode={props.applyMode}
                                 dataSource={dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource : (props.applyMode ?
                                     // eslint-disable-next-line no-template-curly-in-string
-                                    `ext:mbehr1.dlt-logs/get/docs/0/filters?delete={"tmpFb":1}&disableAll=view${attributes.findIndex(attr => attr.hasOwnProperty('lifecycles')) >= 0 ? '&add={"name":"not selected lifecycles","tmpFb":1, "type":1,"not":true,"lifecycles":"${attributes.lifecycles.id}"}' : ''}` :
+                                    `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}&disableAll=view${attributes.findIndex(attr => attr.hasOwnProperty('lifecycles')) >= 0 ? `&add=${encodeURIComponent('{"name":"not selected lifecycles","tmpFb":1, "type":1,"not":true,"lifecycles":"${attributes.lifecycles.id}"}')}` : ''}` :
                                     // eslint-disable-next-line no-template-curly-in-string
-                                    `ext:mbehr1.dlt-logs/get/docs/0/filters?query=[${attributes.findIndex(attr => attr.hasOwnProperty('lifecycles')) >= 0 ? '{"name":"not selected lifecycles","type":1,"not":true,"lifecycles":"${attributes.lifecycles.id}"}' : ''}]`)}
+                                    `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(`[${attributes.findIndex(attr => attr.hasOwnProperty('lifecycles')) >= 0 ? '{"name":"not selected lifecycles","type":1,"not":true,"lifecycles":"${attributes.lifecycles.id}"}' : ''}]`)}`)}
                                 onChange={(newValue) => { setDataSource(newValue); if (!dataJsonPath?.length) { setDataJsonPath('$.data[*]') } }}
                                 open={dltFilterAssistantOpen}
                                 onClose={() => setDltFilterAssistantOpen(false)}
@@ -153,7 +153,7 @@ export default function DataProviderEditDialog(props) {
                                     "Enter dlt-logs rest query"
                                 </InputLabel>
                                 <Input id="dataSourceInput" inputComponent={OnBlurInputBase}
-                                    placeholder={props.applyMode ? "e.g. '/get/docs/0/filters?delete={...}&add={...}'" : "e.g. '/get/docs/0/filters?query=[...]'"}
+                                    placeholder={props.applyMode ? "e.g. '/get/docs/0/filters?delete=(uriencode({...}))&add={...}'" : "e.g. '/get/docs/0/filters?query=...'"}
                                     inputProps={{ value: dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource.slice(19) : dataSource, onChange: (event) => { setPreviewBadgeStatus(0); setDataSource('ext:mbehr1.dlt-logs' + event.target.value); } }} />
                             </FormControl>
                         </Paper>}
