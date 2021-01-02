@@ -39,7 +39,7 @@ export function receivedResponse(response) {
     }
 }
 
-export function triggerRestQuery(requestStr, jsonPath) {
+function triggerRestQuery(requestStr, jsonPath) {
 
     //const url = typeof requestStr === 'string' ? requestStr : requestStr.url;
      // due to e.g. CORS we cannot run the https:// request from inside, 
@@ -79,7 +79,8 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
     const answer = {};
     try {
         const reqSource = dataSourceObj.source;
-        const requestStr = typeof reqSource !== 'string' ? '' : reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => {
+
+        const replaceAttr = (match, p1, offset) => {
             //console.log(`replacing '${match}' '${p1}' at offset ${offset}`);
             if (p1.startsWith("attributes.")) { // currently only attribute supported
                 let attrName = p1.slice(p1.indexOf('.') + 1);
@@ -105,7 +106,14 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
                 return `<unknown attribute:${attrName}>`;
             }
             return `<unknown ${p1}>`;
-        });
+        };
+
+        let requestStr = '';
+        if (typeof reqSource === 'string') {
+            requestStr = reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => replaceAttr(match, p1, offset));
+            // replace the URI encoded ones as well, but uri encode them then:
+            requestStr = requestStr.replace(/%22%24%7B(.*?)%7D%22/g, (match, p1, offset) => encodeURIComponent(replaceAttr(match, p1, offset, true)));
+        } 
 
         const res = await triggerRestQuery(requestStr);
         answer.restQueryResult = res;
