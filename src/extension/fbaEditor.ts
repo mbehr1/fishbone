@@ -112,7 +112,33 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                             if (subscr !== undefined) {
                                 console.log(`fishbone.got restQuery api from ${value.id}`);
                                 // testing it:
-                                console.log(`fishbone restQuery('/get/version')=${subscr('/get/version')}`);
+                                const versResp = subscr('/get/version');
+                                console.log(`fishbone restQuery('/get/version')=${versResp}`);
+                                { // add some version checks:
+                                    const versObj = JSON.parse(versResp);
+                                    if ('data' in versObj && versObj['data'].type === 'version') {
+                                        const versAttrs = versObj['data'].attributes;
+                                        if (versAttrs && 'name' in versAttrs) {
+                                            switch (versAttrs.name) {
+                                                case 'mbehr1.dlt-logs':
+                                                    // if the version is too small ask to update.
+                                                    // we do req. at leat 1.2.1 for restQuery to work properly: (uri de/encode params)
+                                                    // todo use some semver version compare lib.
+                                                    const version: string = typeof versAttrs.version === 'string' ? versAttrs.version : '';
+                                                    const versions = version.split('.').map(e => Number(e));
+                                                    if (versions.length === 3) {
+                                                        if (versions[0] === 1 && versions[1] <= 2 && versions[2] === 0) {
+                                                            // it gets shown multiple times as the extensions are checked multiple times.
+                                                            // but lets keep it like that to get more attention ;-)
+                                                            vscode.window.showWarningMessage(`Please update your DLT-Logs extension to at least version 1.2.1! Reason: support of uri encoded rest parameters.`);
+                                                        }
+                                                    }
+                                                    break;
+                                                default: break;
+                                            }
+                                        }
+                                    }
+                                }
                                 newRQs.set(value.id, subscr);
                             }
                         }
