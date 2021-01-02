@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 import { getNonce, performHttpRequest } from './util';
 import * as yaml from 'js-yaml';
 import TelemetryReporter from 'vscode-extension-telemetry';
+import { assert } from 'console';
 
 interface AssetManifest {
     files: {
@@ -32,6 +33,8 @@ interface DocData {
         toChangeObj: any // the object with the changes to apply. can be just a few fields
     }[];
 }
+
+const currentFBAFileVersion = '0.4';
 
 /**
  * 
@@ -424,29 +427,36 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         const docObj = editToProcess.toChangeObj;
 
         console.log(`processEditsPendingQueue called with json.keys=${Object.keys(docObj)}`);
-        /*Object.keys(docObj).forEach(key => {
-            console.log(` ${key}=${JSON.stringify(docObj[key])}`);
-        });*/
 
         const edit = new vscode.WorkspaceEdit();
 
         const prevDocText = document.getText();
-        // Just replace the entire text document every time for now.
+
         let yamlObj: any = {};
         try {
             yamlObj = yaml.safeLoad(prevDocText);
             if (typeof yamlObj !== 'object') {
                 console.error('Could not get document as yaml. Content is not valid yamlObj ' + JSON.stringify(yamlObj));
                 yamlObj = {};
+            } else {
+                // as we dont store on data file format migration (e.g. v0.3 -> v0.4) instantly
+                // (to avoid a misleading "dirty file directly after opening" and non-working 'undo')
+                // we notice the version mismatch here again, migrate again and use that data:
+                if (yamlObj.version && yamlObj.version !== currentFBAFileVersion) {
+                    console.warn(`processEditsPendingQueue migrating again from ${yamlObj.version} to ${currentFBAFileVersion}:`);
+                    const migYamlObj = this.getFBDataFromText(prevDocText);
+                    yamlObj.version = currentFBAFileVersion;
+                    yamlObj.attributes = migYamlObj.attributes;
+                    yamlObj.fishbone = migYamlObj.fishbone;
+                    yamlObj.title = migYamlObj.title;
+                }
             }
         } catch (e) {
             console.error(`Could not get document as json. Content is not valid yaml e=${e.name}:${e.message}`);
         }
 
         // only 'title', 'attributes' and 'fishbone' are updated for now. keep the rest:
-        if ('version' in docObj) { yamlObj.version = docObj.version; } else {
-            if (!('version' in yamlObj)) { yamlObj.version = '0.3'; } // todo const somewhere..
-        }
+        if ('version' in docObj) { yamlObj.version = docObj.version; } else { yamlObj.version = currentFBAFileVersion; }
 
         if ('type' in docObj) { yamlObj.type = docObj.type; } else {
             if (!('type' in yamlObj)) { yamlObj.type = 'fba'; }
@@ -504,7 +514,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         console.log(` got relPath='${relPath}' from '${document.uri.fsPath}' and '${uri[0].fsPath}'`);
                         try {
                             const fileText = fs.readFileSync(uri[0].fsPath, { encoding: 'utf8' });
-                            const importYamlObj = FBAEditorProvider.getFBDataFromText(fileText, undefined);
+                            const importYamlObj = FBAEditorProvider.getFBDataFromText(fileText);
                             if (typeof importYamlObj === 'object') {
                                 // merge attributes (we might consider adding the new ones to the nested only and show only on entering that nested one?)
                                 FBAEditorProvider.mergeAttributes(yamlObj.attributes, importYamlObj.attributes);
@@ -539,7 +549,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         // now reimport that absPath file:
                         try {
                             const fileText = fs.readFileSync(relPath, { encoding: 'utf8' });
-                            const importYamlObj = FBAEditorProvider.getFBDataFromText(fileText, undefined);
+                            const importYamlObj = FBAEditorProvider.getFBDataFromText(fileText);
                             if (typeof importYamlObj === 'object') {
                                 // merge attributes (we might consider adding the new ones to the nested only and show only on entering that nested one?)
                                 FBAEditorProvider.mergeAttributes(yamlObj.attributes, importYamlObj.attributes);
@@ -632,21 +642,32 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         });
     }
 
-    static getFBDataFromText(text: string, updateFn: undefined | ((yamlObj: any) => void)) {
+    /**
+     * parse the object data: attributes, fishbone, title from the provided
+     * text that should be our yaml representation.
+     * Does a version check and performs the necessary data migration on the returned object.
+     * It does not return the full yaml object but only the members:
+     * title, fishbone and attributes.
+     * @param text yaml representation of our file format. Should contain type:'fba' and version: e.g. '0.4'
+     */
+
+    static getFBDataFromText(text: string) {
         // here we do return the data that we pass as data=... to the Fishbone
 
         // our document is a yaml document. 
         // representing a single object with properties:
         //  type <- expect "fba"
-        //  version <- 0.3
+        //  version <- 0.4 (currentFBAFileVersion)
+        //  title
         //  fishbone : array of effect objects
+        //  attributes
 
         try {
             let yamlObj: any = undefined;
             if (text.trim().length === 0) {
                 yamlObj = {
                     type: 'fba',
-                    version: '0.3',
+                    version: currentFBAFileVersion,
                     title: '<no title>',
                     fishbone: [
                         {
@@ -716,6 +737,93 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 });
             };
 
+            // todo remove duplicate...
+            const deepRootCausesForEachNonAsync = (fishbone: any[], parents: any[], fn: (rc: any, parents: any[]) => any | null | undefined) => {
+                for (const effect of fishbone) {
+                    const nrCats = effect?.categories?.length;
+                    if (nrCats > 0) {
+                        for (let c = 0; c < nrCats; ++c) {
+                            const category = effect.categories[c];
+                            let nrRcs = category?.rootCauses?.length;
+                            if (nrRcs > 0) {
+                                for (let r = 0; r < nrRcs; ++r) {
+                                    const rc = category.rootCauses[r];
+                                    let modRc = fn(rc, parents); // we call the callback in any case
+                                    if (modRc === undefined) { // no change
+                                        modRc = rc;
+                                    } else if (modRc === null) { // delete this rc.
+                                        category.rootCauses.splice(r, 1);
+                                        --nrRcs;
+                                        modRc = undefined;
+                                    } else { // update
+                                        category.rootCauses[r] = modRc;
+                                    }
+                                    if (modRc !== undefined) {
+                                        // and if its a nested we do nest automatically:
+                                        if (modRc?.type === 'nested') {
+                                            deepRootCausesForEachNonAsync(modRc.data, [...parents, modRc], fn);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            // convert data from prev v0.3:
+            const convertv03RestParameters = (yamlObj: { fishbone: any[], attributes: any | undefined, version: string | undefined }) => {
+                // we have to modify directly the yamlObj passed: and not return a new obj.
+                console.assert(yamlObj.version === '0.3', `logical error! unexpected version=${yamlObj.version}`);
+                if (yamlObj.version === '0.3') {
+                    console.warn(`FBAEditorProvider.convertv03RestParameters converting from v03 to v04 ...`);
+                    const updateSource = (obj: { source: string }) => {
+                        if (obj.source.startsWith('ext:mbehr1.dlt-logs')) {
+                            // split into the components: path?cmd1=parm1&cmd2=parm2&...
+                            // parmx needs to be uri encoded
+                            const indexOfQ = obj.source.indexOf('?');
+                            if (indexOfQ > 0) {
+                                const commandsNew: string[] = [];
+                                const options = obj.source.slice(indexOfQ + 1);
+                                const optionArr = options.split('&');
+                                for (const commandStr of optionArr) {
+                                    const eqIdx = commandStr.indexOf('=');
+                                    const command = commandStr.slice(0, eqIdx);
+                                    const commandParams = commandStr.slice(eqIdx + 1);
+                                    commandsNew.push(`${command}=${encodeURIComponent(commandParams)}`);
+                                }
+                                const newRequest = `${obj.source.slice(0, indexOfQ)}?${commandsNew.join('&')}`;
+                                console.warn(` converted\n'${obj.source}' to\n'${newRequest}'`);
+                                obj.source = newRequest;
+                            }
+                        }
+                    };
+
+                    // update all badge.source, badge2.source, filter.source for ext...dlt-logs...
+                    deepRootCausesForEachNonAsync(yamlObj.fishbone, [], rc => {
+                        if (rc.type === 'react' && rc.element === 'FBACheckbox' && typeof rc.props === 'object') {
+                            if ('badge' in rc.props && 'source' in rc.props.badge) { updateSource(rc.props.badge); }
+                            if ('badge2' in rc.props && 'source' in rc.props.badge2) { updateSource(rc.props.badge2); }
+                            if ('filter' in rc.props && 'source' in rc.props.filter) { updateSource(rc.props.filter); }
+                            return rc;
+                        }
+                        return undefined; // no change
+                    });
+
+                    // update all attributes with 
+                    // <key>.dataProvider: {
+                    //          source: 'ext:mbehr1.dlt-logs/get/docs?ecu="${attributes.ecu}"',
+                    if (Array.isArray(yamlObj.attributes) && yamlObj.attributes.length > 0) {
+                        yamlObj.attributes.forEach(attr => {
+                            const keyObj = attr[Object.keys(attr)[0]];
+                            if ('dataProvider' in keyObj && 'source' in keyObj.dataProvider) { updateSource(keyObj.dataProvider); }
+                        });
+                    }
+                    console.log(`FBAEditorProvider.convertv03RestParameters converting from v03 to v04 ... done`);
+                    yamlObj.version = '0.4';
+                }
+            };
+
             // convert from prev. known formats:
             if (yamlObj?.version === '0.1') {
                 // the effects storage has changed:
@@ -725,7 +833,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     yamlObj.fishbone = fbv02;
                 }
                 yamlObj.version = '0.2';
-                if (updateFn !== undefined) { updateFn(yamlObj); }
             }
 
             // convert from prev. known formats:
@@ -733,15 +840,20 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 // the instruction, background and comment field has changed from string to object:
                 if (yamlObj.fishbone) {
                     convertv02TextFields(yamlObj.fishbone);
-                    console.log(`fbv03=`, yamlObj.fishbone);
+                    console.log(`fbv03=`, yamlObj.fishbone); // todo does this work? the yamlObj.fishbone is not modified/assigned?
                 }
                 yamlObj.version = '0.3';
-                if (updateFn !== undefined) { updateFn(yamlObj); }
             }
 
+            if (yamlObj?.version === '0.3') {
+                // uri encoded parameter for dlt-logs rest queries:
+                convertv03RestParameters(yamlObj);
+                // we dont call the update fn here. so the doc remains 
+                // unmodified and will only be stored on next change. if (updateFn !== undefined) { updateFn(yamlObj); }
+            }
 
             // we're not forwards compatible. 
-            if (yamlObj?.version !== '0.3') {
+            if (yamlObj?.version !== currentFBAFileVersion) {
                 const msg = `Fishbone: The document uses unknown version ${yamlObj?.version}. Please check whether an extension update is available.`;
                 throw new Error(msg);
             }
@@ -759,9 +871,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     static getFBDataFromDoc(docData: DocData, doc: vscode.TextDocument): any {
         const text = doc.getText();
 
-        return FBAEditorProvider.getFBDataFromText(text, (yamlObj) => {
-            FBAEditorProvider.updateTextDocument(docData, doc, yamlObj);
-        });
+        return FBAEditorProvider.getFBDataFromText(text);
     }
 
     /**
