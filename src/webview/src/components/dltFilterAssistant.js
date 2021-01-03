@@ -11,6 +11,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
+import FilterListIcon from '@material-ui/icons/FilterList';
 import Checkbox from '@material-ui/core/Checkbox';
 import Badge from '@material-ui/core/Badge';
 import { makeStyles } from '@material-ui/styles';
@@ -273,7 +274,8 @@ export default function DLTFilterAssistantDialog(props) {
                     const newDataSource = uri + `?${commands}`;
                     if (newDataSource !== dataSource) {
                         setDataSource(newDataSource);
-                        setPreviewBadgeStatus(0);
+                        setPreviewQueryResult(`Press "Test apply filter" button to start...`);
+                        setPreviewBadgeStatus(3);
                     }
                 } else { // !applyMode -> queryMode
                     // calc params newly based on left ones:    
@@ -291,7 +293,7 @@ export default function DLTFilterAssistantDialog(props) {
 
     // preview badge content
     const [previewBadgeContent, setPreviewBadgeContent] = React.useState();
-    const [previewBadgeStatus, setPreviewBadgeStatus] = React.useState(0);
+    const [previewBadgeStatus, setPreviewBadgeStatus] = React.useState(props.applyMode ? 3 : 0); // 0 = please load, 1 = loading, 2 = done, 3 = wait manual
     const [previewBadgeError, setPreviewBadgeError] = React.useState('');
     const [previewQueryResult, setPreviewQueryResult] = React.useState('');
 
@@ -424,14 +426,21 @@ export default function DLTFilterAssistantDialog(props) {
                             </Grid>
                         </Grid>
                     </Grid>
+                    {props.applyMode && <Grid item>
+                        <Button id={'test-apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />}
+                            disabled={!(previewBadgeStatus === 3 && dataSource?.length > 0)}
+                            onClick={(e) => { if (previewBadgeStatus === 3 && dataSource?.length > 0) { setPreviewBadgeStatus(0); } }}>
+                            Test "apply filter"
+                        </Button>
+                    </Grid>}
                     <Grid item>
                         source:<React.Fragment>{dataSource ? dataSource.split('&').map((fra, index) => <React.Fragment><br />{index > 0 ? <React.Fragment>&emsp;</React.Fragment> : null}{index > 0 ? '&' + decodeURIComponent(fra) : decodeURIComponent(fra)}</React.Fragment>) : ''}</React.Fragment>
                     </Grid>
                     <Grid item>
                         <Paper>
-                            <Badge badgeContent={previewBadgeContent} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999}>
+                            {!props.applyMode && <Badge badgeContent={previewBadgeContent} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999}>
                                 badge content='{JSON.stringify(previewBadgeContent)}'
-                            </Badge>
+                            </Badge>}
                             <div>
                                 badge error='{JSON.stringify(previewBadgeError)}'
                                 badge status='{JSON.stringify(previewBadgeStatus)}'
