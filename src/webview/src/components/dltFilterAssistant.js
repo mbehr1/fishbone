@@ -229,7 +229,7 @@ export default function DLTFilterAssistantDialog(props) {
                             res.result.forEach((filter) => {
                                 if (filter.type === 'filter') {
                                     const attr = filter.attributes;
-                                    if (attr.type === 0 || attr.type === 1 || attr.type === 2 || attr.type === 3) { // only pos,neg, marker and event filters
+                                    if (attr.type === 0 || attr.type === 1 || (props.applyMode && attr.type === 2) || (props.applyMode && attr.type === 3)) { // only pos,neg. And marker and event filters only for apply mode
                                         if (!(attr?.atLoadTime)) { // ignore load time ones
                                             const enabled = attr?.enabled ? (attr.type !== 3 /* event filters should not be enabled */ ? true : false) : false;
                                             const newAttrs = { ...attr, configs: undefined, id: undefined, enabled: undefined }
