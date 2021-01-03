@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.4.2](https://github.com/mbehr1/fishbone/compare/v1.4.1...v1.4.2) (2021-01-03)
+
+
+### Bug Fixes
+
+* **dltfilterassistant:** offer marker and report filter only in apply mode ([e5f222b](https://github.com/mbehr1/fishbone/commit/e5f222b2f6e5c63afdc72c09dd843241ff8eb0c8))
+
 ### [1.4.1](https://github.com/mbehr1/fishbone/compare/v1.4.0...v1.4.1) (2021-01-03)
 
 
