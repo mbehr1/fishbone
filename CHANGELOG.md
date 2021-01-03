@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+## [1.5.0](https://github.com/mbehr1/fishbone/compare/v1.4.2...v1.5.0) (2021-01-03)
+
+
+### Features
+
+* **dltfilterassistant:** support multiple event filters for reports ([b55081e](https://github.com/mbehr1/fishbone/commit/b55081e92efb1d9f731348587012e68f939295c5))
+
 ### [1.4.2](https://github.com/mbehr1/fishbone/compare/v1.4.1...v1.4.2) (2021-01-03)
 
 
