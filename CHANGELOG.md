@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.4.1](https://github.com/mbehr1/fishbone/compare/v1.4.0...v1.4.1) (2021-01-03)
+
+
+### Bug Fixes
+
+* **dataprovidereditdialog:** add test apply filter button ([c409760](https://github.com/mbehr1/fishbone/commit/c4097608bf3731eaee38403196ecff78f0ab4e13))
+
 ## [1.4.0](https://github.com/mbehr1/fishbone/compare/v1.3.0...v1.4.0) (2021-01-02)
 
 
