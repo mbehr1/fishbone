@@ -101,14 +101,68 @@ function nameForFilterObj(filter) {
     return `${enabled}${type}${nameStr}`;
 }
 
-function filterFromObj(obj, applyMode) {
+class RestCommandBase {
+    get asRestCommand() { throw new Error(`logical error! RestCommandBase asRestCommand() used`); };
+    get asJson() { throw new Error(`logical error! RestCommandBase asRestCommand() used`); };
+}
 
-    return {
-        name: nameForFilterObj(obj), // `${typePrefix(obj.type)}${obj?.name?.length > 0 ? obj.name : JSON.stringify({ ...obj, type: undefined, tmpFb: undefined })}`,
-        restCommand: applyMode ? (obj.type !== 3 ? `add` : `report`) : '',
-        value: applyMode ?
-            (obj.type !== 3 ? JSON.stringify({ ...obj, tmpFb: 1 }) : `[${JSON.stringify({ ...obj, tmpFb: 1 })}]`) :
-            JSON.stringify(obj) // todo for report multiple ones should be put into the same report -> same array. refactor logic!
+/**
+ * RestCommandFilter used for query and apply mode.
+ * Gets constructed with an object directly representing a 
+ * DLT filter.
+ */
+class RestCommandFilter extends RestCommandBase {
+
+    constructor(filter) {
+        super();
+        this.name = nameForFilterObj(filter);
+        this.json = JSON.stringify(filter);
+    }
+
+    get asJson() {
+        return this.json;
+    }
+    get asRestCommand() {
+        return `add=${encodeURIComponent(this.json)}`;
+    }
+}
+
+/**
+ * used for regular command=params commands
+ */
+class RestCommandApply extends RestCommandBase {
+    constructor(command, commandParams, name) {
+        super();
+        this.command = command;
+        this.params = commandParams;
+        this.name = name ? name : this.command;
+    }
+    get asRestCommand() {
+        return `${this.command}=${encodeURIComponent(this.params)}`;
+    }
+}
+
+/**
+ * used for report=[filters] commands
+ * @param filters array of filter objs
+ */
+class RestCommandReport extends RestCommandBase {
+    constructor(filters) {
+        super();
+        this.filters = filters.map(f => new RestCommandFilter(f));
+    }
+
+    appendFilterObj(filterObj) {
+        this.filters.push(new RestCommandFilter(filterObj));
+    }
+
+    get name() {
+        return `report with ${this.filters.length} filters:` +
+            this.filters.map(f => f.name).join(', ');
+    }
+
+    get asRestCommand() {
+        return `report=${encodeURIComponent(`[${this.filters.map(f => f.asJson).join(',')}]`)}`;
     }
 }
 
@@ -125,7 +179,7 @@ function parseFilters(request, applyMode) {
                 console.log(`parseFilters got from '${queryArray}:'`, qArrObj);
                 if (Array.isArray(qArrObj)) {
                     qArrObj.forEach((arrObj) => {
-                        const newFilter = filterFromObj(arrObj);
+                        const newFilter = new RestCommandFilter(arrObj);
                         queryFilters.push(newFilter);
                     });
                 }
@@ -149,26 +203,23 @@ function parseFilters(request, applyMode) {
                 switch (command) {
                     case 'enableAll':
                     case 'disableAll':
-                        commandList.push({ name: commandStr, restCommand: command, value: commandParams });
+                        commandList.push(new RestCommandApply(command, commandParams, commandStr));
                         break;
                     case 'add':
-                        commandList.push(filterFromObj(JSON.parse(commandParams), true));
+                        commandList.push(new RestCommandFilter(JSON.parse(commandParams))); // we use RestCommandFilter here to allow direct compare with loaded filters
                         break;
                     case 'delete':
-                        commandList.push({ name: `delete=${commandParams}`, restCommand: command, value: commandParams });
+                        commandList.push(new RestCommandApply(command, commandParams, `delete=${commandParams}`));
                         break;
                     case 'patch':
-                        commandList.push({ name: `patch=${commandParams}`, restCommand: command, value: commandParams });
+                        commandList.push(new RestCommandApply(command, commandParams, `patch=${commandParams}`));
                         break;
                     case 'report':
                         const params = JSON.parse(commandParams);
-                        if (Array.isArray(params)) {
-                            for (let i = 0; i < params.length; ++i)
-                                commandList.push(filterFromObj(params[i], true));
-                        } // todo refactor for one report with multiple filters
+                        commandList.push(new RestCommandReport(params));
                         break;
                     default:
-                        commandList.push({ name: `unknown '${command}'`, restCommand: command, value: commandParams });
+                        commandList.push(new RestCommandApply(command, commandParams, `unknown '${command}'`));// { name: `unknown '${command}'`, restCommand: command, value: commandParams });
                         break;
                 }
 
@@ -233,7 +284,7 @@ export default function DLTFilterAssistantDialog(props) {
                                         if (!(attr?.atLoadTime)) { // ignore load time ones
                                             const enabled = attr?.enabled ? (attr.type !== 3 /* event filters should not be enabled */ ? true : false) : false;
                                             const newAttrs = { ...attr, configs: undefined, id: undefined, enabled: undefined }
-                                            const newFilter = filterFromObj(newAttrs, props.applyMode);
+                                            const newFilter = new RestCommandFilter(props.applyMode ? { ...newAttrs, tmpFb: 1 } : newAttrs);
                                             // does it exist already?
                                             const curIdx = filters.findIndex(filter => objectShallowEq(newFilter, filter));
                                             if (curIdx < 0) {
@@ -270,7 +321,7 @@ export default function DLTFilterAssistantDialog(props) {
                 const indexOfQ = dataSource?.indexOf('?');
                 const uri = indexOfQ > 0 ? dataSource.slice(0, indexOfQ) : dataSource;
                 if (props.applyMode) {
-                    let commands = list.map((idx) => { return `${filters[idx].restCommand}=${encodeURIComponent(filters[idx].value)}`; }).join('&');
+                    let commands = list.map((idx) => filters[idx].asRestCommand).join('&');
                     const newDataSource = uri + `?${commands}`;
                     if (newDataSource !== dataSource) {
                         setDataSource(newDataSource);
@@ -279,7 +330,8 @@ export default function DLTFilterAssistantDialog(props) {
                     }
                 } else { // !applyMode -> queryMode
                     // calc params newly based on left ones:    
-                    let params = list.map((idx) => { return `${filters[idx].value}`; }).join(',');
+                    // list should only contain RestCommandFilter
+                    let params = list.map((idx) => filters[idx].asJson).join(',');
                     const newDataSource = uri + `?query=${encodeURIComponent(`[${params}]`)}`;
                     if (newDataSource !== dataSource) {
                         setDataSource(newDataSource);
@@ -388,9 +440,50 @@ export default function DLTFilterAssistantDialog(props) {
     }
 
     const handleCheckedLeft = () => {
-        setLeft(left.concat(rightChecked));
-        setRight(not(right, rightChecked));
-        setChecked(not(checked, rightChecked));
+
+        if (props.applyMode) {
+            // special handling for report filters:
+            // a) convert a regular event filter into a report with that filter
+            // b) convert multiple event filter in a row into *one* report with those filters
+            // iterate over all rightChecked ones:
+            // rightChecked is an array of idxs:
+            const newRightChecked = [...rightChecked];
+            let newReport = undefined;
+            const newLeft = [...left];
+            const newFilters = [...filters];
+            for (let i = 0; i < newRightChecked.length; ++i) {
+                const idx = newRightChecked[i];
+                const filter = newFilters[idx];
+                let wasReport = false;
+                if (filter instanceof RestCommandFilter) {
+                    const filterObj = JSON.parse(filter.asJson);
+                    if (filterObj.type === 3) { // got a report filter:
+                        wasReport = true;
+                        // create a new filter and add to left:
+                        if (!newReport) {
+                            newReport = new RestCommandReport([filterObj]);
+                            newFilters.push(newReport);
+                            newLeft.push(newFilters.length - 1);
+                        } else {
+                            // add to newReport
+                            newReport.appendFilterObj(filterObj);
+                        }
+                        // uncheck the right one, but keep it in right
+                        newRightChecked.splice(i, 1);
+                        --i;
+                    }
+                }
+                if (!wasReport && newReport) { newReport = undefined; }
+            }
+            setLeft(newLeft.concat(newRightChecked));
+            setRight(not(right, newRightChecked));
+            setChecked(not(checked, rightChecked)); // here we uncheck the prev. reports
+            if (newFilters.length !== filters.length) { setFilters(newFilters); }
+        } else {
+            setLeft(left.concat(rightChecked));
+            setRight(not(right, rightChecked));
+            setChecked(not(checked, rightChecked));    
+        }
     }
 
     //console.log(`DltFilterAssistant render() filters=`, filters);
