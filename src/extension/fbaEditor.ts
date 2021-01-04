@@ -244,7 +244,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             // any messages to post?
             if (docData.msgsToPost.length) {
                 let msg: any;
-                while (msg = docData.msgsToPost.pop()) {
+                while (msg = docData.msgsToPost.shift()) { // keep fifo order
                     const msgCmd = JSON.stringify(msg);
                     webviewPanel.webview.postMessage(msg); /*.then((onFulFilled) => {
                         console.log(`WebsharkView.postMessage(${msgCmd}) queued ${onFulFilled}`);
