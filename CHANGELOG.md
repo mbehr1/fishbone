@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.5.1](https://github.com/mbehr1/fishbone/compare/v1.5.0...v1.5.1) (2021-01-04)
+
+
+### Bug Fixes
+
+* **webview:** for queue msgs keep fifo order ([b9656a0](https://github.com/mbehr1/fishbone/commit/b9656a03decd49da3c10cd8b8ccb03f11badfd53))
+
 ## [1.5.0](https://github.com/mbehr1/fishbone/compare/v1.4.2...v1.5.0) (2021-01-03)
 
 
