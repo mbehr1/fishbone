@@ -1,5 +1,13 @@
 # Change log for 'Fishbone':
 
+### [1.5.2](https://github.com/mbehr1/fishbone/compare/v1.5.1...v1.5.2) (2021-01-04)
+
+
+### Bug Fixes
+
+* **applyeffect:** apply effect button was using initial props ([ef283fb](https://github.com/mbehr1/fishbone/commit/ef283fb18778449533087be6159ea967b5f1a286))
+* **fbacheckbox:** offer apply filter directly after editing ([d2851dc](https://github.com/mbehr1/fishbone/commit/d2851dc742d4d744ffd1c22a8445a5cd7a18866a))
+
 ### [1.5.1](https://github.com/mbehr1/fishbone/compare/v1.5.0...v1.5.1) (2021-01-04)
 
 
