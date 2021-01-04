@@ -117,12 +117,12 @@ export default function FBACheckbox(props) {
     //console.log(`FBACheckbox(values.label=${values.label}, values.comments=${values.comments})`);
 
     useEffect(() => {
-        console.log(`FBACheckbox applyFilterBarOpen=${applyFilterBarOpen}`, props.filter);
-        if (applyFilterBarOpen && props?.filter?.source?.length > 0) {
+        console.log(`FBACheckbox applyFilterBarOpen=${applyFilterBarOpen}`, values.filter);
+        if (applyFilterBarOpen && values?.filter?.source?.length > 0) {
             setApplyFilterResult('filter settings triggered...');
             const fetchdata = async () => {
                 try {
-                    const res = await triggerRestQueryDetails({ source: props.filter.source }, attributes);
+                    const res = await triggerRestQueryDetails({ source: values.filter.source }, attributes);
                     console.log(`res=`, res);
                     setApplyFilterResult('filter settings applied');
                 } catch (e) {
@@ -132,7 +132,7 @@ export default function FBACheckbox(props) {
             };
             fetchdata();
         }
-    }, [applyFilterBarOpen, props.filter, attributes]);
+    }, [applyFilterBarOpen, values.filter, attributes]);
 
     // if attributes change we do reset the badgestatus
     useEffect(() => {
@@ -220,6 +220,8 @@ export default function FBACheckbox(props) {
             (newValues.filter !== props.filter)
         ) {
             props.onChange({ target: { type: 'textfield', values: newValues } });
+        } else {
+            console.warn(`FBACheckbox.handleClose no changes! newValues.filter=${JSON.stringify(newValues.filter)} vs ${JSON.stringify(props.filter)}`);
         }
     };
 
