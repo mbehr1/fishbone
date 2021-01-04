@@ -306,9 +306,9 @@ export default function FBACheckbox(props) {
         setApplyFilterBarOpen(true)
     }
 
-    const applyFilterFragment = (props.filter &&
+    const applyFilterFragment = (values.filter &&
         <React.Fragment>
-            <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(props.filter)}>
+        <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(values.filter)}>
                 Apply filter
             </Button>
             <Snackbar open={applyFilterBarOpen} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} onClose={handleFilterBarClose}>
@@ -324,8 +324,8 @@ export default function FBACheckbox(props) {
             <Box py='1px' /* py = padding-top+bottom <- padding around checkbox */>
                 <Grid container spacing={1} /* distance between checkbox and edit icon */ >
                     <Grid item flex style={{ 'padding': '1px' }}>
-                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={props.value !== null || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
-                        <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={badge2Counter} color={/* doesn't exist for badge but makes the background inherit */"info"} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={props.value !== null || badge2Status < 2} >
+                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={badgeCounter} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999} invisible={values.value !== null || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
+                            <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={badge2Counter} color={/* doesn't exist for badge but makes the background inherit */"info"} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={values.value !== null || badge2Status < 2} >
                             <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" />, color: 'secondary' }]} {...props} size="small" color="primary" />
                         </Badge>
                     </Badge>
