@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.5.3](https://github.com/mbehr1/fishbone/compare/v1.5.2...v1.5.3) (2021-01-05)
+
+
+### Bug Fixes
+
+* **attributes:** empty lifecycles should match all ([650f422](https://github.com/mbehr1/fishbone/commit/650f4225c4e94bdca9bbba4980056711d8a594af))
+
 ### [1.5.2](https://github.com/mbehr1/fishbone/compare/v1.5.1...v1.5.2) (2021-01-04)
 
 
