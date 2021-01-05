@@ -94,7 +94,7 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
                 const attribute = attributes?.find(attr => Object.keys(attr)[0] === attrName);
                 if (attribute !== undefined) {
                     const attrValue = attribute[attrName].value;
-                    const attrKeyValue = Array.isArray(attrValue) ? attrValue.map(e => attrKey ? e[attrKey] : e) : attrKey ? attrValue[attrKey] : attrValue;
+                    const attrKeyValue = Array.isArray(attrValue) ? attrValue.map(e => attrKey ? e[attrKey] : e) : (attrKey ? (attrValue && (attrKey in attrValue) ? attrValue[attrKey] : null) : attrValue);
                     if (typeof attrKeyValue === 'string') {
                         // console.log(`attrKeyValue='${attrKeyValue}'`, attribute);
                         return wrapStringInQuotes ? `"${attrKeyValue}"` : attrKeyValue;

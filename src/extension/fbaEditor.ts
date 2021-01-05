@@ -130,10 +130,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                                     const version: string = typeof versAttrs.version === 'string' ? versAttrs.version : '';
                                                     const versions = version.split('.').map(e => Number(e));
                                                     if (versions.length === 3) {
-                                                        if (versions[0] === 1 && versions[1] <= 2 && versions[2] === 0) {
+                                                        if (versions[0] < 1 || // 0.x.y
+                                                            (versions[0] === 1 && versions[1] < 2) || // 1.<2.x
+                                                            (versions[0] === 1 && versions[1] === 2 && versions[2] < 4)) { // 1.2.<4
                                                             // it gets shown multiple times as the extensions are checked multiple times.
                                                             // but lets keep it like that to get more attention ;-)
-                                                            vscode.window.showWarningMessage(`Please update your DLT-Logs extension to at least version 1.2.1! Reason: support of uri encoded rest parameters.`);
+                                                            vscode.window.showWarningMessage(`Please update your DLT-Logs extension to at least version 1.2.4!`);
                                                         }
                                                     }
                                                     break;
