@@ -1,5 +1,20 @@
 # Change log for 'Fishbone':
 
+## [1.7.0](https://github.com/mbehr1/fishbone/compare/v1.6.1...v1.7.0) (2021-01-06)
+
+
+### Features
+
+* **layout:** react instantly to color theme changes ([ce41bf7](https://github.com/mbehr1/fishbone/commit/ce41bf7da9f810e95fd4c6e1c218f968c26c83c2))
+
+
+### Bug Fixes
+
+* **layout:** adjust effect colors ([06ae81b](https://github.com/mbehr1/fishbone/commit/06ae81b32f1661f62afc037e372987f5ea412bc0))
+* **layout:** smaller font for Attributes header ([c43e94a](https://github.com/mbehr1/fishbone/commit/c43e94aae6814c4f0674a639739b38bf35a72f62))
+* **layout:** use vscode theme colors for radio buttons ([216b484](https://github.com/mbehr1/fishbone/commit/216b48482b00f40ae6462eb8d79cdd11580b4879))
+* **layout:** vscode theme colors for icon button ([fc2386f](https://github.com/mbehr1/fishbone/commit/fc2386f5c383a86b028ebec4a981ed8a9bc2ed9e))
+
 ### [1.6.1](https://github.com/mbehr1/fishbone/compare/v1.6.0...v1.6.1) (2021-01-06)
 
 

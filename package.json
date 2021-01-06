@@ -2,7 +2,7 @@
 	"name": "fishbone",
 	"displayName": "Fishbone / Ishikawa analysis",
 	"description": "Create interactive fishbone diagrams for a systematic defect/failure analysis.",
-	"version": "1.6.1",
+	"version": "1.7.0",
 	"license": "CC-BY-NC-SA-4.0",
 	"publisher": "mbehr1",
 	"author": {
