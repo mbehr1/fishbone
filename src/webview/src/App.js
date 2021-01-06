@@ -791,6 +791,21 @@ export default class App extends Component {
         // looks weird?        fontWeightRegular: 'var(--vscode-font-weight)'
       },
       overrides: {
+        MuiIconButton: {
+          colorPrimary: {
+            color: vscodeStyles.getPropertyValue('--vscode-button-background'),
+            '&:hover': {
+              color: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
+            }
+          },
+          colorSecondary: {
+            color: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
+            '&:hover': {
+              color: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
+            }
+          }
+
+        },
         MuiRadio: {
           colorPrimary: {
             color: vscodeStyles.getPropertyValue('--vscode-button-background'),

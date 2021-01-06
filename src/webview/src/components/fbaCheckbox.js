@@ -240,8 +240,8 @@ export default function FBACheckbox(props) {
                     expandIcon={<ExpandMoreIcon />}
                     id="backgroundDescription-textfield-header">
                     <Typography gutterBottom variant="h6">Background</Typography>
-                    <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(1); }} >
-                        <EditIcon fontSize="small" color="primary" />
+                    <IconButton color="primary" size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(1); }} >
+                        <EditIcon fontSize="small" />
                     </IconButton>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -263,8 +263,8 @@ export default function FBACheckbox(props) {
                     expandIcon={<ExpandMoreIcon />}
                     id="instructions-textfield-header">
                     <Typography gutterBottom variant="h6">Instructions</Typography>
-                    <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(2); }} >
-                        <EditIcon fontSize="small" color="primary" />
+                    <IconButton color="primary" size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(2); }} >
+                        <EditIcon fontSize="small" />
                     </IconButton>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -286,8 +286,8 @@ export default function FBACheckbox(props) {
                     expandIcon={<ExpandMoreIcon />}
                     id="background-textfield-header">
                     <Typography gutterBottom variant="h6">Comments</Typography>
-                    <IconButton size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(3); }} >
-                        <EditIcon fontSize="small" color="primary" />
+                    <IconButton color="primary" size="small" aria-label="edit" onClick={(event) => { event.stopPropagation(); setTextFieldEditOpen(3); }} >
+                        <EditIcon fontSize="small" />
                     </IconButton>
                 </AccordionSummary>
                 <AccordionDetails>
@@ -331,9 +331,9 @@ export default function FBACheckbox(props) {
                     </Badge>
                 </Grid>
                     <Grid>
-                        <IconButton size="small" aria-label="edit" onClick={handleClickOpen} zIndex={2} style={{ 'padding': '4px 0px 2px 0px' }}>
-                    <EditIcon fontSize="small" color="primary" />
-                </IconButton>
+                        <IconButton color="primary" size="small" aria-label="edit" onClick={handleClickOpen} color="primary" style={{ 'padding': '4px 0px 2px 0px' }}>
+                            <EditIcon fontSize="small" />
+                        </IconButton>
                 </Grid>
             </Grid>
             </Box>

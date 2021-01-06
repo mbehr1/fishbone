@@ -496,7 +496,7 @@ export default function DLTFilterAssistantDialog(props) {
         <Dialog fullScreen open={props.open} onClose={handleClose}>
             <DialogTitle id="dltFilterAssistantDialogTitle">
                 DLT filter assistant...
-                <IconButton onClick={handleClose} color="primary" style={{ position: 'absolute', right: 1 }}>
+                <IconButton onClick={handleClose} color="inherit" style={{ position: 'absolute', right: 1 }}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
