@@ -1,5 +1,13 @@
 # Change log for 'Fishbone':
 
+### [1.7.1](https://github.com/mbehr1/fishbone/compare/v1.7.0...v1.7.1) (2021-01-06)
+
+
+### Bug Fixes
+
+* **layout:** ... buttons in fishbone better contrast ([a0b0e76](https://github.com/mbehr1/fishbone/commit/a0b0e766578df8b6bdf0b649b8e770599998728a))
+* **layout:** close x button with inherit color ([9462c90](https://github.com/mbehr1/fishbone/commit/9462c90f0f9974baad098824373dfd6749dd4a76))
+
 ## [1.7.0](https://github.com/mbehr1/fishbone/compare/v1.6.1...v1.7.0) (2021-01-06)
 
 
