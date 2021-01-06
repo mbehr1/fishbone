@@ -229,15 +229,15 @@ export default class App extends Component {
     this.logMsg(`from App/constructor state.title=${this.state.title}`);
     window.addEventListener('message', event => {
       const msg = event.data;
-      console.log(`App received msg:`);
-      console.log(msg);
+      //console.log(`App received msg:`);
+      //console.log(msg);
       switch (msg.type) {
         case 'update':
           // do we need to update the fbPath?
           // check whether the current path is still valid, if not use the first matching parts:
-          console.log(`state.fbPath=${JSON.stringify(this.state.fbPath)}`);
+          console.log(`App.message.update state.fbPath=${JSON.stringify(this.state.fbPath)}`);
           const newFbPath = this.matchingFbPath(this.state.fbPath, msg.data, msg.title);
-          console.log(`newPath=${JSON.stringify(newFbPath)}`);
+          console.log(`App.message.update  newPath=${JSON.stringify(newFbPath)}`);
 
           // we store the non-modified data in vscode.state (e.g. with react:MyCheckbox as string)
           this.props.vscode.setState({ data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath }); // todo shall we store any other data?
@@ -248,6 +248,12 @@ export default class App extends Component {
           break;
         case 'sAr':
           receivedResponse(msg);
+          break;
+        case 'onDidChangeActiveRestQueryDoc':
+          console.log(`App.onDidChangeActiveRestQueryDoc ext=${msg.ext} uri=${msg.uri}`);
+          // for now simply update the attributes, to retrigger a badge redraw
+          // console.warn(`App.onDidChangeActiveRestQueryDoc  attributes=${JSON.stringify(this.state.attributes)}`);
+          this.setState((state) => { return { attributes: [...state.attributes] }; });
           break;
         default:
           console.warn(`App received unknown type=${msg.type} msg:`);

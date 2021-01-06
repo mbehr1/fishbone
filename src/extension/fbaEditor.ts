@@ -80,13 +80,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
     }
 
-    private _onDidChangeActiveRestQueryDoc = new vscode.EventEmitter<vscode.Uri | undefined>();
+    private _onDidChangeActiveRestQueryDoc = new vscode.EventEmitter<{ ext: string, uri: vscode.Uri | undefined }>();
     /**
      * event that get triggered if any active restquery (currently only dlt) doc
      * (the dlt doc that can be referenced with /get/docs/0/...) changes. 
      * The event gets debounced a bit to prevent lots of traffic after switching documents.
      */
-    get onDidChangeActiveRestQueryDoc(): vscode.Event<vscode.Uri | undefined> { return this._onDidChangeActiveRestQueryDoc.event; }
+    get onDidChangeActiveRestQueryDoc(): vscode.Event<{ ext: string, uri: vscode.Uri | undefined }> { return this._onDidChangeActiveRestQueryDoc.event; }
 
     dispose() {
         console.log(`FBAEditorProvider dispose() called...`);
@@ -143,11 +143,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                                     const versions = version.split('.').map(e => Number(e));
                                                     if (versions.length === 3) {
                                                         if (versions[0] < 1 || // 0.x.y
-                                                            (versions[0] === 1 && versions[1] < 2) || // 1.<2.x
-                                                            (versions[0] === 1 && versions[1] === 2 && versions[2] < 4)) { // 1.2.<4
+                                                            (versions[0] === 1 && versions[1] < 3) || // 1.<3.x
+                                                            (versions[0] === 1 && versions[1] === 3 && versions[2] < 0)) { // 1.3.<0
                                                             // it gets shown multiple times as the extensions are checked multiple times.
                                                             // but lets keep it like that to get more attention ;-)
-                                                            vscode.window.showWarningMessage(`Please update your DLT-Logs extension to at least version 1.2.4!`);
+                                                            vscode.window.showWarningMessage(`Please update your DLT-Logs extension to at least version 1.3.0!`);
                                                         }
                                                     }
                                                     break;
@@ -160,8 +160,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                             }
                             let fnOnDidChangeActiveRestQueryDoc = importedApi.onDidChangeActiveRestQueryDoc;
                             if (fnOnDidChangeActiveRestQueryDoc !== undefined) {
+                                let extId = value.id;
                                 let subOnDidChange = fnOnDidChangeActiveRestQueryDoc(async (uri: vscode.Uri | undefined) => {
-                                    this._onDidChangeActiveRestQueryDoc.fire(uri);
+                                    this._onDidChangeActiveRestQueryDoc.fire({ ext: extId, uri: uri });
                                 });
                                 if (subOnDidChange !== undefined) { newSubs.push(subOnDidChange); }
                             }
@@ -254,8 +255,15 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             }
         });
 
-        const changeActiveDltDocSubscription = this.onDidChangeActiveRestQueryDoc((uri) => {
-            console.warn(`FBAEditorProvider webview onDidChangeActiveRestQueryDoc(uri=${uri?.toString()})...`);
+        const changeActiveDltDocSubscription = this.onDidChangeActiveRestQueryDoc((event) => {
+            if (webviewPanel.visible) {
+                console.log(`FBAEditorProvider webview(${document.uri.toString()}) onDidChangeActiveRestQueryDoc(ext='${event.ext}' uri=${event.uri?.toString()})...`);
+                postMsgOnceAlive({
+                    type: 'onDidChangeActiveRestQueryDoc',
+                    ext: event.ext,
+                    uri: event.uri?.toString()
+                });
+            }
         });
 
         // Make sure we get rid of the listener when our editor is closed.
