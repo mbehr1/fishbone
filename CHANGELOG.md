@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.7.2](https://github.com/mbehr1/fishbone/compare/v1.7.1...v1.7.2) (2021-01-06)
+
+
+### Bug Fixes
+
+* **dltfilterassistantdialog:** render only if opened ([5b98af1](https://github.com/mbehr1/fishbone/commit/5b98af190b6385f95c83a21ba1e51a2bc2205373))
+
 ### [1.7.1](https://github.com/mbehr1/fishbone/compare/v1.7.0...v1.7.1) (2021-01-06)
 
 
