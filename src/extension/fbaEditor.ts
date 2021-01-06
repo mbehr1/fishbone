@@ -266,9 +266,17 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             }
         });
 
+        const changeThemeSubsription = vscode.window.onDidChangeActiveColorTheme((event) => {
+            postMsgOnceAlive({
+                type: 'onDidChangeActiveColorTheme',
+                kind: event.kind // 1 = light, 2 = dark, 3 = high contrast
+            });
+        });
+
         // Make sure we get rid of the listener when our editor is closed.
         webviewPanel.onDidDispose(() => {
             changeDocumentSubscription.dispose();
+            changeThemeSubsription.dispose();
             changeActiveDltDocSubscription.dispose();
         });
 

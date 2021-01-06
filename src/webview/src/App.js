@@ -255,6 +255,11 @@ export default class App extends Component {
           // console.warn(`App.onDidChangeActiveRestQueryDoc  attributes=${JSON.stringify(this.state.attributes)}`);
           this.setState((state) => { return { attributes: [...state.attributes] }; });
           break;
+        case 'onDidChangeActiveColorTheme':
+          console.log(`App.onDidChangeActiveColorTheme kind=${msg.kind}`);
+          // for now simply change title to force render:
+          this.setState((state) => { return { title: state.title }; });
+          break;
         default:
           console.warn(`App received unknown type=${msg.type} msg:`);
           console.log(msg);      
