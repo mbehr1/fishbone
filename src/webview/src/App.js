@@ -889,7 +889,7 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
         <Paper>
           <Grid container spacing={2}>
             <Grid item sm={6} container>
-              <Typography align="left" gutterBottom variant="h4">
+              <Typography align="left" gutterBottom variant="h6">
                 Attributes:
                 </Typography>
               <form style={formStyle} noValidate autoComplete="off">
