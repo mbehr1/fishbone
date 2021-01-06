@@ -62,19 +62,20 @@ export default function FishboneChart(props) {
     console.log(`FishboneChart render no causes! props=`, props);
     return <React.Fragment></React.Fragment>;
   }
+  const vscodeStyles = window.getComputedStyle(document.body);
 
-    const getColor = (index) => {
-        const colors = [
-          'blue_two',
-          'gray',
-          'black',
-          'green',
-          'blue',
-          'orange',
-          'purple',
-          'pink',
-    
-        ];
+  const getColor = (index) => {
+      const colors = [
+        'blue_two',
+        'gray',
+        'black',
+        'green',
+        'blue',
+        'orange',
+        'purple',
+        'pink',
+  
+      ];
     
         if (index >= colors.length) {
           index %= colors.length;
@@ -158,64 +159,64 @@ export default function FishboneChart(props) {
       }
 
   const getHalfCategories = (categories, top) => {
-        // we want them sorted from left to right always changing top/down, e.g.
-        // 1 3 5
-        //  2 4
-    
-        const halfArray = [];
+    // we want them sorted from left to right always changing top/down, e.g.
+    // 1 3 5
+    //  2 4
+
+    const halfArray = [];
     for (let i = top ? 0 : 1; i < categories.length; i += 2) {
       halfArray.push(categories[i]);
-        }
-        // top ? causes.slice(0, middle) : causes.slice(middle);
-    
-        const color = effectIndexColor;
-        const halfCauses = halfArray.map((category, index) => {
-          if (top) {
-            // todo optimize so that we do use only one menu instance?
-            return (
-              <div key={`top_causes_${category.name}_${index}`} className="causeContent">
-                <div className={`cause top ${color}_ ${color}Border`}>
-                  <OnBlurInputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
-                  {props.categoryContextMenu && props.categoryContextMenu.length > 0 && /* todo race cond if all items are undefined... */
-                    <React.Fragment>
-                    <IconButton id={`top_cat_${index}`} onClick={handleMenuClick} color="secondary" size="small"><MoreVertIcon fontSize="small" /></IconButton>
-                      <Menu id={`top_cat_${index}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `top_cat_${index}`} onClose={handleMenuClose}>
-                      {props.categoryContextMenu.filter(m => m !== undefined).map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
-                      </Menu>
-                    </React.Fragment>
-                  }
-
-                </div>
-                <div className="causeAndLine">
-                  {getRootCauses(category.rootCauses, category)}
-                  <div className={`diagonalLine ${color}TopBottom`} />
-                </div>
-              </div>
-            );
-          } else {
-            return (
-              <div key={`bottom_causes_${category.name}_${index}`} className="causeContent">
-                <div className="causeAndLine">
-                  {getRootCauses(category.rootCauses, category)}
-                  <div className={`diagonalLine ${color}BottomTop`} />
-                </div>
-                <div className={`cause bottom ${color}_ ${color}Border`}>
-                  <OnBlurInputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
-                  {props.categoryContextMenu && props.categoryContextMenu.length > 0 &&
-                    <React.Fragment>
-                    <IconButton id={`bottom_cat_${index}`} onClick={handleMenuClick} color="secondary" size="small"><MoreVertIcon fontSize="small" /></IconButton>
-                      <Menu id={`bottom_cat_${index}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `bottom_cat_${index}`} onClose={handleMenuClose}>
-                      {props.categoryContextMenu.filter(m => m !== undefined).map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
-                      </Menu>
-                    </React.Fragment>
-                  }
-                </div>
-              </div>
-            );
-          }
-        });
-        return (<div className="causesGroup">{halfCauses}</div>);
     }
+    // top ? causes.slice(0, middle) : causes.slice(middle);
+
+    const color = effectIndexColor;
+    const halfCauses = halfArray.map((category, index) => {
+      if (top) {
+        // todo optimize so that we do use only one menu instance?
+        return (
+          <div key={`top_causes_${category.name}_${index}`} className="causeContent">
+            <div className={`cause top ${color}_ ${color}Border`}>
+              <OnBlurInputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
+              {props.categoryContextMenu && props.categoryContextMenu.length > 0 && /* todo race cond if all items are undefined... */
+                <React.Fragment>
+                <IconButton id={`top_cat_${index}`} onClick={handleMenuClick} color="secondary" size="small" style={{ color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'), backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'), }} ><MoreVertIcon fontSize="small" /></IconButton>
+                  <Menu id={`top_cat_${index}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `top_cat_${index}`} onClose={handleMenuClose}>
+                    {props.categoryContextMenu.filter(m => m !== undefined).map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
+                  </Menu>
+                </React.Fragment>
+              }
+
+            </div>
+            <div className="causeAndLine">
+              {getRootCauses(category.rootCauses, category)}
+              <div className={`diagonalLine ${color}TopBottom`} />
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <div key={`bottom_causes_${category.name}_${index}`} className="causeContent">
+            <div className="causeAndLine">
+              {getRootCauses(category.rootCauses, category)}
+              <div className={`diagonalLine ${color}BottomTop`} />
+            </div>
+            <div className={`cause bottom ${color}_ ${color}Border`}>
+              <OnBlurInputBase style={{ height: '1em' }} margin='dense' value={category.name} onChange={(event) => props.onChange(category, event, 'name')} />
+              {props.categoryContextMenu && props.categoryContextMenu.length > 0 &&
+                <React.Fragment>
+                <IconButton id={`bottom_cat_${index}`} onClick={handleMenuClick} color="secondary" size="small" style={{ color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'), backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'), }}><MoreVertIcon fontSize="small" /></IconButton>
+                  <Menu id={`bottom_cat_${index}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `bottom_cat_${index}`} onClose={handleMenuClose}>
+                    {props.categoryContextMenu.filter(m => m !== undefined).map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category); }}>{menuItem.text}</MenuItem>)}
+                  </Menu>
+                </React.Fragment>
+              }
+            </div>
+          </div>
+        );
+      }
+    });
+    return (<div className="causesGroup">{halfCauses}</div>);
+  }
 
     const getCauses = () => {
         const color = effectIndexColor;
@@ -237,7 +238,7 @@ export default function FishboneChart(props) {
             </div>
             {props.effectContextMenu && props.effectContextMenu.length > 0 &&
               <React.Fragment>
-              <IconButton id={`effect_${effectIndex}`} onClick={handleMenuClick} color="secondary" size="small"><MoreVertIcon fontSize="small" /></IconButton>
+              <IconButton id={`effect_${effectIndex}`} onClick={handleMenuClick} color="secondary" size="small" style={{ color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'), backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'), }}><MoreVertIcon fontSize="small" /></IconButton>
                 <Menu anchorEl={menuAnchorEl} keepMounted open={menuOpen === `effect_${effectIndex}`} onClose={handleMenuClose}>
                 {props.effectContextMenu.filter(e => e !== undefined).map((menuItem, index) => <MenuItem onClick={() => { handleMenuClose(); menuItem?.cb(props.data, effectIndex); }}>{menuItem.text}</MenuItem>)}
               </Menu>

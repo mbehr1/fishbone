@@ -55,8 +55,8 @@ export default function TextFieldEditDialog(props) {
                 </IconButton>
             </DialogTitle>
             <DialogContent dividers>
-                <FormControlLabel control={<Switch checked={markdownFormat} onChange={toggleMarkdown} />}
-                    label="Markdown">
+                <FormControlLabel control={<Switch color='secondary' checked={markdownFormat} onChange={toggleMarkdown} />}
+                    label={markdownFormat ? 'Markdown on' : 'Markdown off'}>
                 </FormControlLabel>
                 <TextField name={props.label} margin="dense" id={'description-field-' + props.label}
                     InputLabelProps={{ shrink: true, }} fullWidth multiline value={dataTextValue} onChange={(event) => setDataTextValue(event.target.value)}

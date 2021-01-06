@@ -822,6 +822,23 @@ export default class App extends Component {
             }
           }
         },
+        MuiSwitch: {
+          'track': {
+            backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
+          },
+          colorSecondary: {
+            color: vscodeStyles.getPropertyValue('--vscode-badge-background'),
+            '&$checked': {
+              color: vscodeStyles.getPropertyValue('--vscode-badge-background'),
+            },
+            '&$checked + $track': {
+              backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
+            },
+            '&$disabled + $track': {
+              backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
+            },
+          }
+        },
         MuiButton: {
           textPrimary: {
             color: vscodeStyles.getPropertyValue('--vscode-button-foreground'),
