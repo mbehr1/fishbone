@@ -1,5 +1,5 @@
 // copyright (c) 2020 - 2021, Matthias Behr
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -116,7 +116,7 @@ class RestCommandFilter extends RestCommandBase {
     constructor(filter) {
         super();
         this.name = nameForFilterObj(filter);
-        this.json = JSON.stringify(filter);
+        this.json = JSON.stringify(filter, Object.keys(filter).sort());
     }
 
     get asJson() {
@@ -242,30 +242,57 @@ export default function DLTFilterAssistantDialog(props) {
     
     const classes = useStyles();
 
-    const [dataSource, setDataSource] = React.useState();
+    const [dataSource, setDataSource] = React.useState(props.dataSource);
 
     const [filters, setFilters] = React.useState([]);
 
     const [checked, setChecked] = React.useState([]);
-    const [left, setLeft] = React.useState([]);
-    const [right, setRight] = React.useState([]);
+    const [left, setLeft] = React.useState();
+    const [right, setRight] = React.useState();
 
     // preview all available filters with the list from opened dlt doc:
-    const [loadAllFilters, setLoadAllFilters] = useState(0);
+    const [loadAllFilters, setLoadAllFilters] = React.useState(-1);
 
     useEffect(() => {
+        console.log(`DLTFilterAssistantDialog useEffect[props.dataSource, props.applyMode]`);
         setDataSource(props.dataSource);
         // parse filters:
         const parsedFilters = parseFilters(props.dataSource, props.applyMode);
+
+        // add special filters if not in parsedFilters
+        // applyMode delete={"tmpFb":1}
+        // disableAll=view
+        // ${attributes.findIndex(attr => attr.hasOwnProperty('lifecycles')) >= 0 ? `add={"name":"not selected lifecycles","tmpFb":1, "type":1,"not":true,"lifecycles":"${attributes.lifecycles.id}"}
+        let forRight = 0;
+        if (props.applyMode) { // todo this should on move to left always be at the top
+            const newFilter = new RestCommandApply('delete', '{"tmpFb":1}', `delete={"tmpFb":1}`);
+            const curIdx = parsedFilters.findIndex(filter => objectShallowEq(newFilter, filter));
+            if (curIdx < 0) { parsedFilters.push(newFilter); forRight++; }
+        }
+        if (props.applyMode) { // todo this should on move to left always be at the top
+            const newFilter = new RestCommandApply('disableAll', 'view', `disableAll=view`);
+            const curIdx = parsedFilters.findIndex(filter => objectShallowEq(newFilter, filter));
+            if (curIdx < 0) { parsedFilters.push(newFilter); forRight++; }
+        }
+        if (true /* or add attributes here? */) {
+            // eslint-disable-next-line no-template-curly-in-string
+            const newAttrs = { name: "not selected lifecycles", "type": 1, "not": true, "lifecycles": "${attributes.lifecycles.id}" };
+            const newFilter = new RestCommandFilter(props.applyMode ? { ...newAttrs, tmpFb: 1 } : newAttrs);
+            const curIdx = parsedFilters.findIndex(filter => objectShallowEq(newFilter, filter));
+            if (curIdx < 0) { parsedFilters.push(newFilter); forRight++; }
+        }
+
         setFilters(parsedFilters);
-        setLeft(parsedFilters.map((filter, index) => index));
-        setRight([]);
+        setLeft(parsedFilters.map((filter, index) => index).filter(val => val < parsedFilters.length - forRight));
+        setRight(parsedFilters.map((filter, index) => index).filter(val => val >= parsedFilters.length - forRight));
+        setChecked([]);
         setLoadAllFilters(0);
     }, [props.dataSource, props.applyMode]);
     console.log(`DLTFilterAssistantDialog dataSource=${dataSource}`);
 
     useEffect(() => {
         if (props.open && !loadAllFilters) {
+            console.log(`DLTFilterAssistantDialog effect for filter fetch called`);
             const fetchdata = async () => {
                 try {
                     setLoadAllFilters(1); // running
@@ -281,7 +308,7 @@ export default function DLTFilterAssistantDialog(props) {
                                 if (filter.type === 'filter') {
                                     const attr = filter.attributes;
                                     if (attr.type === 0 || attr.type === 1 || (props.applyMode && attr.type === 2) || (props.applyMode && attr.type === 3)) { // only pos,neg. And marker and event filters only for apply mode
-                                        if (!(attr?.atLoadTime)) { // ignore load time ones
+                                        if (!(attr?.atLoadTime) && !(attr?.tmpFb === 1)) { // ignore load time ones and temporary ones
                                             const enabled = attr?.enabled ? (attr.type !== 3 /* event filters should not be enabled */ ? true : false) : false;
                                             const newAttrs = { ...attr, configs: undefined, id: undefined, enabled: undefined }
                                             const newFilter = new RestCommandFilter(props.applyMode ? { ...newAttrs, tmpFb: 1 } : newAttrs);
@@ -317,13 +344,14 @@ export default function DLTFilterAssistantDialog(props) {
     useEffect(() => {
         const updateDataSource = (list) => {
             if (props.open && dataSource !== undefined) {
-                console.log(`updateDataSource(dataSource=${dataSource} list=`, list);
+                //console.log(`updateDataSource(dataSource=${dataSource} list.length=${list.length}`);
                 const indexOfQ = dataSource?.indexOf('?');
                 const uri = indexOfQ > 0 ? dataSource.slice(0, indexOfQ) : dataSource;
                 if (props.applyMode) {
                     let commands = list.map((idx) => filters[idx].asRestCommand).join('&');
                     const newDataSource = uri + `?${commands}`;
                     if (newDataSource !== dataSource) {
+                        console.log(`updateDataSource setDataSource(${newDataSource}`);
                         setDataSource(newDataSource);
                         setPreviewQueryResult(`Press "Test apply filter" button to start...`);
                         setPreviewBadgeStatus(3);
@@ -334,13 +362,14 @@ export default function DLTFilterAssistantDialog(props) {
                     let params = list.map((idx) => filters[idx].asJson).join(',');
                     const newDataSource = uri + `?query=${encodeURIComponent(`[${params}]`)}`;
                     if (newDataSource !== dataSource) {
+                        console.log(`updateDataSource setDataSource(${newDataSource}`);
                         setDataSource(newDataSource);
                         setPreviewBadgeStatus(0);
                     }
                 }
             }
         }
-        updateDataSource(left);
+        if (Array.isArray(left)) { updateDataSource(left); }
     }, [props.open, left, dataSource, filters, props.applyMode]);
 
     // preview badge content
@@ -350,8 +379,8 @@ export default function DLTFilterAssistantDialog(props) {
     const [previewQueryResult, setPreviewQueryResult] = React.useState('');
 
     useEffect(() => {
-        console.log(`DLTFilterAssistantDialog effect for badge processing called (badgeStatus=${previewBadgeStatus}, dataSource=${dataSource})`);
         if (props.open && !previewBadgeStatus && dataSource?.length > 0) {
+            console.log(`DLTFilterAssistantDialog effect for badge processing called (badgeStatus=${previewBadgeStatus}, dataSource=${dataSource})`);
             const fetchdata = async () => {
                 try {
                     setPreviewBadgeError('querying...');
@@ -431,8 +460,8 @@ export default function DLTFilterAssistantDialog(props) {
         </Paper>
     );
 
-    const leftChecked = intersection(checked, left);
-    const rightChecked = intersection(checked, right);
+    const leftChecked = Array.isArray(left) ? intersection(checked, left) : [];
+    const rightChecked = Array.isArray(right) ? intersection(checked, right) : [];
 
     const handleCheckedRight = () => {
         setRight(right.concat(leftChecked));
@@ -487,7 +516,7 @@ export default function DLTFilterAssistantDialog(props) {
         }
     }
 
-    //console.log(`DltFilterAssistant render() filters=`, filters);
+    //console.log(`DltFilterAssistant render() filters.length=`, filters.length);
     //console.log(`DltFilterAssistant render() checked=`, checked);
     //console.log(`DltFilterAssistant render() left   =`, left);
     //console.log(`DltFilterAssistant render() right  =`, right);
@@ -506,7 +535,7 @@ export default function DLTFilterAssistantDialog(props) {
                         <Grid container spacing={2} justify="flex-start" alignItems="center">
                             <Grid item>
                                 Selected filters:
-                                {customList(left)}
+                                {Array.isArray(left) && customList(left)}
                             </Grid>
                             <Grid item>
                                 <Grid container direction="column" alignItems="center">
@@ -516,7 +545,7 @@ export default function DLTFilterAssistantDialog(props) {
                             </Grid>
                             <Grid item>
                                 All available filters:
-                                {customList(right)}
+                                {Array.isArray(right) && customList(right)}
                             </Grid>
                         </Grid>
                     </Grid>
