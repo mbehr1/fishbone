@@ -1,5 +1,17 @@
 # Change log for 'Fishbone':
 
+## [1.6.0](https://github.com/mbehr1/fishbone/compare/v1.5.3...v1.6.0) (2021-01-06)
+
+
+### Features
+
+* **restquery:** re-trigger badge queries on dlt doc view changes ([aba011d](https://github.com/mbehr1/fishbone/commit/aba011dfbe734dc33980038d7de2113ee1111541))
+
+
+### Other
+
+* **restquery:** subscribe to onDidChangeActiveRestQueryDoc ([888541e](https://github.com/mbehr1/fishbone/commit/888541ec00808f73330732b2f0d298dfcdb85bc2))
+
 ### [1.5.3](https://github.com/mbehr1/fishbone/compare/v1.5.2...v1.5.3) (2021-01-05)
 
 
