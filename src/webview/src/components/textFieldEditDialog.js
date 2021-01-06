@@ -64,7 +64,7 @@ export default function TextFieldEditDialog(props) {
                 </TextField>
             </DialogContent>
             <DialogActions>
-                <Button autoFocus onClick={handleSave} color="primary">
+                <Button size="small" autoFocus onClick={handleSave} color="primary">
                     Save changes
                 </Button>
             </DialogActions>

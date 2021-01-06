@@ -137,7 +137,7 @@ export default function DataProviderEditDialog(props) {
                             </FormControl>
                         </Paper>}
                         {dataType === 'ext:dlt' && <Paper>
-                            <Button size="small" variant="outlined" color="primary" onClick={() => setDltFilterAssistantOpen(true)}>
+                            <Button size="small" color="primary" onClick={() => setDltFilterAssistantOpen(true)}>
                                 Open DLT filter assistant...
                             </Button>
                             <DLTFilterAssistantDialog
@@ -190,7 +190,7 @@ export default function DataProviderEditDialog(props) {
                         </Paper>}
                     </Grid>
                     {props.applyMode && <Grid item>
-                        <Button id={'dp-test-apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />}
+                        <Button id={'dp-test-apply-filter-' + props.name} color="secondary" startIcon={<FilterListIcon />}
                             disabled={!(previewBadgeStatus === 3 && dataSource?.length > 0)}
                             onClick={(e) => { if (previewBadgeStatus === 3 && dataSource?.length > 0) { setPreviewBadgeStatus(0); } }}>
                             Test "apply filter"
@@ -215,7 +215,7 @@ export default function DataProviderEditDialog(props) {
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button autoFocus onClick={handleSave} color="primary">
+                <Button size="small" autoFocus onClick={handleSave} color="primary">
                     Save changes
                 </Button>
             </DialogActions>

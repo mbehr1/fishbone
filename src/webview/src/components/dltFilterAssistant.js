@@ -413,6 +413,7 @@ export default function DLTFilterAssistantDialog(props) {
                         <ListItem classes={{ root: classes.item }} key={value} role="listitem" button onClick={handleToggle(value)} dense={true} disableGutters={true}>
                             <ListItemIcon classes={{ root: classes.icon }}>
                                 <Checkbox
+                                    color='primary'
                                     classes={{ root: classes.checkbox }}
                                     checked={checked.indexOf(value) !== -1}
                                     tabIndex={-1}
@@ -509,8 +510,8 @@ export default function DLTFilterAssistantDialog(props) {
                             </Grid>
                             <Grid item>
                                 <Grid container direction="column" alignItems="center">
-                                    <Button variant="outlined" size="small" onClick={handleCheckedRight} disabled={leftChecked.length === 0}>&gt;</Button>
-                                    <Button variant="outlined" size="small" onClick={handleCheckedLeft} disabled={rightChecked.length === 0}>&lt;</Button>
+                                    <Button size="small" color="primary" onClick={handleCheckedRight} disabled={leftChecked.length === 0}>&gt;</Button>
+                                    <Button size="small" color="primary" onClick={handleCheckedLeft} disabled={rightChecked.length === 0}>&lt;</Button>
                                 </Grid>
                             </Grid>
                             <Grid item>
@@ -520,7 +521,7 @@ export default function DLTFilterAssistantDialog(props) {
                         </Grid>
                     </Grid>
                     {props.applyMode && <Grid item>
-                        <Button id={'test-apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />}
+                        <Button id={'test-apply-filter-' + props.name} color="secondary" startIcon={<FilterListIcon />}
                             disabled={!(previewBadgeStatus === 3 && dataSource?.length > 0)}
                             onClick={(e) => { if (previewBadgeStatus === 3 && dataSource?.length > 0) { setPreviewBadgeStatus(0); } }}>
                             Test "apply filter"
@@ -548,7 +549,7 @@ export default function DLTFilterAssistantDialog(props) {
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button autoFocus onClick={handleSave} color="primary">
+                <Button size="small" autoFocus onClick={handleSave} color="primary">
                     Save changes
                 </Button>
             </DialogActions>

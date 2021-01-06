@@ -308,7 +308,7 @@ export default function FBACheckbox(props) {
 
     const applyFilterFragment = (values.filter &&
         <React.Fragment>
-        <Button id={'apply-filter-' + props.name} color="primary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(values.filter)}>
+        <Button id={'apply-filter-' + props.name} size="small" color="secondary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(values.filter)}>
                 Apply filter
             </Button>
             <Snackbar open={applyFilterBarOpen} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} onClose={handleFilterBarClose}>
@@ -360,18 +360,18 @@ export default function FBACheckbox(props) {
                 </DialogContent>
                 <DialogActions>
                     {applyFilterFragment}
-                    <ButtonGroup>
-                        <Button size="small" onClick={() => { handleClose({ value: 'ok' }); }} color="primary" startIcon={<CheckBoxIcon />}>
+                    <ButtonGroup color="primary" size="small" variant="outlined">
+                        <Button onClick={() => { handleClose({ value: 'ok' }); }} color="primary" startIcon={<CheckBoxIcon />}>
                             {values.value === 'ok' ? 'keep as OK' : 'mark as OK'}
                         </Button>
-                        <Button size="small" onClick={() => { handleClose({ value: 'error' }); }} color="secondary" startIcon={<ErrorIcon />}>
+                        <Button onClick={() => { handleClose({ value: 'error' }); }} color="primary" startIcon={<ErrorIcon color='error' />}>
                             {values.value === 'error' ? 'keep as ERROR' : 'mark as ERROR'}
                         </Button>
-                        <Button size="small" onClick={() => { handleClose({ value: null }); }} color="primary" startIcon={<CheckBoxOutlineBlankIcon />}>
+                        <Button onClick={() => { handleClose({ value: null }); }} color="primary" startIcon={<CheckBoxOutlineBlankIcon />}>
                             {!values.value ? 'keep as unprocessed' : 'mark as unprocessed'}
                         </Button>
                     </ButtonGroup>
-                    <Button onClick={() => handleClose()} color="primary">
+                    <Button size="small" onClick={() => handleClose()} color="primary">
                         Close
                     </Button>
                 </DialogActions>

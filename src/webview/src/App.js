@@ -789,6 +789,47 @@ export default class App extends Component {
         // looks weird?        fontSize: 'var(--vscode-font-size)',
         fontFamily: vscodeStyles.getPropertyValue('--vscode-font-family'),
         // looks weird?        fontWeightRegular: 'var(--vscode-font-weight)'
+      },
+      overrides: {
+        MuiButton: {
+          textPrimary: {
+            color: vscodeStyles.getPropertyValue('--vscode-button-foreground'),
+            background: vscodeStyles.getPropertyValue('--vscode-button-background'),
+            '&:hover': {
+              backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
+            }
+          },
+          textSecondary: {
+            color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'),
+            background: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
+            '&:hover': {
+              backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
+            }
+          }, // todo support inherit color for buttons?
+          outlinedPrimary: {
+            color: vscodeStyles.getPropertyValue('--vscode-foreground'), // regular foreground
+            borderColor: vscodeStyles.getPropertyValue('--vscode-button-background'),
+            '&:hover': {
+              color: vscodeStyles.getPropertyValue('--vscode-editor-foreground'),
+              borderColor: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
+            }
+          },
+          outlinedSecondary: {
+            color: vscodeStyles.getPropertyValue('--vscode-foreground'), // regular foreground for contrast
+            borderColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
+            '&:hover': {
+              color: vscodeStyles.getPropertyValue('--vscode-editor-foreground'),
+              borderColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
+            }
+          },
+        },
+        /* todo investigate later ... MuiCheckbox: {
+colorPrimary: {
+// background: vscodeStyles.getPropertyValue('--vscode-checkbox-background'),
+// borderColor: vscodeStyles.getPropertyValue('--vscode-checkbox-border'),
+color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
+}
+} */
       }
     });
 
