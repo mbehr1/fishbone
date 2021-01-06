@@ -50,7 +50,7 @@ export default function TextFieldEditDialog(props) {
         <Dialog fullWidth={true} open={props.open} maxWidth='md' onClose={handleClose}>
             <DialogTitle id="textFieldEditDialogTitle">
                 {props.label}
-                <IconButton onClick={handleClose} color="primary" style={{ position: 'absolute', right: 1 }}>
+                <IconButton onClick={handleClose} color="inherit" style={{ position: 'absolute', right: 1 }}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
