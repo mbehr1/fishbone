@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.6.1](https://github.com/mbehr1/fishbone/compare/v1.6.0...v1.6.1) (2021-01-06)
+
+
+### Bug Fixes
+
+* **layout:** apply theme colors for buttons. fix [#5](https://github.com/mbehr1/fishbone/issues/5) ([091ab34](https://github.com/mbehr1/fishbone/commit/091ab347eaf0b620c8d1bf5757e8887b4b8a1105))
+
 ## [1.6.0](https://github.com/mbehr1/fishbone/compare/v1.5.3...v1.6.0) (2021-01-06)
 
 
