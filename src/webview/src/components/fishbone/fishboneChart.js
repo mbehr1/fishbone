@@ -65,11 +65,11 @@ export default function FishboneChart(props) {
 
     const getColor = (index) => {
         const colors = [
-          'blue',
+          'blue_two',
           'gray',
           'black',
           'green',
-          'blue_two',
+          'blue',
           'orange',
           'purple',
           'pink',

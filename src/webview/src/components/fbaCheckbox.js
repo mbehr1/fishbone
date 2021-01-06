@@ -331,7 +331,7 @@ export default function FBACheckbox(props) {
                     </Badge>
                 </Grid>
                     <Grid>
-                        <IconButton color="primary" size="small" aria-label="edit" onClick={handleClickOpen} color="primary" style={{ 'padding': '4px 0px 2px 0px' }}>
+                        <IconButton color="primary" size="small" aria-label="edit" onClick={handleClickOpen} style={{ 'padding': '4px 0px 2px 0px' }}>
                             <EditIcon fontSize="small" />
                         </IconButton>
                 </Grid>

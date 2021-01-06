@@ -91,67 +91,67 @@
 } 
 
 .blue_{
-    background: rgb(0, 192, 239, 0.1);
+    background: rgb(0, 192, 239, 0.3);
 }
 
 .black_{
-    background: rgb(17, 17, 17, 0.1);
+    background: rgb(17, 17, 17, 0.3);
 }
 
 .blue_two_ {
-    background: rgb(11, 120, 206, 0.1);
+    background: rgb(11, 120, 206, 0.3);
 }
 
 .gray_ {
-    background: rgb(104,115,140, 0.1);
+    background: rgb(104,115,140, 0.3);
 }
 
 .green_ {
-    background:rgb(48, 187, 187, 0.1);
+    background:rgb(48, 187, 187, 0.3);
 }
 
 .pink_ {
-    background: rgb(216, 27, 96, 0.1);
+    background: rgb(216, 27, 96, 0.3);
 }
 
 .purple_ {
-    background: rgb(85, 82, 153, 0.1);
+    background: rgb(85, 82, 153, 0.3);
 }
 
 .orange_ {
-    background:rgb(255, 119, 1, 0.1);
+    background:rgb(255, 119, 1, 0.3);
 }
 
 .blue_dark{
-    background: rgb(0, 192, 239, 0.4);
+    background: rgb(0, 192, 239, 0.7);
 }
 
 .black_dark{
-    background: rgb(17, 17, 17, 0.4);
+    background: rgb(17, 17, 17, 0.7);
 }
 
 .blue_two_dark {
-    background: rgb(11, 120, 206, 0.4);
+    background: rgb(11, 120, 206, 0.7);
 }
 
 .gray_dark {
-    background: rgb(104,115,140, 0.4);
+    background: rgb(104,115,140, 0.7);
 }
 
 .green_dark {
-    background:rgb(48, 187, 187, 0.4);
+    background:rgb(48, 187, 187, 0.7);
 }
 
 .pink_dark {
-    background: rgb(216, 27, 96, 0.4);
+    background: rgb(216, 27, 96, 0.7);
 }
 
 .purple_dark {
-    background: rgb(85, 82, 153, 0.4);
+    background: rgb(85, 82, 153, 0.7);
 }
 
 .orange_dark {
-    background:rgb(255, 119, 1, 0.4);
+    background:rgb(255, 119, 1, 0.7);
 }
 
 .blueBorder{
