@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 	console.log(`extension ${extensionId} v${extensionVersion} is now active!`);
 
-	context.subscriptions.push(FBAEditorProvider.register(context, reporter));
+	FBAEditorProvider.register(context, reporter);
 
 	context.subscriptions.push(vscode.commands.registerCommand("fishbone.addNewFile", async () => {
 		console.log(`fishbone.addNewFile...`);

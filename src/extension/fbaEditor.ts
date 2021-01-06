@@ -41,14 +41,12 @@ const currentFBAFileVersion = '0.4';
  */
 export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscode.Disposable {
 
-    public static register(context: vscode.ExtensionContext, reporter?: TelemetryReporter): vscode.Disposable {
+    public static register(context: vscode.ExtensionContext, reporter?: TelemetryReporter): void {
         const provider = new FBAEditorProvider(context, reporter);
-        const providerRegistration = vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider);
+        context.subscriptions.push(vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider));
 
         // todo was only for testing. add later with e.g. nr errors, or unchecked ...
         // context.subscriptions.push(vscode.window.registerFileDecorationProvider(provider));
-
-        return providerRegistration;
     }
 
     private static readonly viewType = 'fishbone.fba'; // has to match the package.json
@@ -56,6 +54,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
     /// some extensions might offer a rest api (currently only dlt-logs), store ext name and function here
     private _restQueryExtFunctions: Map<string, Function> = new Map<string, Function>();
+    private _extensionSubscriptions: vscode.Disposable[] = [];
     private _checkExtensionsTimer?: NodeJS.Timeout = undefined;
     private _checkExtensionsLastActive = 0;
 
@@ -78,7 +77,16 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         /* setTimeout(() => {
             this.checkActiveExtensions();
         }, 2000); todo renable one the onDidChange works reliable... */
+
     }
+
+    private _onDidChangeActiveRestQueryDoc = new vscode.EventEmitter<vscode.Uri | undefined>();
+    /**
+     * event that get triggered if any active restquery (currently only dlt) doc
+     * (the dlt doc that can be referenced with /get/docs/0/...) changes. 
+     * The event gets debounced a bit to prevent lots of traffic after switching documents.
+     */
+    get onDidChangeActiveRestQueryDoc(): vscode.Event<vscode.Uri | undefined> { return this._onDidChangeActiveRestQueryDoc.event; }
 
     dispose() {
         console.log(`FBAEditorProvider dispose() called...`);
@@ -101,9 +109,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         let nrActiveExt = vscode.extensions.all.reduce((acc, cur) => acc + (cur.isActive ? 1 : 0), 0);
         if (nrActiveExt !== this._checkExtensionsLastActive) {
             this._checkExtensionsLastActive = nrActiveExt;
-            // no need to dispose them.
+
+            this._extensionSubscriptions.forEach(v => v?.dispose());
+            this._extensionSubscriptions = [];
+
             this._restQueryExtFunctions.clear();
             let newRQs = new Map<string, Function>();
+            let newSubs = new Array<vscode.Disposable>();
 
             vscode.extensions.all.forEach((value) => {
                 if (value.isActive) {
@@ -146,6 +158,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                 }
                                 newRQs.set(value.id, subscr);
                             }
+                            let fnOnDidChangeActiveRestQueryDoc = importedApi.onDidChangeActiveRestQueryDoc;
+                            if (fnOnDidChangeActiveRestQueryDoc !== undefined) {
+                                let subOnDidChange = fnOnDidChangeActiveRestQueryDoc(async (uri: vscode.Uri | undefined) => {
+                                    this._onDidChangeActiveRestQueryDoc.fire(uri);
+                                });
+                                if (subOnDidChange !== undefined) { newSubs.push(subOnDidChange); }
+                            }
                         }
                     } catch (error) {
                         console.log(`fishbone: extension ${value.id} throws: ${error.name}:${error.message}`);
@@ -153,7 +172,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 }
             });
             this._restQueryExtFunctions = newRQs;
-            console.log(`fishbone.checkActiveExtensions: got ${this._restQueryExtFunctions.size} rest query functions.`);
+            this._extensionSubscriptions = newSubs;
+            console.log(`fishbone.checkActiveExtensions: got ${this._restQueryExtFunctions.size} rest query functions and ${this._extensionSubscriptions.length} subscriptions.`);
         } else {
             // console.log(`fishbone.checkActiveExtensions: nrActiveExt = ${nrActiveExt}`);
         }
@@ -234,9 +254,14 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             }
         });
 
+        const changeActiveDltDocSubscription = this.onDidChangeActiveRestQueryDoc((uri) => {
+            console.warn(`FBAEditorProvider webview onDidChangeActiveRestQueryDoc(uri=${uri?.toString()})...`);
+        });
+
         // Make sure we get rid of the listener when our editor is closed.
         webviewPanel.onDidDispose(() => {
             changeDocumentSubscription.dispose();
+            changeActiveDltDocSubscription.dispose();
         });
 
         // Receive message from the webview.
