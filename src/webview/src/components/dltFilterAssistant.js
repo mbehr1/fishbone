@@ -298,7 +298,7 @@ export default function DLTFilterAssistantDialog(props) {
                     setLoadAllFilters(1); // running
                     const res = await triggerRestQueryDetails({ source: 'ext:mbehr1.dlt-logs/get/docs/0/filters', jsonPath: '$.data[*]' }, attributes);
                     if ('result' in res) {
-                        console.log(`got res.result=`, res.result);
+                        //console.log(`got res.result=`, res.result);
                         if (Array.isArray(res.result)) {
                             const newFilters = [...filters];
                             const newLeft = [...left];
