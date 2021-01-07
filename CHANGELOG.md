@@ -1,5 +1,14 @@
 # Change log for 'Fishbone':
 
+### [1.7.3](https://github.com/mbehr1/fishbone/compare/v1.7.2...v1.7.3) (2021-01-07)
+
+
+### Bug Fixes
+
+* **layout:** error icon should be red ([d85a617](https://github.com/mbehr1/fishbone/commit/d85a617e8a3310e002b0fa3ef6ca43180be64ee6))
+* **layout:** use vscode theme colors for Chip/secondary ([778cde7](https://github.com/mbehr1/fishbone/commit/778cde750870374260fff1a5998605f221e37ec2))
+* **log:** removed one useless log ([245b302](https://github.com/mbehr1/fishbone/commit/245b302829341fa86b6b566fad02b3df858e83b3))
+
 ### [1.7.2](https://github.com/mbehr1/fishbone/compare/v1.7.1...v1.7.2) (2021-01-06)
 
 
