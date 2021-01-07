@@ -79,6 +79,7 @@ export default function InputDataProvided(props) {
             multiple={props.multiple}
             disableCloseOnSelect={props.multiple}
             style={{ width: 400 }}
+            ChipProps={{ color: 'secondary' }}
             open={open}
             onOpen={() => {
                 setOpen(true);
@@ -97,6 +98,7 @@ export default function InputDataProvided(props) {
                 <React.Fragment>
                     <Checkbox
                         icon={icon}
+                        color='primary'
                         checkedIcon={checkedIcon}
                         style={{ marginRight: 8 }}
                         checked={selected}
