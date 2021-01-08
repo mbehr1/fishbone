@@ -19,6 +19,8 @@ import { makeStyles } from '@material-ui/styles';
 import { AttributesContext } from './../App';
 import { triggerRestQueryDetails, objectShallowEq } from './../util';
 
+var stableStringify = require('json-stable-stringify');
+
 /* todos
 - add manual trigger button for preview (or find better way to avoid reports constantly popping up)
   - applyMode -> manual trigger only
@@ -116,7 +118,7 @@ class RestCommandFilter extends RestCommandBase {
     constructor(filter) {
         super();
         this.name = nameForFilterObj(filter);
-        this.json = JSON.stringify(filter, Object.keys(filter).sort());
+        this.json = stableStringify(filter); //  JSON.stringify(filter, Object.keys(filter).sort());
     }
 
     get asJson() {
