@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.7.5](https://github.com/mbehr1/fishbone/compare/v1.7.4...v1.7.5) (2021-01-08)
+
+
+### Bug Fixes
+
+* **applyfilter:** remove spurious apply filter triggers ([36372f7](https://github.com/mbehr1/fishbone/commit/36372f7a7345fce30b754bcc6eac28b14a0daefa))
+
 ### [1.7.4](https://github.com/mbehr1/fishbone/compare/v1.7.3...v1.7.4) (2021-01-08)
 
 
