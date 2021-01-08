@@ -80,6 +80,7 @@ export default function FBACheckbox(props) {
 
     const [editOpen, setEditOpen] = React.useState(false);
     const [applyFilterBarOpen, setApplyFilterBarOpen] = React.useState(false);
+    const [doApplyFilter, setDoApplyFilter] = React.useState(false);
     const [applyFilterResult, setApplyFilterResult] = React.useState('<not triggered yet>')
 
     // badge support (restquery in the background)
@@ -112,14 +113,17 @@ export default function FBACheckbox(props) {
             'filter': props.filter
         });
         setApplyFilterBarOpen(false);
+        setDoApplyFilter(false);
     }, [props]);
 
     //console.log(`FBACheckbox(values.label=${values.label}, values.comments=${values.comments})`);
 
     useEffect(() => {
-        console.log(`FBACheckbox applyFilterBarOpen=${applyFilterBarOpen}`, values.filter);
-        if (applyFilterBarOpen && values?.filter?.source?.length > 0) {
+        if (doApplyFilter && values?.filter?.source?.length > 0) {
+            console.log(`FBACheckbox doApplyFilter=${doApplyFilter}`, values.filter);
             setApplyFilterResult('filter settings triggered...');
+            setDoApplyFilter(false);
+            setApplyFilterBarOpen(true);
             const fetchdata = async () => {
                 try {
                     const res = await triggerRestQueryDetails({ source: values.filter.source }, attributes);
@@ -132,7 +136,7 @@ export default function FBACheckbox(props) {
             };
             fetchdata();
         }
-    }, [applyFilterBarOpen, values.filter, attributes]);
+    }, [doApplyFilter, values.filter, attributes]);
 
     // if attributes change we do reset the badgestatus
     useEffect(() => {
@@ -303,7 +307,7 @@ export default function FBACheckbox(props) {
     );
 
     const handleApplyFilter = (request) => {
-        setApplyFilterBarOpen(true)
+        setDoApplyFilter(true);
     }
 
     const applyFilterFragment = (values.filter &&
