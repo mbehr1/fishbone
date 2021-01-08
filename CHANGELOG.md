@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.7.4](https://github.com/mbehr1/fishbone/compare/v1.7.3...v1.7.4) (2021-01-08)
+
+
+### Bug Fixes
+
+* **dltfilterassistant:** serialize nested objects from filter ([4d32504](https://github.com/mbehr1/fishbone/commit/4d32504558adbae0d501492909a0ea26b0fa0016))
+
 ### [1.7.3](https://github.com/mbehr1/fishbone/compare/v1.7.2...v1.7.3) (2021-01-07)
 
 
