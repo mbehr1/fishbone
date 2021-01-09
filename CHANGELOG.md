@@ -1,5 +1,24 @@
 # Change log for 'Fishbone':
 
+## [1.8.0](https://github.com/mbehr1/fishbone/compare/v1.7.6...v1.8.0) (2021-01-09)
+
+
+### Features
+
+* **inputdataprovider:** red border if value not in options ([383a543](https://github.com/mbehr1/fishbone/commit/383a54371f77df44c41d919a0613a489fdf0e54f))
+
+
+### Bug Fixes
+
+* **attributes:** default to current doc (0) only ([efaea4d](https://github.com/mbehr1/fishbone/commit/efaea4db2352c2cdff1ad184ff7c3ec3112a9f69))
+* **attributes:** file version 0.5: migrate attributes to new default ([cae8f40](https://github.com/mbehr1/fishbone/commit/cae8f4089d5cc63272844459fab0d154afeac01e))
+* **dataprovider:** autoSelect not for multi select, treat options empty as error ([d64601d](https://github.com/mbehr1/fishbone/commit/d64601dea39fcaf78a716e5c0fce5a6dfb5ff402))
+
+
+### Performance
+
+* **app:** distribute attributes update only on change ([e600688](https://github.com/mbehr1/fishbone/commit/e600688d38693c797dc346ba7e44b21df2214bf3))
+
 ### [1.7.6](https://github.com/mbehr1/fishbone/compare/v1.7.5...v1.7.6) (2021-01-09)
 
 
