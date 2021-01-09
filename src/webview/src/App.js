@@ -224,6 +224,9 @@ export default class App extends Component {
       this.state.fbPath = [{ title: this.state.title, effectIndex: 0 }]
     }
 
+    // cache attr changes (ugly, but as we do modify the attribute elements directly and the comparision is only done shallow...)
+    this.oldAttributesStringified = stableStringify(this.state.attributes);
+
     // Ensure summary dialog is initially disabled
     this.state['showSummaryDialog'] = false;
 
@@ -245,9 +248,11 @@ export default class App extends Component {
 
           // distribute new attributes only if they change to prevent requeries:
           {
-            const oldAttr = stableStringify(this.state.attributes);
             const newAttr = stableStringify(msg.attributes);
-            if (oldAttr !== newAttr) { this.setState({ attributes: msg.attributes }); } else {
+            if (this.oldAttributesStringified !== newAttr) {
+              this.oldAttributesStringified = newAttr;
+              this.setState({ attributes: msg.attributes });
+            } else {
               console.log(`App.message.update skipped attributes update!`);
             }
           }
@@ -263,6 +268,7 @@ export default class App extends Component {
           console.log(`App.onDidChangeActiveRestQueryDoc ext=${msg.ext} uri=${msg.uri}`);
           // for now simply update the attributes, to retrigger a badge redraw
           // console.warn(`App.onDidChangeActiveRestQueryDoc  attributes=${JSON.stringify(this.state.attributes)}`);
+          // this.oldAttributesStringified stays unchanged...
           this.setState((state) => { return { attributes: [...state.attributes] }; });
           break;
         case 'onDidChangeActiveColorTheme':
@@ -403,8 +409,17 @@ export default class App extends Component {
   setAllStates(newStateFragements) {
     //console.log(`setAllStates newStateFragments=`, newStateFragements);
     //console.log(`setAllStates state=`, this.state);
+    const newFragObj = newStateFragements || {};
 
-    this.setState(newStateFragements || {}, () => {
+    // did the attributes values changes? if yes, we do need to parse a new attr. as values are modified directly...
+    const newAttr = stableStringify('attributes' in newFragObj ? newFragObj.attributes : this.state.attributes);
+    if (newAttr !== this.oldAttributesStringified) {
+      console.log(`App.setAllStates attributes did change.`);
+      this.oldAttributesStringified = newAttr;
+      newFragObj.attributes = JSON.parse(newAttr);
+    }
+
+    this.setState(newFragObj, () => {
       const state = this.state;
       //console.log(`setAllStates cb state=`, state);
       this.props.vscode.setState({ data: state.data, title: state.title, attributes: state.attributes, fbPath: state.fbPath }); // todo shall we store any other data?
@@ -502,8 +517,8 @@ export default class App extends Component {
       ecu: {
         label: "ECU identifier",
         dataProvider: {
-          source: 'ext:mbehr1.dlt-logs/get/docs',
-          jsonPath: '$..attributes.ecus[*].attributes.name'
+          source: 'ext:mbehr1.dlt-logs/get/docs/0',
+          jsonPath: '$.data.attributes.ecus[*].name'
         },
         value: null
       }
@@ -514,8 +529,8 @@ export default class App extends Component {
         label: "SW name",
         dataProvider: {
           // eslint-disable-next-line no-template-curly-in-string
-          source: `ext:mbehr1.dlt-logs/get/docs?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
-          jsonPath: '$..attributes.ecus[*].attributes.sws[*]'
+          source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
+          jsonPath: '$.data[*].attributes.sws[*]'
         },
         value: null
       }
@@ -527,8 +542,8 @@ export default class App extends Component {
         multiple: true,
         dataProvider: {
           // eslint-disable-next-line no-template-curly-in-string
-          source: `ext:mbehr1.dlt-logs/get/docs?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
-          jsonPath: '$..attributes.ecus[*].attributes.lifecycles[*].attributes'
+          source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
+          jsonPath: '$.data[*].attributes.lifecycles[*].attributes'
         },
         value: null
       }
