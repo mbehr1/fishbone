@@ -14,6 +14,7 @@ import OnBlurInputBase from '../onBlurInputBase';
 
 import './fishboneChart.css';
 
+import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Input from '@material-ui/core/Input';
@@ -126,8 +127,11 @@ export default function FishboneChart(props) {
                 }
                 break;
               case 'nested':
-                console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
-                fragment= (<button class="nestedRootCauses" key={`root_causes_${index}`} type="button" onClick={() => props?.onStateChange({ childFBData: [rootCause.data, rootCause.title] })} >{rootCause.title}</button>);
+                // console.log(`FishboneChart.getRootCauses(type=${rootCause.type}, elementName=${rootCause.elementName})`);
+                // margin-left 1 px <- to align the outer border with the checkboxes
+                // padding: 1px top/bottom to ensure that the size is same as regular root cause
+                // padding: 20px left: to align the text inside with the other root causes text. take care the other root causes have 0.85rem, this one 0.8125rem, 
+                fragment = (<Button style={{ 'marginLeft': '1px', 'padding': '1px 9px 1px 20px', 'justifyContent': 'left' }} fullWidth size="small" variant="outlined" color="primary" key={`root_causes_${index}`} onClick={() => props?.onStateChange({ childFBData: [rootCause.data, rootCause.title] })} >{rootCause.title}</Button>);
                 break;
               default:
                 fragment= (<div key={`root_causes_${rootCause.title}_${index}`} >`unsupported type='{rootCause.type}'` </div>);
