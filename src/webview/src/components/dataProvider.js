@@ -8,35 +8,54 @@ import { Checkbox } from '@material-ui/core';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 
-/*function sleep(delay = 0) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, delay);
-    });
-}*/
-
 // todo add props types:
 // currently expected: dataProvider (object), attributes[] (from state.attributes)
+
+function containsUnknownValue(value, options) {
+    if (value === null || value === undefined) return false;
+    if (!Array.isArray(options)) return false;
+    if (options.length === 0) return false;
+    if (Array.isArray(value)) {
+        // if any value is not in options return true;
+        for (let i = 0; i < value.length; ++i) {
+            const val = value[i];
+            if (options.indexOf(val) < 0) return true;
+        }
+    } else { // !Array(value)
+        if (value === null) return false;
+        if (options.indexOf(value) < 0) return true;
+    }
+    return false;
+}
 
 export default function InputDataProvided(props) {
     const [open, setOpen] = React.useState(false);
     const [options, setOptions] = React.useState([]);
-    const loading = open && options.length === 0;
+    const [loadOptions, setLoadOptions] = React.useState(true);
+    const loading = open && loadOptions;
+    const hasUnknownValue = React.useMemo(() => options.length > 0 && containsUnknownValue(props?.value, options), [options, props.value]);
 
-    //console.log(`InputDataProvided(props=${JSON.stringify(props)}) loading=${loading} called`);
-    console.log(`InputDataProvided(value=${JSON.stringify(props?.value)} props=${props?.dataProvider?.source}) loading=${loading} called`);
+    console.log(`InputDataProvided(value=${JSON.stringify(props?.value)} props=${props?.dataProvider?.source}) loading=${loading} called. hasUnknownValue=${hasUnknownValue}`);
+
+    // if attributes change we do have to reload the options:
+    React.useEffect(() => {
+        setLoadOptions(true);
+    }, [props.attributes]);
 
     React.useEffect(() => {
-        let active = true;
-
-        if (!loading) {
+        if (!loadOptions) { // already loaded
+            // console.warn(`InputDataProvided effect for loading options called loadOptions=${loadOptions}`);
             return undefined;
         }
+        let active = true;
+        console.log(`InputDataProvided effect for loading options triggering...`);
 
         (async () => {
             triggerRestQueryDetails(props.dataProvider, props.attributes).then((res) => {
-                console.log(`InputDataProvided got response ${JSON.stringify(res)}`);
+                console.log(`InputDataProvided active=${active} got response with len=${JSON.stringify(res).length}`);
                 if (active) {
                     setOptions('result' in res ? res.result : [res.error]);
+                    setLoadOptions(false);
                 }
             });
         })();
@@ -44,15 +63,10 @@ export default function InputDataProvided(props) {
         // this function as we return it from the hook will be called on cleanup
         // see e.g. https://reactjs.org/docs/hooks-effect.html
         return () => {
+            console.log(`InputDataProvided cleanup hook called active=${active}`);
             active = false;
         };
-    }, [loading, props.dataProvider, props.attributes]); // only rerun the effect if loading changes! (if multiple expr. inside its called if any changes)
-
-    React.useEffect(() => {
-        if (!open) {
-            setOptions([]);
-        }
-    }, [open]);
+    }, [loadOptions, props.dataProvider, props.attributes]);
 
     const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
     const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -64,7 +78,7 @@ export default function InputDataProvided(props) {
      */
 
     const getOptionLabel = (option) => {
-        console.log(`getOptionLabel()`, option);
+        //console.log(`getOptionLabel(typeof option=${typeof option})`, option);
 
         if (typeof option === 'string') return option;
         if (option === null || option === undefined) return '<null|undefined>';
@@ -94,6 +108,7 @@ export default function InputDataProvided(props) {
             options={options}
             loading={loading}
             freeSolo
+            autoSelect
             renderOption={props.multiple ? ((option, { selected }) => (
                 <React.Fragment>
                     <Checkbox
@@ -113,6 +128,7 @@ export default function InputDataProvided(props) {
                     variant="outlined"
                     InputProps={{
                         ...params.InputProps,
+                        error: hasUnknownValue,
                         endAdornment: (
                             <React.Fragment>
                                 {loading ? <CircularProgress color="inherit" size={20} /> : null}
