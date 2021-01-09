@@ -11,19 +11,40 @@ import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 // todo add props types:
 // currently expected: dataProvider (object), attributes[] (from state.attributes)
 
+/**
+ * 
+ * @param {*} option the single value to return the label from
+ * @returns string with the label to use for that option/value 
+ */
+
+function getOptionLabel(option) {
+    //console.log(`getOptionLabel(typeof option=${typeof option})`, option);
+
+    if (typeof option === 'string') return option;
+    if (option === null || option === undefined) return '<null|undefined>';
+    if ('label' in option) { return option.label; }
+
+    return JSON.stringify(option).slice(0, 20);
+};
+
+
 function containsUnknownValue(value, options) {
-    if (value === null || value === undefined) return false;
+    if (value === null || value === undefined || value === '') return false;
+    if (Array.isArray(value) && value.length === 0) return false;
     if (!Array.isArray(options)) return false;
-    if (options.length === 0) return false;
+    if (options.length === 0) return true; // value is not in options!
+
+    const labelOptions = options.map(opt => getOptionLabel(opt));
+
     if (Array.isArray(value)) {
         // if any value is not in options return true;
         for (let i = 0; i < value.length; ++i) {
-            const val = value[i];
-            if (options.indexOf(val) < 0) return true;
+            const val = getOptionLabel(value[i]);
+            if (labelOptions.indexOf(val) < 0) return true;
         }
     } else { // !Array(value)
         if (value === null) return false;
-        if (options.indexOf(value) < 0) return true;
+        if (labelOptions.indexOf(getOptionLabel(value)) < 0) return true;
     }
     return false;
 }
@@ -33,7 +54,7 @@ export default function InputDataProvided(props) {
     const [options, setOptions] = React.useState([]);
     const [loadOptions, setLoadOptions] = React.useState(true);
     const loading = open && loadOptions;
-    const hasUnknownValue = React.useMemo(() => options.length > 0 && containsUnknownValue(props?.value, options), [options, props.value]);
+    const hasUnknownValue = React.useMemo(() => !loadOptions && containsUnknownValue(props?.value, options), [loadOptions, options, props.value]);
 
     console.log(`InputDataProvided(value=${JSON.stringify(props?.value)} props=${props?.dataProvider?.source}) loading=${loading} called. hasUnknownValue=${hasUnknownValue}`);
 
@@ -71,22 +92,6 @@ export default function InputDataProvided(props) {
     const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
     const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
-    /**
-     * 
-     * @param {*} option the single value to return the label from
-     * @returns string with the label to use for that option/value 
-     */
-
-    const getOptionLabel = (option) => {
-        //console.log(`getOptionLabel(typeof option=${typeof option})`, option);
-
-        if (typeof option === 'string') return option;
-        if (option === null || option === undefined) return '<null|undefined>';
-        if ('label' in option) { return option.label; }
-
-        return JSON.stringify(option).slice(0, 20);
-    };
-
     return (
         <Autocomplete
             id={props.id}
@@ -108,7 +113,7 @@ export default function InputDataProvided(props) {
             options={options}
             loading={loading}
             freeSolo
-            autoSelect
+            autoSelect={!props.multiple}
             renderOption={props.multiple ? ((option, { selected }) => (
                 <React.Fragment>
                     <Checkbox
