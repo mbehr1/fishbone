@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.7.6](https://github.com/mbehr1/fishbone/compare/v1.7.5...v1.7.6) (2021-01-09)
+
+
+### Bug Fixes
+
+* **layout:** beautify nested fishbones ([c01531b](https://github.com/mbehr1/fishbone/commit/c01531b88d6ab513d492bba7a9994801af4a517e))
+
 ### [1.7.5](https://github.com/mbehr1/fishbone/compare/v1.7.4...v1.7.5) (2021-01-08)
 
 
