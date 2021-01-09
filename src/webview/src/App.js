@@ -36,6 +36,7 @@ import { receivedResponse } from './util';
 import HomeIcon from '@material-ui/icons/Home';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import { createMuiTheme } from '@material-ui/core/styles';
+var stableStringify = require('json-stable-stringify');
 
 export const AttributesContext = createContext();
 
@@ -241,8 +242,17 @@ export default class App extends Component {
 
           // we store the non-modified data in vscode.state (e.g. with react:MyCheckbox as string)
           this.props.vscode.setState({ data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath }); // todo shall we store any other data?
+
+          // distribute new attributes only if they change to prevent requeries:
+          {
+            const oldAttr = stableStringify(this.state.attributes);
+            const newAttr = stableStringify(msg.attributes);
+            if (oldAttr !== newAttr) { this.setState({ attributes: msg.attributes }); } else {
+              console.log(`App.message.update skipped attributes update!`);
+            }
+          }
           this.setState({
-            data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath,
+            data: msg.data, title: msg.title, fbPath: newFbPath,
             clipboard: this.state?.clipboard !== undefined && !this.state.clipboard.doCut ? this.state.clipboard : undefined
           });
           break;
