@@ -34,7 +34,7 @@ interface DocData {
     }[];
 }
 
-const currentFBAFileVersion = '0.4';
+const currentFBAFileVersion = '0.5';
 
 /**
  * 
@@ -891,6 +891,46 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 }
             };
 
+            // convert data from prev v0.4: attributes change values to query only for current doc
+            const convertv04Attributes = (yamlObj: { fishbone: any[], attributes: any | undefined, version: string | undefined }) => {
+                if (yamlObj.version === '0.4') {
+                    console.warn(`FBAEditorProvider.convertv04Attributes converting from v04 to v05 ...`);
+                    if (Array.isArray(yamlObj.attributes) && yamlObj.attributes.length > 0) {
+                        yamlObj.attributes.forEach(attr => {
+                            const attrId = Object.keys(attr)[0];
+                            const keyObj = attr[attrId];
+                            if ('dataProvider' in keyObj) {
+                                switch (attrId) {
+                                    case 'ecu':
+                                        keyObj.dataProvider = {
+                                            source: 'ext:mbehr1.dlt-logs/get/docs/0',
+                                            jsonPath: '$.data.attributes.ecus[*].name'
+                                        };
+                                        break;
+                                    case 'sw':
+                                        keyObj.dataProvider = {
+                                            // eslint-disable-next-line no-template-curly-in-string
+                                            source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
+                                            jsonPath: '$.data[*].attributes.sws[*]'
+                                        };
+                                        break;
+                                    case 'lifecycles':
+                                        keyObj.dataProvider = {
+                                            // eslint-disable-next-line no-template-curly-in-string
+                                            source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
+                                            jsonPath: '$.data[*].attributes.lifecycles[*].attributes'
+                                        };
+                                        break;
+                                    default: break; // skip
+                                }
+                            }
+                        });
+                    }
+                    console.warn(`FBAEditorProvider.convertv04Attributes converting from v04 to v05 ... done`);
+                    yamlObj.version = '0.5';
+                }
+            };
+
             // convert from prev. known formats:
             if (yamlObj?.version === '0.1') {
                 // the effects storage has changed:
@@ -911,6 +951,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 // uri encoded parameter for dlt-logs rest queries:
                 convertv03RestParameters(yamlObj);
             }
+
+            if (yamlObj?.version === '0.4') { convertv04Attributes(yamlObj); }
 
             // we're not forwards compatible. 
             if (yamlObj?.version !== currentFBAFileVersion) {
