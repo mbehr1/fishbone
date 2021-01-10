@@ -3,7 +3,7 @@ import React, { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
-import { Button, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, TextField, Typography } from '@material-ui/core';
+import { Button, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Typography } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import Grid from '@material-ui/core/Grid';
@@ -184,7 +184,12 @@ export default function DataProviderEditDialog(props) {
                             </RadioGroup>
                             {dataConv?.startsWith("func") &&
                                 <FormControl variant="outlined" fullWidth margin="normal">
-                                <TextField InputLabelProps={{ shrink: true }} label="javascript function body" placeholder="e.g. '{return result.message;}'" multiline value={dataConv.slice(dataConv.indexOf(':') + 1)} onChange={(event) => { setDataConv('func:' + event.target.value); }} />
+                                <InputLabel shrink htmlFor="dataFuncInput">javascript function body</InputLabel>
+                                <Input id="dataFuncInput" inputComponent={OnBlurInputBase}
+                                    placeholder="e.g. '{return result.message;}'"
+                                    multiline
+                                    inputProps={{ multiline: true, value: dataConv.slice(dataConv.indexOf(':') + 1), onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataConv('func:' + event.target.value); } }}
+                                />
                                 </FormControl>
                             }
                         </Paper>}
