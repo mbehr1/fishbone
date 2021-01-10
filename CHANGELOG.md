@@ -1,5 +1,13 @@
 # Change log for 'Fishbone':
 
+### [1.8.1](https://github.com/mbehr1/fishbone/compare/v1.8.0...v1.8.1) (2021-01-10)
+
+
+### Bug Fixes
+
+* **badges:** re-query on source change ([624c594](https://github.com/mbehr1/fishbone/commit/624c59478d8e40e230436d58bb4f4ff37a042608))
+* **dataprovidereditdialog:** update conv func result after edit ([f546d28](https://github.com/mbehr1/fishbone/commit/f546d28d05600744add25beabe3035764f041d51))
+
 ## [1.8.0](https://github.com/mbehr1/fishbone/compare/v1.7.6...v1.8.0) (2021-01-09)
 
 
