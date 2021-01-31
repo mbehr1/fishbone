@@ -47,7 +47,12 @@ If the list is empty you do need to open a DLT log file and configure your filte
 
     to get the data out of the returned DLT-filter results.
 
-### returned data from a DLT-Logs rest query:
+:::info
+The upper badge is configured to not show if the returned value is the number 0.
+If you want to show it anyhow see [examples](#javascript-function-examples) on how to convert to the string '0'.
+:::
+
+### Data returned from a DLT-Logs rest query:
 
 The returned data from a rest query is in general a JSON object. 
 
@@ -84,7 +89,7 @@ For a query with DLT-filters it's typically in the form of an object with a key 
 }
 ```
 
-### json path details
+### Json path details
 
 As a first step of processing the returned object can be processed with a [json path](https://goessner.net/articles/JsonPath/index.html) pre-processor.
 
@@ -107,7 +112,7 @@ $.data[*].attributes.payloadString
 If you're not used to json path expressions there is a online evaluator available here [jsonpath](https://jsonpath.com).
 :::
 
-### javascript function details
+### Javascript function details
 
 If the the number of messages or the first element from the json path expression is not sufficient e.g. for use-cases like:
 - calculate an average/min/max value
@@ -137,13 +142,17 @@ It's actually created, called and evalued internally with:
 ```
 The result from the rest query or if provided from the json path processor is passed to the javascript function as `result` parameter.
 
-### javascript function examples
+### Javascript function examples
 
 See here a few examples:
 
 1. provide from the first 3 results the substring from index 10 to 15 separated by ',':
 ```javascript
    return result.slice(0,3).map(r=>r.slice(10,15)).join(',');
+```
+2. show 0 for number of message, i.e. convert to string as result:
+```javascript
+    return result.length.toString();
 ```
 
 todo ... add more examples.
