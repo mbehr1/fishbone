@@ -67,7 +67,7 @@ If you want to show it anyhow or show higher numbers see [examples](#javascript-
 The returned data from a rest query is in general a JSON object. 
 
 For a query with DLT-filters it's typically in the form of an object with a key `data` that is an array of messages like:
-```jsonc
+```jsonc {2,5,6,11,17,18,23}
 {
   "data": [
     {
@@ -103,7 +103,7 @@ For a query with DLT-filters it's typically in the form of an object with a key 
 
 By default a DLT-logs query returns a maximum of 1000 messages. In general this should be sufficient for the intended use-cases by using filters restricting the results. If you have use-cases where this is not sufficient you can increase the limit or even disable the limit by adding the `maxNrMsgs`attribute to any filter of the query. E.g.
 
-```jsonc
+```jsonc {4}
 /get/docs/0/filters?
 query=[
   {
@@ -125,12 +125,12 @@ Please consider that this might impact heavily the processing time to calculate/
 
 ### Adding lifecycle info to the DLT query results: addLifecycles
 
-By default a DLT-logs query returns an array of DLT logs as shown in [Data returned](#data-returned-from-a-dlt-logs-rest-query). Each log info contains a `lifecycle`identifier as well that helps e.g. doing calculations like avg/min/max,... per lifecycle.
+By default a DLT-logs query returns an array of DLT logs as shown in [Data returned](#data-returned-from-a-dlt-logs-rest-query). Each log info contains a `lifecycle` identifier as well that helps e.g. doing calculations like avg/min/max,... per lifecycle.
 
 To support more complex use-cases e.g. to calculate the time distance from a certain message towards the end of the lifecycle "occurred xx sec before end of LC" you can request the lifecycle details as well.
-To do so simply add `addLifecycles`to any filter of your query. E.g.
+To do so simply add `addLifecycles` to any filter of your query. E.g.
 
-```jsonc
+```jsonc {4}
 /get/docs/0/filters?
 query=[
   {
@@ -143,7 +143,7 @@ query=[
 ```
 
 The example data returned will then consist of both type `lifecycles` and type `msg` objects:
-```jsonc
+```jsonc {3,17,35}
   "data": [
     {
       "type": "lifecycles",
