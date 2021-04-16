@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.8.2](https://github.com/mbehr1/fishbone/compare/v1.8.1...v1.8.2) (2021-04-16)
+
+
+### Bug Fixes
+
+* **badge:** add numberAbbrev to avoid strings ([94898a2](https://github.com/mbehr1/fishbone/commit/94898a28f209aaa53cdc3a9c36d9213af5e7c528)), closes [#9](https://github.com/mbehr1/fishbone/issues/9)
+
 ### [1.8.1](https://github.com/mbehr1/fishbone/compare/v1.8.0...v1.8.1) (2021-01-10)
 
 
