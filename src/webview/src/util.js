@@ -200,3 +200,16 @@ export function objectShallowEq(a, b) {
     // console.log(`objectShallowEq eq=${eq} `, a, b);
     return eq;
 }
+
+/**
+ * If data is a number and the number is >max return max+.
+ * Helper function for badge max mimic
+ * @param {string|number} data 
+ * @param {number} max 
+ * @returns data or if data>max "max+"
+ */
+export function numberAbbrev(data, max) {
+    // console.warn(`numberAbbrev(${data}, ${max}), typeof data=${typeof data} data>max=${data > max}`)
+    if (typeof data === 'number' && data > max) { return `${max}+`; }
+    return data;
+}

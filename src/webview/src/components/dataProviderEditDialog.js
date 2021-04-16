@@ -17,7 +17,7 @@ import OnBlurInputBase from './onBlurInputBase';
 import DLTFilterAssistantDialog from './dltFilterAssistant';
 
 import { AttributesContext } from './../App';
-import { triggerRestQueryDetails } from './../util';
+import { triggerRestQueryDetails, numberAbbrev } from './../util';
 
 /* todos
 - add appy filter edit
@@ -203,7 +203,7 @@ export default function DataProviderEditDialog(props) {
                     </Grid>}
                     <Grid item>
                         <Paper>
-                            {!props.applyMode && <Badge badgeContent={previewBadgeContent} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999}>
+                            {!props.applyMode && <Badge badgeContent={numberAbbrev(previewBadgeContent, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={NaN}>
                                 badge content='{JSON.stringify(previewBadgeContent)}'
                             </Badge>}
                             <div>

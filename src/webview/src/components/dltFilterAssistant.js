@@ -17,7 +17,7 @@ import Badge from '@material-ui/core/Badge';
 import { makeStyles } from '@material-ui/styles';
 
 import { AttributesContext } from './../App';
-import { triggerRestQueryDetails, objectShallowEq } from './../util';
+import { triggerRestQueryDetails, objectShallowEq, numberAbbrev } from './../util';
 
 var stableStringify = require('json-stable-stringify');
 
@@ -563,7 +563,7 @@ export default function DLTFilterAssistantDialog(props) {
                     </Grid>
                     <Grid item>
                         <Paper>
-                            {!props.applyMode && <Badge badgeContent={previewBadgeContent} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={999}>
+                            {!props.applyMode && <Badge badgeContent={numberAbbrev(previewBadgeContent, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={NaN}>
                                 badge content='{JSON.stringify(previewBadgeContent)}'
                             </Badge>}
                             <div>
