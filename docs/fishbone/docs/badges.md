@@ -272,6 +272,6 @@ As the communication from fishbone extension to DLT-Logs extension is via a rest
 
 To ease decoding and fast manual edits you can enter/modify the query below:
 
-<UriEnDecode />
+<UriEnDecode searchParams={(new URL(document.location)).searchParams}/>
 
 ## Badges using https rest-queries

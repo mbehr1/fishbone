@@ -67,8 +67,8 @@ const rqUriEncode = (rq) => {
     return toRet;
 };
 
-export default function UriEnDecode() {
-    const [text, setText] = useState('/get/docs/0/filters?query=%5B%5D');
+export default function UriEnDecode(props) {
+    const [text, setText] = useState(props?.searchParams?.get('q') ? decodeURIComponent(props?.searchParams?.get('q')) : '/get/docs/0/filters?query=%5B%5D');
     const [json, setJson] = useState(rqUriDecode(''));
     const [text2, setText2] = useState('');
 
