@@ -8,11 +8,11 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
+import * as zlib from 'zlib';
 import * as vscode from 'vscode';
 import { getNonce, performHttpRequest } from './util';
 import * as yaml from 'js-yaml';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { assert } from 'console';
 
 interface AssetManifest {
     files: {
@@ -34,7 +34,7 @@ interface DocData {
     }[];
 }
 
-const currentFBAFileVersion = '0.5';
+const currentFBAFileVersion = '0.6';
 
 /**
  * 
@@ -476,7 +476,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
         let yamlObj: any = {};
         try {
-            yamlObj = yaml.safeLoad(prevDocText);
+            yamlObj = yaml.load(prevDocText, { schema: yaml.JSON_SCHEMA });
             if (typeof yamlObj !== 'object') {
                 console.error('Could not get document as yaml. Content is not valid yamlObj ' + JSON.stringify(yamlObj));
                 yamlObj = {};
@@ -491,6 +491,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     yamlObj.attributes = migYamlObj.attributes;
                     yamlObj.fishbone = migYamlObj.fishbone;
                     yamlObj.title = migYamlObj.title;
+                    yamlObj.backups = migYamlObj.backups;
                 }
             }
         } catch (e) {
@@ -628,7 +629,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
         // now store it as yaml:
         try {
-            const yamlStr = yaml.safeDump(yamlObj);
+            const yamlStr = yaml.dump(yamlObj, { schema: yaml.JSON_SCHEMA, forceQuotes: true });
 
             if (yamlStr === prevDocText) {
                 console.warn(`FBAEditorProvider.processEditsPendingQueue text unchanged! Skipping replace.`);
@@ -725,7 +726,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     attributes: []
                 };
             } else {
-                yamlObj = yaml.safeLoad(text);
+                yamlObj = yaml.load(text, { schema: yaml.JSON_SCHEMA });
             }
             if (typeof yamlObj !== 'object') { throw new Error(`content is no 'object' but '${typeof yamlObj}'`); }
             console.log(`getFBDataFromText(len=${text.length}) type=${yamlObj.type}, version=${yamlObj.version}, title=${yamlObj.title}`);
@@ -954,13 +955,26 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
             if (yamlObj?.version === '0.4') { convertv04Attributes(yamlObj); }
 
+            if (yamlObj?.version === '0.5') {
+                yamlObj.version = '0.6'; // change from js-yaml lib 3.x to 4.x
+                // no further migration needed but to identify files in case of errors we create a backup
+                if (yamlObj.backups === undefined) {
+                    yamlObj.backups = [];
+                }
+                yamlObj.backups.push({
+                    date: Date.now(),
+                    reason: `conversion from v0.5 to v0.6`,
+                    textDeflated: zlib.deflateSync(text).toString('base64')
+                });
+            }
+
             // we're not forwards compatible. 
             if (yamlObj?.version !== currentFBAFileVersion) {
                 const msg = `Fishbone: The document uses unknown version ${yamlObj?.version}. Please check whether an extension update is available.`;
                 throw new Error(msg);
             }
 
-            return { attributes: yamlObj?.attributes, fishbone: yamlObj.fishbone, title: yamlObj.title || '<please add title to .fba>' };
+            return { attributes: yamlObj?.attributes, fishbone: yamlObj.fishbone, title: yamlObj.title || '<please add title to .fba>', backups: yamlObj.backups || [] };
         } catch (e) {
             vscode.window.showErrorMessage(`Fishbone: Could not get document as yaml. Content is not valid yaml. Error= ${e.name}:${e.message}`);
             throw new Error(`Fishbone: Could not get document as yaml. Content is not valid yaml. Error= ${e.name}:${e.message}`);
