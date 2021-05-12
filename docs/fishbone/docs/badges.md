@@ -5,6 +5,7 @@ sidebar_label: Badges
 ---
 import ImageSwitcher from './ImageSwitcher';
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import BrowserOnly from '@docusaurus/BrowserOnly';
 import UriEnDecode from './UriEnDecode';
 
 ## Overview
@@ -272,6 +273,7 @@ As the communication from fishbone extension to DLT-Logs extension is via a rest
 
 To ease decoding and fast manual edits you can enter/modify the query below:
 
-<UriEnDecode searchParams={(new URL(document.location)).searchParams}/>
-
+<BrowserOnly fallback={<UriEnDecode />}>
+  {() => <UriEnDecode searchParams={(new URL(document.location)).searchParams}/>}
+</BrowserOnly>
 ## Badges using https rest-queries
