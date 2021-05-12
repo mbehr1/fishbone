@@ -26,7 +26,7 @@ Badges receive their info from currently two sources:
 - https rest-queries.
 
 :::note
-The badges are only shown if the checkbox is unchecked.
+The badges are only shown if the checkbox is unchecked or marked as error.
 :::
 
 ## Badges using DLT-Logs extensions

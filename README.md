@@ -58,7 +58,7 @@ A more detailed documentation is available here: [Docs](https://mbehr1.github.io
 
 ## Known Issues
 
-- first version, proof-of-concept status. Expect (and pls report) bugs.
+- still little testing. Expect and please report bugs via github issues.
 
 ## Contributors
 
@@ -87,11 +87,11 @@ fishbone-chart (1.0.24)
  - Source: https://github.com/thiagoferrax/fishbone-chart
  - Note: this was used as the initial basis. I plan to provide the fixes/improvements done here to my github fork.
 
-js-yaml (3.14.0)
+js-yaml (4.1.0)
  - License: MIT
  - see npm package js-yaml
  
-jsonpath (1.0.2)
+jsonpath (1.1.1)
  - License: MIT
  - see npm package jsonpath
 

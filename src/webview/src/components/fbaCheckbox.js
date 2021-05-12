@@ -338,8 +338,8 @@ export default function FBACheckbox(props) {
             <Box py='1px' /* py = padding-top+bottom <- padding around checkbox */>
                 <Grid container spacing={1} /* distance between checkbox and edit icon */ >
                     <Grid item flex style={{ 'padding': '1px' }}>
-                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={numberAbbrev(badgeCounter, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={NaN} invisible={values.value !== null || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
-                            <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={numberAbbrev(badge2Counter, 99)} max={NaN} color={/* doesn't exist for badge but makes the background inherit */"info"} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={values.value !== null || badge2Status < 2} >
+                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={numberAbbrev(badgeCounter, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={NaN} invisible={values.value === 'ok' || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
+                            <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={numberAbbrev(badge2Counter, 99)} max={NaN} color={/* doesn't exist for badge but makes the background inherit */"info"} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={values.value === 'ok' || badge2Status < 2} >
                                 <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" style={{ color: '#f44336' }} /> }]} {...props} size="small" color="primary" />
                         </Badge>
                     </Badge>
