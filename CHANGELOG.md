@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+## [1.9.0](https://github.com/mbehr1/fishbone/compare/v1.8.2...v1.9.0) (2021-05-12)
+
+
+### Features
+
+* **badges:** show as well for errors ([9fcb641](https://github.com/mbehr1/fishbone/commit/9fcb64116e4b9d2646067c1233fe3dbdc4724245))
+
 ### [1.8.2](https://github.com/mbehr1/fishbone/compare/v1.8.1...v1.8.2) (2021-04-16)
 
 
