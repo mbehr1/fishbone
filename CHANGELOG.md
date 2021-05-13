@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+## [1.11.0](https://github.com/mbehr1/fishbone/compare/v1.10.0...v1.11.0) (2021-05-13)
+
+
+### Features
+
+* support untrusted workspaces ([7756b2c](https://github.com/mbehr1/fishbone/commit/7756b2c444277f6a0b6d50047156e80dfa929881))
+
 ## [1.10.0](https://github.com/mbehr1/fishbone/compare/v1.9.0...v1.10.0) (2021-05-13)
 
 
