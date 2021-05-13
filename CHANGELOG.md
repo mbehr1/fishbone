@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+### [1.11.1](https://github.com/mbehr1/fishbone/compare/v1.11.0...v1.11.1) (2021-05-13)
+
+
+### Bug Fixes
+
+* tag virtual workspaces as supported ([babb870](https://github.com/mbehr1/fishbone/commit/babb870c7d48718affc0b42ab289cb7e9d29e713))
+
 ## [1.11.0](https://github.com/mbehr1/fishbone/compare/v1.10.0...v1.11.0) (2021-05-13)
 
 
