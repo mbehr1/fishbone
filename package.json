@@ -36,6 +36,7 @@
 		"onCustomEditor:fishbone.fba"
 	],
 	"capabilities": {
+		"virtualWorkspaces": true,
 		"untrustedWorkspaces": {
 			"supported": true
 		}
