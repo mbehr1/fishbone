@@ -20,7 +20,7 @@ Example picture with root cause 1 with upper badge and root cause 2 with both up
 
 Each root-cause supports two badges:
 - upper left badge. Shown in red color.
-- lower left badge, shown in secondary color.
+- lower left badge. Shown in secondary color.
 
 Badges receive their info from currently two sources:
 - DLT-Logs extension
@@ -62,6 +62,19 @@ If the list is empty you do need to open a DLT log file and configure your filte
 The upper badge is configured to not show if the returned value is the number 0 and is limited to 999. The lower badge will show the 0 and is limited to 99.
 If you want to show it anyhow or show higher numbers see [examples](#javascript-function-examples) on how to convert to the string '0'.
 :::
+
+### Manual edit of DLT query
+
+You can as well use the **EDIT MANUALLY** button to directly change the rest query performed.
+The DLT-Logs rest query api supports the following commands:
+
+command name | description
+------------ | -----------
+`query` | Used to apply a query for dlt messages. The expected parameter is an array of filter objects. For a filter object attributes see [filter reference](https://mbehr1.github.io/dlt-logs/docs/filterReference#filter-match-attributes). Query should be used for all badges. If multiple filters are queried the [usual rules](https://mbehr1.github.io/dlt-logs/docs/filterReference/#when-is-a-dlt-message-shown-in-a-view) apply (e.g. positive filters are `or`'d) except that for no filter no messages are returned.
+`disableAll`, `enableAll`| Used to disable/enable all filters of a certain type. The expected parameter is any of `view` (pos or neg), `pos` (positive filters), `neg` (neg. filters), `marker`(marker). Used only for [apply filter](/docs/interactive) button.
+`report` | Used to generate a report. The expected parameter is an array of filter objects. Used only for [apply filter](/docs/interactive) button.
+`add`| Used to add a filter. The expected parameter is a filter object. Those filters are not persisted. Hint: use e.g. an attribute like "tmpFb":1 to identify those filters easily for a later `delete`(see below). Used only for [apply filter](/docs/interactive) button.
+`delete` | Used to delete a filter. The expected parameter is an object with filter attributes. All matching filter will be deleted. The main use-case is to delete temporary filters that are added via `add`. Used only for [apply filter](/docs/interactive) button. 
 
 ### Data returned from a DLT-Logs rest query:
 
@@ -271,9 +284,11 @@ todo ... add more examples.
 
 As the communication from fishbone extension to DLT-Logs extension is via a rest-api alike "restQuery" the query gets transmitted and stored in a URI encoded format.
 
-To ease decoding and fast manual edits you can enter/modify the query below:
+To ease decoding and fast manual edits you can enter/modify the query below or use the **EDIT MANUALLY...** button:
 
 <BrowserOnly fallback={<UriEnDecode />}>
   {() => <UriEnDecode searchParams={(new URL(document.location)).searchParams}/>}
 </BrowserOnly>
+
 ## Badges using https rest-queries
+todo add example

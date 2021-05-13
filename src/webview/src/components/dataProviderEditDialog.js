@@ -5,6 +5,7 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import { Button, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Typography } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
+import EditIcon from '@material-ui/icons/Edit';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
@@ -15,6 +16,7 @@ import Badge from '@material-ui/core/Badge';
 import Input from '@material-ui/core/Input';
 import OnBlurInputBase from './onBlurInputBase';
 import DLTFilterAssistantDialog from './dltFilterAssistant';
+import DLTRestQueryManualDialog from './dltRestQueryManual';
 
 import { AttributesContext } from './../App';
 import { triggerRestQueryDetails, numberAbbrev } from './../util';
@@ -48,6 +50,8 @@ export default function DataProviderEditDialog(props) {
 
     // DLTFilterAssistantDialog handling
     const [dltFilterAssistantOpen, setDltFilterAssistantOpen] = React.useState(false);
+
+    const [manualEditOpen, setManualEditOpen] = React.useState(false);
 
     const previewApplyText = props.applyMode ? 'Press "Test apply filter" button to start...' : '';
 
@@ -140,6 +144,9 @@ export default function DataProviderEditDialog(props) {
                             <Button size="small" color="primary" onClick={() => setDltFilterAssistantOpen(true)}>
                                 Open DLT filter assistant...
                             </Button>
+                            <Button startIcon={<EditIcon />} size="small" color="primary" style={{ 'margin-left': '5px' }} onClick={() => setManualEditOpen(true)}>
+                                Edit manually...
+                            </Button>
                             {dltFilterAssistantOpen && <DLTFilterAssistantDialog
                                 applyMode={props.applyMode}
                                 dataSource={dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource : (props.applyMode ?
@@ -150,6 +157,17 @@ export default function DataProviderEditDialog(props) {
                                 onChange={(newValue) => { setDataSource(newValue); if (!dataJsonPath?.length) { setDataJsonPath('$.data[*]') } }}
                                 open={dltFilterAssistantOpen}
                                 onClose={() => setDltFilterAssistantOpen(false)}
+                            />}
+                            {manualEditOpen && <DLTRestQueryManualDialog
+                                applyMode={props.applyMode}
+                                dataSource={dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource : (props.applyMode ?
+                                    // eslint-disable-next-line no-template-curly-in-string
+                                    `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}&disableAll=view${attributes.findIndex(attr => attr.hasOwnProperty('lifecycles')) >= 0 ? `&add=${encodeURIComponent('{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,"tmpFb":1,"type":1}')}` : ''}` :
+                                    // eslint-disable-next-line no-template-curly-in-string
+                                    `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(`[{${attributes.findIndex(attr => attr.hasOwnProperty('lifecycles')) >= 0 ? '"lifecycles":"${attributes.lifecycles.id}",' : ''}"name":"not selected lifecycles","not":true,"type":1}]`)}`)}
+                                open={manualEditOpen}
+                                onChange={(newValue) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataSource(newValue); if (!dataJsonPath?.length) { setDataJsonPath('$.data[*]') } }}
+                                onClose={() => setManualEditOpen(false)}
                             />}
                             <FormControl variant="outlined" color="primary" fullWidth margin="normal">
                                 <InputLabel htmlFor="dataSourceInput" shrink color="primary">
