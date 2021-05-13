@@ -1,5 +1,12 @@
 # Change log for 'Fishbone':
 
+## [1.10.0](https://github.com/mbehr1/fishbone/compare/v1.9.0...v1.10.0) (2021-05-13)
+
+
+### Features
+
+* add manual edit button for dlt queries ([ae2df0e](https://github.com/mbehr1/fishbone/commit/ae2df0e72d4914d2e4f7a3c159581f6c21a822f9))
+
 ## [1.9.0](https://github.com/mbehr1/fishbone/compare/v1.8.2...v1.9.0) (2021-05-12)
 
 
