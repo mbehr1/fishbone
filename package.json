@@ -35,6 +35,11 @@
 		"onCommand:fishbone.addNewFile",
 		"onCustomEditor:fishbone.fba"
 	],
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": true
+		}
+	},
 	"main": "./out/extension/extension.js",
 	"contributes": {
 		"commands": [
