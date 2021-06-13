@@ -9,8 +9,9 @@ module.exports = {
   organizationName: 'mbehr1',
   projectName: 'fishbone',
   themeConfig: {
-    googleAnalytics: {
+    gtag: {
       trackingID: 'UA-180286216-1',
+      anonymizeIP: true
     },
     navbar: {
       title: 'Fishbone',
