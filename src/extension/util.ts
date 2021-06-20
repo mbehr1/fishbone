@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as request from 'request';
+import { extensionId } from './constants';
 import { URL } from 'url';
 
 export function getNonce() {
@@ -56,7 +57,7 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
     const reqOptions: { url: string, headers: object, auth?: { username: string, password: string, sendImmediately: boolean } } = {
         url: urlString,
         headers: {
-            'User-Agent': 'mbehr1.fishbone',
+            'User-Agent': extensionId,
             ...headers
         }
     };

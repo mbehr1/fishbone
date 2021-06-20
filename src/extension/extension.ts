@@ -5,9 +5,8 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
+import { extensionId, GlobalState } from './constants';
 import { FBAEditorProvider } from './fbaEditor';
-
-const extensionId = 'mbehr1.fishbone';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -18,7 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	const extension = vscode.extensions.getExtension(extensionId);
 
-	let extensionVersion = undefined;
+	const prevVersion = context.globalState.get<string>(GlobalState.Version);
+	let extensionVersion = '0.0.0'; // default value for unlikely case
 	if (extension) {
 		extensionVersion = extension.packageJSON.version;
 
@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
 	} else {
 		console.error(`${extensionId}: not found as extension!`);
 	}
-	console.log(`extension ${extensionId} v${extensionVersion} is now active!`);
+	console.log(`extension ${extensionId} v${extensionVersion} ${prevVersion !== extensionVersion ? `prevVersion: ${prevVersion} ` : ''}is now active!`);
 
 	FBAEditorProvider.register(context, reporter);
 
@@ -58,9 +58,79 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		});
 	}));
+
+	void showWelcomeOrWhatsNew(context, extensionVersion, prevVersion);
+
+	void context.globalState.update(GlobalState.Version, extensionVersion);
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
 	console.log('extension "fishbone" is now deactive!');
+}
+
+async function showWelcomeOrWhatsNew(context: vscode.ExtensionContext, version: string, prevVersion: string | undefined) {
+
+	let showFunction: undefined | ((version: string) => Promise<void>) = undefined;
+
+	if (!prevVersion) {
+		// first time install... point to docs todo
+		showFunction = showWelcomeMessage;
+	} else if (prevVersion !== version) {
+		const [major, minor] = version.split('.').map(v => parseInt(v, 10));
+		const [prevMajor, prevMinor] = prevVersion.split('.').map(v => parseInt(v, 10));
+		if ((major === prevMajor && minor === prevMinor) ||
+			(major < prevMajor) || // ignore downgrades
+			(major === prevMajor && minor < prevMinor)) {
+			return;
+		}
+		// major/minor version is higher
+		showFunction = showWhatsNewMessage;
+	}
+	if (showFunction) {
+		if (vscode.window.state.focused) {
+			await context.globalState.update(GlobalState.PendingWhatNewOnFocus, undefined);
+			void showFunction(version);
+		} else {
+			await context.globalState.update(GlobalState.PendingWhatNewOnFocus, true);
+			const disposable = vscode.window.onDidChangeWindowState(e => {
+				if (!e.focused) { return; }
+				disposable.dispose();
+
+				if (context.globalState.get(GlobalState.PendingWhatNewOnFocus) === true) {
+					void context.globalState.update(GlobalState.PendingWhatNewOnFocus, undefined);
+					if (showFunction) {
+						void showFunction(version);
+					}
+				}
+			});
+			context.subscriptions.push(disposable);
+		}
+	}
+}
+
+async function showWhatsNewMessage(version: string) {
+	const message = `Fishbone has been updated to v${version} - check out what's new!`;
+	const actions: vscode.MessageItem[] = [{ title: "What's New" }, { title: '❤ Sponsor' }];
+	const result = await vscode.window.showInformationMessage(message, ...actions);
+	if (result !== undefined) {
+		if (result === actions[0]) {
+			await vscode.env.openExternal(vscode.Uri.parse('https://github.com/mbehr1/fishbone/blob/master/CHANGELOG.md'));
+		} else if (result === actions[1]) {
+			await vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/mbehr1'));
+		}
+	}
+}
+
+async function showWelcomeMessage(version: string) {
+	const message = `Fishbone v${version} has been installed - check out the docs!`;
+	const actions: vscode.MessageItem[] = [{ title: "Docs" }, { title: '❤ Sponsor' }];
+	const result = await vscode.window.showInformationMessage(message, ...actions);
+	if (result !== undefined) {
+		if (result === actions[0]) {
+			await vscode.env.openExternal(vscode.Uri.parse('https://mbehr1.github.io/fishbone/docs/#first-use'));
+		} else if (result === actions[1]) {
+			await vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/mbehr1'));
+		}
+	}
 }
