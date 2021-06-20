@@ -1,3 +1,17 @@
+# Change log for 'Fishbone':
+
+## [1.12.0](https://github.com/mbehr1/fishbone/compare/v1.11.1...v1.12.0) (2021-06-20)
+
+
+### Features
+
+* welcome or whats new ([c3166f6](https://github.com/mbehr1/fishbone/commit/c3166f6a4a8ee6e96efc53489915a975a2329094))
+
+
+### Bug Fixes
+
+* add constants.ts ([96c9f8d](https://github.com/mbehr1/fishbone/commit/96c9f8d9be7230b3a432cd49582a525111c3f909))
+
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
 ### [1.11.1](https://github.com/mbehr1/fishbone/compare/v1.11.0...v1.11.1) (2021-05-13)
