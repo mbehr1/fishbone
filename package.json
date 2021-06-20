@@ -171,7 +171,7 @@
 				"@semantic-release/changelog",
 				{
 					"changelogFile": "CHANGELOG.md",
-					"changelogTitle": "# Change log for 'Fishbone':"
+					"changelogTitle": "# Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):"
 				}
 			],
 			[
