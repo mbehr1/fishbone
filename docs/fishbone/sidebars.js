@@ -11,6 +11,11 @@ module.exports = {
         "label": "Features",
         "items": ['interactive', 'badges', 'nestedFishbones'],
         "collapsed": false
+      },
+      {
+        "type": "link",
+        "label": "Changelog",
+        href: "https://github.com/mbehr1/fishbone/blob/master/CHANGELOG.md"
       }
     ]
   },

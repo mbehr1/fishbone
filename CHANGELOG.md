@@ -1,4 +1,4 @@
-# Change log for 'Fishbone':
+# Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
 ### [1.11.1](https://github.com/mbehr1/fishbone/compare/v1.11.0...v1.11.1) (2021-05-13)
 
