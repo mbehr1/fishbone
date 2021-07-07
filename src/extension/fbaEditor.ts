@@ -408,10 +408,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 <meta charset="UTF-8">
                 <meta name="theme-color" content="#000000" />
 
-				<!--
-				Use a content security policy to only allow loading images from https or from our extension directory,
-				and only allow scripts that have a specific nonce.
-				-->
+                <meta http-equiv="Content-Security-Policy"
+                    content="default-src 'none';
+                        img-src vscode-resource: https:;
+                        script-src 'unsafe-eval' 'unsafe-inline' vscode-resource:;
+                        style-src vscode-resource: 'unsafe-inline';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=0.5">
 
