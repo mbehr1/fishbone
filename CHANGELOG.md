@@ -1,3 +1,12 @@
+# Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
+
+### [1.12.1](https://github.com/mbehr1/fishbone/compare/v1.12.0...v1.12.1) (2021-07-07)
+
+
+### Bug Fixes
+
+* add content-security-policy ([a2d7c00](https://github.com/mbehr1/fishbone/commit/a2d7c0042a00442bdace3f8e3072affc52a519a3))
+
 # Change log for 'Fishbone':
 
 ## [1.12.0](https://github.com/mbehr1/fishbone/compare/v1.11.1...v1.12.0) (2021-06-20)
