@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+### [1.12.3](https://github.com/mbehr1/fishbone/compare/v1.12.2...v1.12.3) (2021-07-08)
+
+
+### Bug Fixes
+
+* csp allow self ([ebe6e8b](https://github.com/mbehr1/fishbone/commit/ebe6e8b848598ab74228c9d5ea19c70a9c8e3c5f))
+
 ### [1.12.2](https://github.com/mbehr1/fishbone/compare/v1.12.1...v1.12.2) (2021-07-08)
 
 
