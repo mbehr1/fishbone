@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+### [1.12.4](https://github.com/mbehr1/fishbone/compare/v1.12.3...v1.12.4) (2021-07-08)
+
+
+### Bug Fixes
+
+* use proper asWebviewUri api ([3fa853f](https://github.com/mbehr1/fishbone/commit/3fa853fd3fee61936fdd000b6f056942e48ba54b))
+
 ### [1.12.3](https://github.com/mbehr1/fishbone/compare/v1.12.2...v1.12.3) (2021-07-08)
 
 
