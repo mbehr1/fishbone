@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+### [1.12.2](https://github.com/mbehr1/fishbone/compare/v1.12.1...v1.12.2) (2021-07-08)
+
+
+### Bug Fixes
+
+* csp add webview.cspSource ([3fea766](https://github.com/mbehr1/fishbone/commit/3fea7663b0f4f45895588deec5335ee4b0d1ae4e))
+
 ### [1.12.1](https://github.com/mbehr1/fishbone/compare/v1.12.0...v1.12.1) (2021-07-07)
 
 
