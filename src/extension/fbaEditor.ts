@@ -409,7 +409,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 <meta name="theme-color" content="#000000" />
 
                 <meta http-equiv="Content-Security-Policy"
-                    content="default-src 'none';
+                    content="default-src 'self';
                         img-src ${webview.cspSource} vscode-resource: https:;
                         script-src ${webview.cspSource} 'unsafe-eval' 'unsafe-inline' vscode-resource:;
                         style-src ${webview.cspSource} vscode-resource: 'unsafe-inline';">
