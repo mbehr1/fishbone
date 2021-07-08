@@ -389,10 +389,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         const runTime: string = assetManifest.files['runtime-main.js'];
         const chunk: string = Object.keys(assetManifest.files).find((key) => key.endsWith('chunk.js')) as string;
 
-        const mainUri: vscode.Uri = vscode.Uri.file(path.join(webviewPath, main)).with({ scheme: 'vscode-resource' });
-        const stylesUri: vscode.Uri = vscode.Uri.file(path.join(webviewPath, styles)).with({ scheme: 'vscode-resource' });
-        const runTimeMainUri: vscode.Uri = vscode.Uri.file(path.join(webviewPath, runTime)).with({ scheme: 'vscode-resource' });
-        const chunkUri: vscode.Uri = vscode.Uri.file(path.join(webviewPath, chunk)).with({ scheme: 'vscode-resource' });
+        const mainUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', main));
+        const stylesUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', styles));
+        const runTimeMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', runTime));
+        const chunkUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', chunk));
 
         // Use a nonce to whitelist which scripts can be run
         const nonce = getNonce();
@@ -409,10 +409,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 <meta name="theme-color" content="#000000" />
 
                 <meta http-equiv="Content-Security-Policy"
-                    content="default-src 'self';
-                        img-src ${webview.cspSource} vscode-resource: https:;
-                        script-src ${webview.cspSource} 'unsafe-eval' 'unsafe-inline' vscode-resource:;
-                        style-src ${webview.cspSource} vscode-resource: 'unsafe-inline';">
+                    content="default-src 'none';
+                        img-src ${webview.cspSource} https:;
+                        script-src ${webview.cspSource} 'unsafe-eval' 'unsafe-inline';
+                        style-src ${webview.cspSource} 'unsafe-inline';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=0.5">
 
