@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+### [1.13.1](https://github.com/mbehr1/fishbone/compare/v1.13.0...v1.13.1) (2022-03-04)
+
+
+### Bug Fixes
+
+* accept restQuery getVersion in async as well ([9cd737f](https://github.com/mbehr1/fishbone/commit/9cd737f311eba252dba2eefacb2cc1bd1ad543b3))
+
 ## [1.13.0](https://github.com/mbehr1/fishbone/compare/v1.12.4...v1.13.0) (2022-03-04)
 
 
