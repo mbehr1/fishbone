@@ -103,7 +103,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         });
     }
 
-    checkActiveExtensions() {
+    async checkActiveExtensions() {
 
         // we debounce and react only if the number of active extensions changes:
         let nrActiveExt = vscode.extensions.all.reduce((acc, cur) => acc + (cur.isActive ? 1 : 0), 0);
@@ -117,7 +117,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             let newRQs = new Map<string, Function>();
             let newSubs = new Array<vscode.Disposable>();
 
-            vscode.extensions.all.forEach((value) => {
+            // check in parallel but wait:
+            await Promise.all(vscode.extensions.all.map(async (value) => {
                 if (value.isActive) {
                     // console.log(`dlt-log:found active extension: id=${value.id}`);// with #exports=${value.exports.length}`);
                     try {
@@ -127,7 +128,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                             if (subscr !== undefined) {
                                 console.log(`fishbone.got restQuery api from ${value.id}`);
                                 // testing it:
-                                const versResp = subscr('/get/version');
+                                let versResp = subscr('/get/version');
+                                // string | Thenable<string> = rq(query); // restQuery can return a string or a Promise<string>
+                                if (versResp !== undefined && typeof versResp !== 'string') { versResp = (await versResp) as string; }
                                 console.log(`fishbone restQuery('/get/version')=${versResp}`);
                                 { // add some version checks:
                                     const versObj = JSON.parse(versResp);
@@ -171,7 +174,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         console.log(`fishbone: extension ${value.id} throws: ${error.name}:${error.message}`);
                     }
                 }
-            });
+            }));
             this._restQueryExtFunctions = newRQs;
             this._extensionSubscriptions = newSubs;
             console.log(`fishbone.checkActiveExtensions: got ${this._restQueryExtFunctions.size} rest query functions and ${this._extensionSubscriptions.length} subscriptions.`);
