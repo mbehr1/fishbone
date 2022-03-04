@@ -74,7 +74,7 @@ Open an [issue](https://github.com/mbehr1/fishbone/issues) or create a pull requ
 
 [GitHub ♥︎ Sponsors are welcome!](https://github.com/sponsors/mbehr1)
 
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/mbehr1/fishbone)
+[![Open in Visual Studio Code](https://img.shields.io/static/v1?logo=visualstudiocode&label=&message=Open%20in%20Visual%20Studio%20Code&labelColor=2c2c32&color=007acc&logoColor=007acc)](https://open.vscode.dev/mbehr1/fishbone)
 
 ## Release Notes
 
