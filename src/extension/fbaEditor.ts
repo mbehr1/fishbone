@@ -282,7 +282,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
         // Receive message from the webview.
 
-        webviewPanel.webview.onDidReceiveMessage(e => {
+        webviewPanel.webview.onDidReceiveMessage(async e => {
             docData.gotAliveFromPanel = true;
             // any messages to post?
             if (docData.msgsToPost.length) {
@@ -317,7 +317,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                 { // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
                                     const url: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url; // todo request.url should not occur any longer!
                                     if (url.startsWith('ext:')) {
-
                                         const extName = url.slice(4, url.indexOf('/'));
                                         const query = url.slice(url.indexOf('/'));
                                         console.log(`extName=${extName} request=${url}`);
@@ -325,7 +324,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                         const rq = this._restQueryExtFunctions.get(extName);
                                         if (rq) {
                                             // call it:
-                                            const res: string = rq(query);
+                                            let res: string | Thenable<string> = rq(query); // restQuery can return a string or a Promise<string>
+                                            if (typeof res !== 'string') { res = (await res) as string; }
                                             console.log(`FBAEditorProvider.restQuery response (first 1k chars)='${res.slice(0, 1000)}'`);
                                             // todo try/catch
                                             webviewPanel.webview.postMessage({ type: e.type, res: JSON.parse(res), id: e.id });
