@@ -9,7 +9,6 @@
 		"sourceMap": true,
 		"rootDir": "src",
 		"strict": true, /* enable all strict type-checking options */
-		"useUnknownInCatchVariables": false,
 		/* Additional Checks */
 		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
 		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */

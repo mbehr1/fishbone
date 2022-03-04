@@ -167,7 +167,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                 if (subOnDidChange !== undefined) { newSubs.push(subOnDidChange); }
                             }
                         }
-                    } catch (error) {
+                    } catch (error: any) {
                         console.log(`fishbone: extension ${value.id} throws: ${error.name}:${error.message}`);
                     }
                 }
@@ -304,7 +304,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         // setTimeout(() =>
                         //    FBAEditorProvider.updateTextDocument(docData, document, { fishbone: e.data, title: e.title, attributes: e.attributes }), 1);
 
-                    } catch (e) {
+                    } catch (e: any) {
                         console.error(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e.name}:${e.message}.`);
                         vscode.window.showErrorMessage(`Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e.name}:${e.message}.`);
                     }
@@ -495,7 +495,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     yamlObj.backups = migYamlObj.backups;
                 }
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(`Could not get document as json. Content is not valid yaml e=${e.name}:${e.message}`);
         }
 
@@ -569,7 +569,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                     data: importYamlObj.fishbone
                                 };
                             }
-                        } catch (e) {
+                        } catch (e: any) {
                             console.error(`opening file failed with err:'${e.name}:${e.message}'`);
                         }
                     }
@@ -611,7 +611,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                                     data: importYamlObj.fishbone
                                 };
                             }
-                        } catch (e) {
+                        } catch (e: any) {
                             console.warn(`re-importing file '${rc.relPath}' failed due to:'${e.name}:${e.message}'`);
                             vscode.window.showWarningMessage(`re-importing file '${rc.relPath} failed due to:'${e.name}:${e.message}'`);
                         }
@@ -655,7 +655,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 new vscode.Range(0, 0, document.lineCount, 0),
                 yamlStr);
 
-        } catch (e) {
+        } catch (e: any) {
             // need to remove this one from the queue
             docData.editsPending.shift();
             console.error(`storing as YAML failed. Error=${e.name}:${e.message}`);
@@ -807,7 +807,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                             rootCause.props.comments = { textValue: rootCause.props.comments };
                         }
                         return rootCause;
-                    } catch (e) {
+                    } catch (e: any) {
                         console.warn(` FBAEditorProvider.convertv02TextFields got error ${e.type}:${e.message} migrating ${JSON.stringify(rootCause)}`);
                         return null; // this root cause will be deleted!
                     }
@@ -873,7 +873,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                             return rc;
                         }
                         return undefined; // no change
-                        } catch (e) {
+                        } catch (e: any) {
                             console.warn(` FBAEditorProvider.convertv03RestParameters got error ${e.type}:${e.message} migrating ${JSON.stringify(rc)}`);
                             return null; // this root cause will be deleted!
                         }
@@ -976,7 +976,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             }
 
             return { attributes: yamlObj?.attributes, fishbone: yamlObj.fishbone, title: yamlObj.title || '<please add title to .fba>', backups: yamlObj.backups || [] };
-        } catch (e) {
+        } catch (e: any) {
             vscode.window.showErrorMessage(`Fishbone: Could not get document as yaml. Content is not valid yaml. Error= ${e.name}:${e.message}`);
             throw new Error(`Fishbone: Could not get document as yaml. Content is not valid yaml. Error= ${e.name}:${e.message}`);
         }
