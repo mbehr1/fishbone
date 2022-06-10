@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+### [1.13.2](https://github.com/mbehr1/fishbone/compare/v1.13.1...v1.13.2) (2022-06-10)
+
+
+### Bug Fixes
+
+* use node v16 ([1f0ee26](https://github.com/mbehr1/fishbone/commit/1f0ee26b741d93a6690cc2c261532373ae78987f))
+
 ### [1.13.1](https://github.com/mbehr1/fishbone/compare/v1.13.0...v1.13.1) (2022-03-04)
 
 
