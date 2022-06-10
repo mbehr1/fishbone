@@ -14,9 +14,9 @@ jobs:
       - name: Commitlint
         uses: wagoid/commitlint-github-action@v2
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: 12
+          node-version: 16
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Install webview dependencies
