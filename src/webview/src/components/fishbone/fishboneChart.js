@@ -14,12 +14,12 @@ import OnBlurInputBase from '../onBlurInputBase';
 
 import './fishboneChart.css';
 
-import Button from '@material-ui/core/Button';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import Input from '@material-ui/core/Input';
-import IconButton from '@material-ui/core/IconButton';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import Button from '@mui/material/Button';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Input from '@mui/material/Input';
+import IconButton from '@mui/material/IconButton';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 // const INITIAL_STATE = {causes: undefined, effect: undefined, index: 0};
 
@@ -143,12 +143,12 @@ export default function FishboneChart(props) {
           if (props.rootCauseContextMenu && props.rootCauseContextMenu.length>0) {
             const keyFrag = typeof rootCause === 'string' ? `${rootCause}_${index}` : `${JSON.stringify(rootCause)}_${index}`;
             return (
-              <div style={{height: '100%', width:'100%', display:'flex', 'align-items':'baseline'}}>
+              <div style={{ height: '100%', width: '100%', display: 'flex', 'align-items': 'center' }}>
                 <div style={{position: 'relative', width:'95%'}}>
                 {fragment}
                 </div>
                 <div style={{position: 'relative', width:'5%'}}>
-                  <IconButton id={`rcMore_${keyFrag}`} onClick={handleMenuClick} color="secondary" size="small"><MoreVertIcon fontSize="small" /></IconButton>
+                  <IconButton id={`rcMore_${keyFrag}`} onClick={handleMenuClick} color="secondary" size="small" > <MoreVertIcon fontSize="small" /></IconButton>
                   <Menu key={`cm_root_causes_${keyFrag}`} anchorEl={menuAnchorEl} keepMounted open={menuOpen === `rcMore_${keyFrag}`} onClose={handleMenuClose}>
                     {props.rootCauseContextMenu.filter(m => m !== undefined).map((menuItem, index) => <MenuItem onClick={(event) => { handleMenuClose(); menuItem?.cb(props.data, effectIndex, category, rootCause); }}>{menuItem.text}</MenuItem>)}
                 </Menu>

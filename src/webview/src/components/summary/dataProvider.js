@@ -1,12 +1,11 @@
 import React from 'react'
 
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-import Chip from '@material-ui/core/Chip';
+import Select from '@mui/material/Select';
+import Chip from '@mui/material/Chip';
 
-import ErrorIcon from '@material-ui/icons/Error';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import ErrorIcon from '@mui/icons-material/Error';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 
 import { GetMarkdownActive, GetTextValue, RenderConditionText } from './../utils/markdown'
 import { CreateTooltip, CreateLink } from './htmlHelper'
@@ -28,26 +27,24 @@ function SelectColumnFilter({
 
   // Render a multi-select box
   return (
-    <FormControl>
-      <Select
-        native
-        style={{ paddingHorizontal: '2px' }}
-        value={filterValue}
-        onChange={e => {
-          setFilter(e.target.value || undefined)
-        }}
-        inputProps={{
-          id: 'select-filter-input',
-        }}
-      >
-        <option value="">&nbsp;All</option>
-        {options.map((option, i) => (
-          <option key={i} value={option} >
-            &nbsp;{option}
-          </option>
-        ))}
-      </Select>
-    </FormControl >
+    <Select
+      native
+      style={{ paddingHorizontal: '2px' }}
+      value={filterValue}
+      onChange={e => {
+        setFilter(e.target.value || undefined)
+      }}
+      inputProps={{
+        id: 'select-filter-input',
+      }}
+    >
+      <option value="">&nbsp;All</option>
+      {options.map((option, i) => (
+        <option key={i} value={option} >
+          &nbsp;{option}
+        </option>
+      ))}
+    </Select>
   )
 }
 

@@ -1,12 +1,12 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React from 'react';
-import TextField from '@material-ui/core/TextField';
-import Autocomplete from '@material-ui/lab/Autocomplete';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+import CircularProgress from '@mui/material/CircularProgress';
 import { triggerRestQueryDetails } from '../util';
-import { Checkbox } from '@material-ui/core';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import { Checkbox } from '@mui/material';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 
 // todo add props types:
 // currently expected: dataProvider (object), attributes[] (from state.attributes)
@@ -108,23 +108,22 @@ export default function InputDataProvided(props) {
             }}
             value={props.multiple ? (Array.isArray(props.value) ? props.value : []) : props.value}
             onChange={(event, value, reason) => { /*console.warn(`Autocomplete.onChange(value=`, value, `reason=${reason}`); */ props.onChange({ target: { type: 'DataProvider', name: props.id, value: value } }); }}
-            getOptionSelected={(option, value) => { /* console.warn(`getOptionSelected`, option, value); */ return getOptionLabel(option) === getOptionLabel(value) }}
+            isOptionEqualToValue={(option, value) => { /* console.warn(`getOptionSelected`, option, value); */ return getOptionLabel(option) === getOptionLabel(value) }}
             getOptionLabel={getOptionLabel}
             options={options}
             loading={loading}
             freeSolo
             autoSelect={!props.multiple}
-            renderOption={props.multiple ? ((option, { selected }) => (
-                <React.Fragment>
+            renderOption={props.multiple ? ((props, option, { selected }) => (
+                <li {...props}>
                     <Checkbox
                         icon={icon}
-                        color='primary'
                         checkedIcon={checkedIcon}
                         style={{ marginRight: 8 }}
                         checked={selected}
                     />
                     {getOptionLabel(option)}
-                </React.Fragment>
+                </li>
             )) : undefined}
             renderInput={(params) => (
                 <TextField

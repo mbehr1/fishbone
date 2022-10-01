@@ -1,20 +1,20 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import { Button, DialogContent, DialogTitle, IconButton } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import Grid from '@material-ui/core/Grid';
-import Paper from '@material-ui/core/Paper';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import Checkbox from '@material-ui/core/Checkbox';
-import Badge from '@material-ui/core/Badge';
-import { makeStyles } from '@material-ui/styles';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import { Button, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import Checkbox from '@mui/material/Checkbox';
+import Badge from '@mui/material/Badge';
+import { makeStyles } from '@mui/styles';
 
 import { AttributesContext } from './../App';
 import { triggerRestQueryDetails, objectShallowEq, numberAbbrev } from './../util';
@@ -527,14 +527,18 @@ export default function DLTFilterAssistantDialog(props) {
         <Dialog fullScreen open={props.open} onClose={handleClose}>
             <DialogTitle id="dltFilterAssistantDialogTitle">
                 DLT filter assistant...
-                <IconButton onClick={handleClose} color="inherit" style={{ position: 'absolute', right: 1 }}>
+                <IconButton
+                    onClick={handleClose}
+                    color="inherit"
+                    style={{ position: 'absolute', right: 1 }}
+                    size="large">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
             <DialogContent dividers>
-                <Grid container direction="column" justify="flex-start" alignItems="stretch" spacing={2}>
+                <Grid container direction="column" justifyContent="flex-start" alignItems="stretch" spacing={2}>
                     <Grid item>
-                        <Grid container spacing={2} justify="flex-start" alignItems="center">
+                        <Grid container spacing={2} justifyContent="flex-start" alignItems="center">
                             <Grid item>
                                 Selected filters:
                                 {Array.isArray(left) && customList(left)}
@@ -563,7 +567,7 @@ export default function DLTFilterAssistantDialog(props) {
                     </Grid>
                     <Grid item>
                         <Paper>
-                            {!props.applyMode && <Badge badgeContent={numberAbbrev(previewBadgeContent, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={NaN}>
+                            {!props.applyMode && <Badge badgeContent={numberAbbrev(previewBadgeContent, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circular" max={NaN}>
                                 badge content='{JSON.stringify(previewBadgeContent)}'
                             </Badge>}
                             <div>

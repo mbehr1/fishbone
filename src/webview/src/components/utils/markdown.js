@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify';
-import toMarkdown from 'marked';
+import marked from 'marked';
 
 /**
  * helper function to check and return the o.markdownFormat state
@@ -23,7 +23,7 @@ export function GetTextValue(property) {
 export function RenderConditionText(property) {
     const markdownActive = property.markdownActive;
     if (markdownActive) {
-        return <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(toMarkdown(property.text)) }} />;
+        return <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(property.text)) }} />;
     }
     return <div style={{ whiteSpace: 'pre-line' }} >{property.text}</div>;
 }

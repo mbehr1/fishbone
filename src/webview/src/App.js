@@ -15,27 +15,24 @@
 
 import React, { Component, createContext } from 'react';
 import './App.css';
-import Breadcrumbs from '@material-ui/core/Breadcrumbs';
-import Link from '@material-ui/core/Link';
-import Paper from '@material-ui/core/Paper'
-import Checkbox from '@material-ui/core/Checkbox';
-import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
-// import Filter1Icon from '@material-ui/icons/Filter1';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import Link from '@mui/material/Link';
+import Paper from '@mui/material/Paper';
+import Checkbox from '@mui/material/Checkbox';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import FishboneChart from './components/fishbone/fishboneChart'
-import { FormControlLabel, IconButton, Container, TextField, ThemeProvider, AppBar, Toolbar, Menu, MenuItem } from '@material-ui/core';
-// import { makeStyles } from '@material-ui/core/styles';
-import EditIcon from '@material-ui/icons/Edit';
-import Grid from '@material-ui/core/Grid';
-//import MenuItem from '@material-ui/core/MenuItem';
+import { FormControlLabel, IconButton, Container, TextField, StyledEngineProvider, AppBar, Toolbar, Menu, MenuItem } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import Grid from '@mui/material/Grid';
 import InputDataProvided from './components/dataProvider';
 import FBACheckbox from './components/fbaCheckbox';
 import SummaryDialog from './components/summaryDialog';
 import OnBlurInputBase from './components/onBlurInputBase';
 import { receivedResponse } from './util';
-import HomeIcon from '@material-ui/icons/Home';
-import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
-import { createMuiTheme } from '@material-ui/core/styles';
+import HomeIcon from '@mui/icons-material/Home';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 var stableStringify = require('json-stable-stringify');
 
 export const AttributesContext = createContext();
@@ -46,7 +43,7 @@ class MyCheckbox extends Component {
       <Container>
         <Tooltip title={`a tooltip for ${this.props.name}`}>
           <FormControlLabel control={
-            <Checkbox {...this.props} size="small" color="primary"></Checkbox>
+            <Checkbox {...this.props} size="small"></Checkbox>
           } label={this.props.label}
           />
         </Tooltip >
@@ -796,7 +793,7 @@ export default class App extends Component {
     // hack to get the css variables from vscode:
     const vscodeStyles = window.getComputedStyle(document.body);
 
-    const theme = createMuiTheme({
+    const theme = createTheme({
       palette: {
         common: {
           black: '#ff0000'
@@ -812,7 +809,6 @@ export default class App extends Component {
           primary: vscodeStyles.getPropertyValue('--vscode-foreground'),
           secondary: vscodeStyles.getPropertyValue('--vscode-descriptionForeground'),
           disabled: '#ff0000',
-          hint: '#00ff00',
         }
       },
       typography: {
@@ -820,88 +816,100 @@ export default class App extends Component {
         fontFamily: vscodeStyles.getPropertyValue('--vscode-font-family'),
         // looks weird?        fontWeightRegular: 'var(--vscode-font-weight)'
       },
-      overrides: {
+      components: {
         MuiChip: {
-          colorSecondary: {
-            color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'),
-            backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
+          styleOverrides: {
+            colorSecondary: {
+              color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'),
+              backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
+            }
           }
         },
         MuiIconButton: {
-          colorPrimary: {
-            color: vscodeStyles.getPropertyValue('--vscode-button-background'),
-            '&:hover': {
-              color: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
-            }
-          },
-          colorSecondary: {
-            color: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
-            '&:hover': {
-              color: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
+          styleOverrides: {
+            colorPrimary: {
+              color: vscodeStyles.getPropertyValue('--vscode-button-background'),
+              '&:hover': {
+                color: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
+              }
+            },
+            colorSecondary: { // style={{ color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'), backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'), }}
+              color: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
+              '&:hover': {
+                color: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
+              }
+            },
+            sizeSmall: {
+              padding: '3px'
             }
           }
-
         },
         MuiRadio: {
-          colorPrimary: {
-            color: vscodeStyles.getPropertyValue('--vscode-button-background'),
-            '&:hover': {
-              color: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
-            },
-            '&$checked': {
+          styleOverrides: {
+            colorPrimary: {
               color: vscodeStyles.getPropertyValue('--vscode-button-background'),
+              '&:hover': {
+                color: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
+              },
+              '&.Mui-checked': {
+                color: vscodeStyles.getPropertyValue('--vscode-button-background'),
+              }
             }
           }
         },
         MuiSwitch: {
-          'track': {
-            backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
-          },
-          colorSecondary: {
-            color: vscodeStyles.getPropertyValue('--vscode-badge-background'),
-            '&$checked': {
+          styleOverrides: {
+            '.MuiSwitch-track': {
+              backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
+            },
+            colorSecondary: {
               color: vscodeStyles.getPropertyValue('--vscode-badge-background'),
-            },
-            '&$checked + $track': {
-              backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
-            },
-            '&$disabled + $track': {
-              backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
-            },
+              '&.Mui-checked': {
+                color: vscodeStyles.getPropertyValue('--vscode-badge-background'),
+              },
+              '&.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
+              },
+              '&.Mui-disabled + .MuiSwitch-track': {
+                backgroundColor: vscodeStyles.getPropertyValue('--vscode-badge-foreground'),
+              },
+            }
           }
         },
         MuiButton: {
-          textPrimary: {
-            color: vscodeStyles.getPropertyValue('--vscode-button-foreground'),
-            background: vscodeStyles.getPropertyValue('--vscode-button-background'),
-            '&:hover': {
-              backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
-            }
-          },
-          textSecondary: {
-            color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'),
-            background: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
-            '&:hover': {
-              backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
-            }
-          }, // todo support inherit color for buttons?
-          outlinedPrimary: {
-            color: vscodeStyles.getPropertyValue('--vscode-foreground'), // regular foreground
-            borderColor: vscodeStyles.getPropertyValue('--vscode-button-background'),
-            '&:hover': {
-              color: vscodeStyles.getPropertyValue('--vscode-editor-foreground'),
-              borderColor: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
-            }
-          },
-          outlinedSecondary: {
-            color: vscodeStyles.getPropertyValue('--vscode-foreground'), // regular foreground for contrast
-            borderColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
-            '&:hover': {
-              color: vscodeStyles.getPropertyValue('--vscode-editor-foreground'),
-              borderColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
-            }
-          },
-        },
+          styleOverrides: {
+            textPrimary: {
+              color: vscodeStyles.getPropertyValue('--vscode-button-foreground'),
+              background: vscodeStyles.getPropertyValue('--vscode-button-background'),
+              '&:hover': {
+                backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
+              }
+            },
+            textSecondary: {
+              color: vscodeStyles.getPropertyValue('--vscode-button-secondaryForeground'),
+              background: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
+              '&:hover': {
+                backgroundColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
+              }
+            }, // todo support inherit color for buttons?
+            outlinedPrimary: {
+              color: vscodeStyles.getPropertyValue('--vscode-foreground'), // regular foreground
+              borderColor: vscodeStyles.getPropertyValue('--vscode-button-background'),
+              '&:hover': {
+                color: vscodeStyles.getPropertyValue('--vscode-editor-foreground'),
+                borderColor: vscodeStyles.getPropertyValue('--vscode-button-hoverBackground'),
+              }
+            },
+            outlinedSecondary: {
+              color: vscodeStyles.getPropertyValue('--vscode-foreground'), // regular foreground for contrast
+              borderColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryBackground'),
+              '&:hover': {
+                color: vscodeStyles.getPropertyValue('--vscode-editor-foreground'),
+                borderColor: vscodeStyles.getPropertyValue('--vscode-button-secondaryHoverBackground'),
+              }
+            },
+          }
+        }
         /* todo investigate later ... MuiCheckbox: {
 colorPrimary: {
 // background: vscodeStyles.getPropertyValue('--vscode-checkbox-background'),
@@ -1004,7 +1012,7 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
         const icon = index === -1 ? <HomeIcon /> : null; // disabled for now
         if (index < arr.length - 1) {
           return (
-            <Link component="button" key={`br_${index}_${path.title}`} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
+            <Link underline="hover" component="button" key={`br_${index}_${path.title}`} onClick={(event) => { event.preventDefault(); handleBreadcrumbClick(index); }} color="textPrimary">
               {icon}{path.title}
             </Link>);
         } else {
@@ -1028,76 +1036,78 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
     return (
       <AttributesContext.Provider value={this.state.attributes || []}>
       <div className="App">
-        <ThemeProvider theme={theme}>
-          <AppBar position="static" color="transparent">
-            <Toolbar variant="dense">
-              <div style={{ flexGrow: 1 }}></div>
-              <Breadcrumbs>
-                {breadcrumbFragment}
-              </Breadcrumbs>
-              <div style={{ flexGrow: 1 }}></div>
-              <IconButton size="small" edge="end" color="inherit" onClick={handleClick}>
-                <MoreHorizIcon />
-              </IconButton>
-              <Menu id="appMoreMenu" anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={handleClose}>
-                  <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(false); }}>reset all entries</MenuItem>
-                  <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(true); }}>reset & reimport all entries</MenuItem>
-                  <MenuItem onClick={() => { handleClose(); this.onShowSummary(); }}>show summary</MenuItem>
-                  {this.state?.attributes?.findIndex(attr => attr.hasOwnProperty('lifecycles')) < 0 && <MenuItem onClick={() => { handleClose(); this.onAddDLTAttributes(); }}>add DLT attributes</MenuItem>}
-              </Menu>
-            </Toolbar>
-          </AppBar>
-            <SummaryDialog
-              label='Summary'
-              fbdata={this.state.data}
-              onFbPathChange={onFbPathChange}
-              title={this.state.title}
-              open={this.state.showSummaryDialog === true} onClose={() => this.setState({ showSummaryDialog: false })}
-            />
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-              <Paper>
-              <div>
-                <Grid container spacing={2} justify="center">
-                  <Grid item gutterBottom>
+          <StyledEngineProvider injectFirst>
+            <ThemeProvider theme={theme}>
+              <AppBar position="static" color="transparent">
+                <Toolbar variant="dense">
+                  <div style={{ flexGrow: 1 }}></div>
+                  <Breadcrumbs>
+                    {breadcrumbFragment}
+                  </Breadcrumbs>
+                  <div style={{ flexGrow: 1 }}></div>
+                  <IconButton size="small" edge="end" color="primary" onClick={handleClick}>
+                    <MoreHorizIcon />
+                  </IconButton>
+                  <Menu id="appMoreMenu" anchorEl={this.state.anchorEl} keepMounted open={Boolean(this.state.anchorEl)} onClose={handleClose}>
+                    <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(false); }}>reset all entries</MenuItem>
+                    <MenuItem onClick={() => { handleClose(); this.onResetAllEntries(true); }}>reset & reimport all entries</MenuItem>
+                    <MenuItem onClick={() => { handleClose(); this.onShowSummary(); }}>show summary</MenuItem>
+                    {this.state?.attributes?.findIndex(attr => attr.hasOwnProperty('lifecycles')) < 0 && <MenuItem onClick={() => { handleClose(); this.onAddDLTAttributes(); }}>add DLT attributes</MenuItem>}
+                  </Menu>
+                </Toolbar>
+              </AppBar>
+              <SummaryDialog
+                label='Summary'
+                fbdata={this.state.data}
+                onFbPathChange={onFbPathChange}
+                title={this.state.title}
+                open={this.state.showSummaryDialog === true} onClose={() => this.setState({ showSummaryDialog: false })}
+              />
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Paper>
+                    <div>
+                      <Grid container spacing={2} justifyContent="center">
+                        <Grid item gutterBottom>
 
-                  </Grid>
+                        </Grid>
+                      </Grid>
+                    </div>
+                    <FishboneChart
+                      onStateChange={(fbData) => this.handleFBStateChange(fbData)}
+                      reactInlineElementsAdder={this.addInlineElements}
+                      onChange={this.handleInputChange.bind(this)}
+                      effectContextMenu={[
+                        { text: 'add category', cb: this.onAddCategory.bind(this) },
+                        { text: 'add effect', cb: this.onAddEffect.bind(this) },
+                        this.state.clipboard !== undefined && this.state.clipboard.type === 'category' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
+                        { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
+                      categoryContextMenu={[
+                        { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
+                        { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
+                        { text: 'import fishbone', cb: this.onAddRootCause.bind(this, 'import') },
+                        { text: 'add category', cb: this.onAddCategory.bind(this) },
+                        { text: 'copy', cb: this.onCopy.bind(this, false, 'category') },
+                        { text: 'cut', cb: this.onCopy.bind(this, true, 'category') },
+                        this.state.clipboard !== undefined /* we allow all types (currently rootcause and category */ ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
+                        { text: 'delete category', cb: this.onDeleteCategory.bind(this) }
+                      ]}
+                      rootCauseContextMenu={[
+                        { text: 'copy', cb: this.onCopy.bind(this, false, 'rootcause') },
+                        { text: 'cut', cb: this.onCopy.bind(this, true, 'rootcause') },
+                        this.state.clipboard !== undefined && this.state.clipboard.type === 'rootcause' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
+                        { text: 'delete root-cause', cb: this.onDeleteRootCause.bind(this) },
+                      ]}
+                      data={this.getCurData(this.state.fbPath, this.state.data)}
+                      effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
+                  </Paper>
                 </Grid>
-                </div>
-                <FishboneChart
-                  onStateChange={(fbData) => this.handleFBStateChange(fbData)}
-                  reactInlineElementsAdder={this.addInlineElements}
-                  onChange={this.handleInputChange.bind(this)}
-                  effectContextMenu={[
-                    { text: 'add category', cb: this.onAddCategory.bind(this) },
-                    { text: 'add effect', cb: this.onAddEffect.bind(this) },
-                    this.state.clipboard !== undefined && this.state.clipboard.type === 'category' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
-                    { text: 'delete effect', cb: this.onDeleteEffect.bind(this) }]}
-                  categoryContextMenu={[
-                    { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
-                    { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
-                    { text: 'import fishbone', cb: this.onAddRootCause.bind(this, 'import') },
-                    { text: 'add category', cb: this.onAddCategory.bind(this) },
-                    { text: 'copy', cb: this.onCopy.bind(this, false, 'category') },
-                    { text: 'cut', cb: this.onCopy.bind(this, true, 'category') },
-                    this.state.clipboard !== undefined /* we allow all types (currently rootcause and category */ ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
-                    { text: 'delete category', cb: this.onDeleteCategory.bind(this) }
-                  ]}
-                  rootCauseContextMenu={[
-                    { text: 'copy', cb: this.onCopy.bind(this, false, 'rootcause') },
-                    { text: 'cut', cb: this.onCopy.bind(this, true, 'rootcause') },
-                    this.state.clipboard !== undefined && this.state.clipboard.type === 'rootcause' ? { text: 'paste', cb: this.onPaste.bind(this) } : undefined,
-                    { text: 'delete root-cause', cb: this.onDeleteRootCause.bind(this) },
-                  ]}
-                  data={this.getCurData(this.state.fbPath, this.state.data)}
-                  effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex} cols="12" />
-            </Paper>
-          </Grid>
-          <Grid item xs={6}>
-            {attributeSection}
-          </Grid>
-        </Grid>
-        </ThemeProvider>
+                <Grid item xs={6}>
+                  {attributeSection}
+                </Grid>
+              </Grid>
+            </ThemeProvider>
+          </StyledEngineProvider>
       </div>
       </AttributesContext.Provider>
     );

@@ -1,11 +1,11 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import { Button, DialogContent, DialogTitle, IconButton, TextField, Typography, Link } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import ErrorIcon from '@material-ui/icons/Error';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import { Button, DialogContent, DialogTitle, IconButton, TextField, Typography, Link } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import ErrorIcon from '@mui/icons-material/Error';
 
 // todo move those two functions into a util class. It's currently duplicated in docs.
 
@@ -120,7 +120,11 @@ export default function DLTRestQueryManualDialog(props) {
         <Dialog fullScreen open={props.open} onClose={handleClose}>
             <DialogTitle id="dltRestQueryManualDialogTitle">
                 DLT rest query manual edit...
-                <IconButton onClick={handleClose} color="inherit" style={{ position: 'absolute', right: 1 }}>
+                <IconButton
+                    onClick={handleClose}
+                    color="inherit"
+                    style={{ position: 'absolute', right: 1 }}
+                    size="large">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -133,7 +137,7 @@ export default function DLTRestQueryManualDialog(props) {
                 <TextField name="DLT rest query" margin="dense" id={'description-field-rest-query'}
                     label="DLT-Logs rest query:"
                     error={error.length > 0}
-                    rowsMax={35}
+                    maxRows={35}
                     InputLabelProps={{ shrink: true, }} fullWidth multiline value={json} onChange={(event) => setJson(event.target.value)}
                 ></TextField>
                 <div />
