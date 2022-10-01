@@ -22,7 +22,7 @@
 	},
 	"homepage": "https://mbehr1.github.io/fishbone/",
 	"engines": {
-		"vscode": "^1.51.0"
+		"vscode": "^1.67.0"
 	},
 	"categories": [
 		"Visualization",
