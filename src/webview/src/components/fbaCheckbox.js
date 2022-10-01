@@ -1,4 +1,4 @@
-// copyright (c) 2020 - 2021, Matthias Behr
+// copyright (c) 2020 - 2022, Matthias Behr
 import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import Container from '@mui/material/Container';
@@ -40,13 +40,9 @@ import MultiStateBox from './multiStateBox';
 import DataProviderEditDialog from './dataProviderEditDialog';
 import TextFieldEditDialog from './textFieldEditDialog';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import Tooltip from '@mui/material/Tooltip';
 
 var stableStringify = require('json-stable-stringify');
-
-// import Grid from '@mui/material/Grid';
-// import Autocomplete from '@mui/lab/Autocomplete';
-// import CircularProgress from '@mui/material/CircularProgress';
-// import { sendAndReceiveMsg } from '../util';
 
 // todo
 // - make applyFilter a state to appear directly after editing.
@@ -54,7 +50,6 @@ var stableStringify = require('json-stable-stringify');
 //  - use Chips instead of texts (allowing always to set the <DoneIcon />?)
 // - highlight current selection with a different text. e.g. "keep as OK", ...
 // - add id= to buttons...
-// - add tooltips 
 
 const useStyles = makeStyles(theme => ({
     upperLeftBadge: {
@@ -148,7 +143,7 @@ export default function FBACheckbox(props) {
     // effect for badge processing:
     useEffect(() => {
         const bs = stableStringify(values.badge);
-        console.log(`FBACheckbox effect for badge processing called (badgeStatus=${badgeStatus}, badgeCounter='${badgeCounter}' badge=${bs})`);
+        //console.log(`FBACheckbox effect for badge processing called (badgeStatus=${badgeStatus}, badgeCounter='${badgeCounter}' badge=${bs})`);
         if ((!badgeStatus && values.badge?.source) ||
             (badgeStatus > 0 && badgeQuery !== bs)) {
             const fetchdata = async () => {
@@ -172,7 +167,7 @@ export default function FBACheckbox(props) {
     // effect for badge2 processing:
     useEffect(() => {
         const b2s = stableStringify(values.badge2);
-        console.log(`FBACheckbox effect for badge2 processing called (badge2Status=${badge2Status}, badge2Counter='${badge2Counter}' badge2=${b2s})`);
+        //console.log(`FBACheckbox effect for badge2 processing called (badge2Status=${badge2Status}, badge2Counter='${badge2Counter}' badge2=${b2s})`);
         if ((badge2Status === 0 && values.badge2?.source) ||
             (badge2Status > 0 && badge2Query !== b2s)) {
             const fetchdata = async () => {
@@ -332,13 +327,33 @@ export default function FBACheckbox(props) {
         </React.Fragment>
     );
 
+    const contentTooltip = (content, maxLen) => {
+        if (typeof content === 'number') {
+            return content;
+        } else {
+            try {
+                const str = typeof content === 'string' ? content : JSON.stringify(content, undefined, 2);
+                const strLen = str.length;
+                if (strLen > 0) {
+                    return <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>{str}</span>} arrow>
+                        <span>{strLen > maxLen ? str.slice(0, maxLen) + '...' : str}</span>
+                    </Tooltip>
+                } else {
+                    return str;
+                }
+            } catch (e) {
+                return `err:${e}`;
+            }
+        }
+    };
+
     return (
         <Container style={{ padding: '0px 0px 0px 0px' } /* no padding */}>
             <Box py='1px' /* py = padding-top+bottom <- padding around checkbox */>
                 <Grid container spacing={1} m={'-4px'} /* distance between checkbox and edit icon */ >
                     <Grid item flex style={{ 'padding': '1px' }}>
-                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={numberAbbrev(badgeCounter, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circular" max={NaN} invisible={values.value === 'ok' || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
-                            <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={numberAbbrev(badge2Counter, 99)} max={NaN} color={undefined} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circular" invisible={values.value === 'ok' || badge2Status < 2} showZero >
+                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={contentTooltip(numberAbbrev(badgeCounter, 999), 40)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circular" max={NaN} invisible={values.value === 'ok' || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
+                            <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={contentTooltip(numberAbbrev(badge2Counter, 99), 40)} max={NaN} color={undefined} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circular" invisible={values.value === 'ok' || badge2Status < 2} showZero >
                                 <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" style={{ color: '#f44336' }} /> }]} {...props} size="small" color="primary" />
                                 <FormControlLabel style={{ 'flex': 'auto', 'min-width': '234px', 'margin': '0px', 'justifyContent': 'space-between' }} labelPlacement={'start'} control={
                                     <IconButton color="primary" size="small" aria-label="edit" onClick={handleClickOpen} style={{ 'padding': '4px 0px 2px 0px', margin: '0px' }}>
