@@ -210,7 +210,7 @@ export default class App extends Component {
     // need to convert to class names...
     // done on the fly/need now this.parseFBData(vsCodeState?.data || []);
 
-    console.log(`vsCodeState=${JSON.stringify(vsCodeState)}`);
+    // console.log(`vsCodeState=${JSON.stringify(vsCodeState)}`);
 
     this.state = vsCodeState ||
       (props.initialData ?

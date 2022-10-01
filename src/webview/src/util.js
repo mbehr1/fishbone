@@ -9,7 +9,7 @@ export function getVsCode() {
     if (vscode === undefined) {
         vscode = window.acquireVsCodeApi();
     }
-    console.log(`getVsCode called. returning ${vscode}`)
+    //console.log(`getVsCode called. returning ${vscode}`)
     return vscode;
 }
 
@@ -19,7 +19,7 @@ let reqCallbacks = new Map();
 export function sendAndReceiveMsg(req) {
     const reqId = ++lastReqId;
     const prom = new Promise(resolve => {
-        console.log(`added reqId=${reqId} to callbacks`);
+        //console.log(`added reqId=${reqId} to callbacks`);
         reqCallbacks.set(reqId, (response) => { resolve(response); })
     });
     vscode.postMessage({ type: 'sAr', req: req, id: reqId });
@@ -28,7 +28,7 @@ export function sendAndReceiveMsg(req) {
 
 export function receivedResponse(response) {
     try {
-        console.log('receivedResponse id:' + response.id);
+        //console.log('receivedResponse id:' + response.id);
         const cb = reqCallbacks.get(response.id);
         if (cb) {
             reqCallbacks.delete(response.id);
@@ -46,10 +46,10 @@ function triggerRestQuery(requestStr, jsonPath) {
      // so we do forward to the extension as well
      // if (url.startsWith('ext:')) {
         return new Promise((resolve, reject) => {
-            console.log(`triggerRestQuery triggering ${JSON.stringify(requestStr)} via extension`);
+            //console.log(`triggerRestQuery triggering ${JSON.stringify(requestStr)} via extension`);
             try {
                 sendAndReceiveMsg({ type: 'restQuery', request: requestStr }).then((res) => {
-                    console.log(`triggerRestQuery got response ${JSON.stringify(res).slice(0, 100)}`);
+                    //console.log(`triggerRestQuery got response ${JSON.stringify(res).slice(0, 100)}`);
                     // check for res.error... and trigger reject then...
                     // if we have errors we reject:
                     if ('errors' in res && res.errors.length > 0) {
@@ -59,7 +59,7 @@ function triggerRestQuery(requestStr, jsonPath) {
 
                     if (jsonPath) {
                         const data = jp.query(res.data, jsonPath);
-                        console.log(`jsonPath('${jsonPath}') returned '${JSON.stringify(data).slice(0, 100)}'`);
+                        //console.log(`jsonPath('${jsonPath}') returned '${JSON.stringify(data).slice(0, 100)}'`);
                         resolve(data);
                     } else resolve(res);
                 }).catch(reject);
