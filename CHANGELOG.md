@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.15.0](https://github.com/mbehr1/fishbone/compare/v1.14.0...v1.15.0) (2022-10-01)
+
+
+### Features
+
+* add tooltip for badge texts and truncate to 40 chars ([ad36ab5](https://github.com/mbehr1/fishbone/commit/ad36ab50fa3bc2eac898143f3d7f09d8ba65a51d))
+
 ## [1.14.0](https://github.com/mbehr1/fishbone/compare/v1.13.2...v1.14.0) (2022-10-01)
 
 
