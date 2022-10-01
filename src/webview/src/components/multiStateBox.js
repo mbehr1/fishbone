@@ -11,15 +11,9 @@ import IconButton from '@mui/material/IconButton';
  * In contrast to Checkbox the value will be provided as 'value' not as 'checked'
  * @param props properties to use. Mandatory: (see proptypes). Main property:
  *   values: array of { value: <valuename>, icon: Icon }
+ * 
+ * It has no label attached.
  */
-
-/*
-should replace this:
-<FormControlLabel control={
-                    <Checkbox {...props} color="primary"></Checkbox>
-                } label={props.label}
-                />
-                */
 
 export default function MultiStateBox(props) {
 
@@ -59,10 +53,7 @@ export default function MultiStateBox(props) {
     }
 
     const innerFragment = (
-        <FormControlLabel style={{ 'flex': 'auto', 'text-align': 'initial', 'align-self': 'initial', 'min-width': '240px', "margin-right": '0px' }} control={
-                <IconButton {...props} color={curColor} onClick={handleClick}>{curValuePair.icon}</IconButton>
-            } label={props.label}
-        />
+        <IconButton {...props} color={curColor} onClick={handleClick}>{curValuePair.icon}</IconButton>
     );
 
     if (props.tooltip) {
@@ -75,7 +66,6 @@ export default function MultiStateBox(props) {
 }
 
 MultiStateBox.propTypes = {
-    label: PropTypes.string.isRequired,
     values: PropTypes.array.isRequired,
     tooltip: PropTypes.string,
     onChange: PropTypes.func // otherwise the option won't be stored

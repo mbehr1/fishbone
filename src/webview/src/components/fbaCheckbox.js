@@ -28,7 +28,7 @@ import DialogContent from '@mui/material/DialogContent';
 import Button from '@mui/material/Button';
 import Badge from '@mui/material/Badge';
 import Alert from '@mui/material/Alert';
-import { Snackbar } from '@mui/material';
+import Snackbar from '@mui/material/Snackbar';
 import { makeStyles } from '@mui/styles';
 
 import { triggerRestQueryDetails, numberAbbrev } from './../util';
@@ -39,6 +39,8 @@ import { GetMarkdownActive, GetTextValue, RenderConditionText } from './utils/ma
 import MultiStateBox from './multiStateBox';
 import DataProviderEditDialog from './dataProviderEditDialog';
 import TextFieldEditDialog from './textFieldEditDialog';
+import FormControlLabel from '@mui/material/FormControlLabel';
+
 var stableStringify = require('json-stable-stringify');
 
 // import Grid from '@mui/material/Grid';
@@ -56,13 +58,13 @@ var stableStringify = require('json-stable-stringify');
 
 const useStyles = makeStyles(theme => ({
     upperLeftBadge: {
-        left: `2px`, // was 0px orig
+        left: `13px`,
         transform: `scale(0.8) translate(0%, -65%)` // was scale(1) tranlate(-50%, -50%) orig. but we prefer them left aligned
     },
     lowerRightBadge: {
         'justify-content': 'flex-end', // right align text
-        width: '115%', // as we move it to the right we can use more space
-        right: '-5px', // text starting right aligned a -5px over the border but not overlapping the ... button (z-index issues)
+        width: '115%', // as we scale it down we can use more width
+        right: '12px', // text starting right aligned but not overlapping the edit button
         transform: 'scale(0.8) translate(0%, 70%)' // text a bit smaller and below
     }
 }));
@@ -331,22 +333,23 @@ export default function FBACheckbox(props) {
     );
 
     return (
-        <Container style={{ padding: '0px 0px 0px 10px' } /* a little padding left */}>
+        <Container style={{ padding: '0px 0px 0px 0px' } /* no padding */}>
             <Box py='1px' /* py = padding-top+bottom <- padding around checkbox */>
                 <Grid container spacing={1} m={'-4px'} /* distance between checkbox and edit icon */ >
                     <Grid item flex style={{ 'padding': '1px' }}>
                         <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={numberAbbrev(badgeCounter, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circular" max={NaN} invisible={values.value === 'ok' || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
                             <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={numberAbbrev(badge2Counter, 99)} max={NaN} color={undefined} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circular" invisible={values.value === 'ok' || badge2Status < 2} showZero >
                                 <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" style={{ color: '#f44336' }} /> }]} {...props} size="small" color="primary" />
+                                <FormControlLabel style={{ 'flex': 'auto', 'min-width': '234px', 'margin': '0px', 'justifyContent': 'space-between' }} labelPlacement={'start'} control={
+                                    <IconButton color="primary" size="small" aria-label="edit" onClick={handleClickOpen} style={{ 'padding': '4px 0px 2px 0px', margin: '0px' }}>
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                } label={props.label}
+                                />
+                            </Badge>
                         </Badge>
-                    </Badge>
+                    </Grid>
                 </Grid>
-                    <Grid>
-                        <IconButton color="primary" size="small" aria-label="edit" onClick={handleClickOpen} style={{ 'padding': '4px 0px 2px 0px' }}>
-                            <EditIcon fontSize="small" />
-                        </IconButton>
-                </Grid>
-            </Grid>
             </Box>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
                 <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>
