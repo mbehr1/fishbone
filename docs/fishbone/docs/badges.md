@@ -30,6 +30,15 @@ Badges receive their info from currently two sources:
 The badges are only shown if the checkbox is unchecked or marked as error.
 :::
 
+:::info
+The upper badge is configured to not show if the returned value is the number 0 and is limited to 999. The lower badge will show the 0 and is limited to 99.
+If you want to show it anyhow or show higher numbers see [examples](#javascript-function-examples) on how to convert to the string '0'.
+:::
+
+:::note
+The text from badges is truncated to max 40 chars. A tooltip is available showing the full text.
+:::
+
 ## Badges using DLT-Logs extensions
 
 With DLT-Logs extension the following use-cases are supported:
@@ -40,7 +49,7 @@ Show information in any of the badges:
 - based on applying a user-defined Javascript on the messages returned from a query of a set of DLT-filters.
 
 To use a badge perform the following steps:
-1. **edit** a root-cause (press the small pen icon on a root cause in the fishbone)
+1. **edit** a root-cause (press the small pen icon on a root cause in the fishbone or click on the text of the root cause)
 2. press the **edit upper left badge** or *lower right badge** button
 3. select the **extension dlt-logs rest query** button
 4. press the **OPEN DLT FILTER ASSISTANT...** button
@@ -57,11 +66,6 @@ If the list is empty you do need to open a DLT log file and configure your filte
     - a javascript function
 
     to get the data out of the returned DLT-filter results.
-
-:::info
-The upper badge is configured to not show if the returned value is the number 0 and is limited to 999. The lower badge will show the 0 and is limited to 99.
-If you want to show it anyhow or show higher numbers see [examples](#javascript-function-examples) on how to convert to the string '0'.
-:::
 
 ### Manual edit of DLT query
 
