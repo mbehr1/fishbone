@@ -1,7 +1,6 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React from 'react';
 import PropTypes from 'prop-types';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 
