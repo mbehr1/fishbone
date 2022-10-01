@@ -1,6 +1,6 @@
 import React from 'react'
-import Link from '@material-ui/core/Link';
-import Tooltip from '@material-ui/core/Tooltip'
+import Link from '@mui/material/Link';
+import Tooltip from '@mui/material/Tooltip'
 
 /**
  * Returns a link based on the input path

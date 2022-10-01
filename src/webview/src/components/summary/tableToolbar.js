@@ -2,12 +2,12 @@ import React from 'react'
 
 import GlobalFilter from './globalFilter'
 import PropTypes from 'prop-types'
-import Toolbar from '@material-ui/core/Toolbar'
-import Box from '@material-ui/core/Box';
-import Typography from '@material-ui/core/Typography';
+import Toolbar from '@mui/material/Toolbar'
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 
-import CloseIcon from '@material-ui/icons/Close';
-import { IconButton } from '@material-ui/core';
+import CloseIcon from '@mui/icons-material/Close';
+import { IconButton } from '@mui/material';
 
 const TableToolbar = props => {
 
@@ -26,11 +26,15 @@ const TableToolbar = props => {
                 setGlobalFilter={setGlobalFilter}
             />
             <Box display='flex' flexGrow={1}></Box> { /* https://stackoverflow.com/a/62735254 */}
-            <IconButton onClick={onClose} color="primary" style={{ position: 'absolute', right: 1 }}>
+            <IconButton
+                onClick={onClose}
+                color="primary"
+                style={{ position: 'absolute', right: 1 }}
+                size="large">
                 <CloseIcon />
             </IconButton>
         </Toolbar>
-    )
+    );
 }
 
 TableToolbar.propTypes = {

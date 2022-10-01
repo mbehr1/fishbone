@@ -1,19 +1,19 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React, { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import { Button, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Typography } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import EditIcon from '@material-ui/icons/Edit';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import Grid from '@material-ui/core/Grid';
-import Paper from '@material-ui/core/Paper';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import Radio from '@material-ui/core/Radio';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Badge from '@material-ui/core/Badge';
-import Input from '@material-ui/core/Input';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import { Button, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, Typography } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import RadioGroup from '@mui/material/RadioGroup';
+import Radio from '@mui/material/Radio';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Badge from '@mui/material/Badge';
+import Input from '@mui/material/Input';
 import OnBlurInputBase from './onBlurInputBase';
 import DLTFilterAssistantDialog from './dltFilterAssistant';
 import DLTRestQueryManualDialog from './dltRestQueryManual';
@@ -115,17 +115,21 @@ export default function DataProviderEditDialog(props) {
         <Dialog fullScreen open={props.open} onClose={handleClose}>
             <DialogTitle id="dpEditDialogTitle">
                 {props.applyMode ? 'Edit apply filter settings...' : 'Edit badge and filter settings...'}
-                <IconButton onClick={handleClose} color="inherit" style={{ position: 'absolute', right: 1 }}>
+                <IconButton
+                    onClick={handleClose}
+                    color="inherit"
+                    style={{ position: 'absolute', right: 1 }}
+                    size="large">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
             <DialogContent dividers>
-                <Grid container direction="column" justify="flex-start" alignItems="stretch" spacing={2}>
+                <Grid container direction="column" justifyContent="flex-start" alignItems="stretch" spacing={2}>
                     <Grid item>
                         <Paper>
                             <RadioGroup row value={dataType} onChange={(event) => setDataType(event.target.value)}>
-                                <FormControlLabel value="http" control={<Radio size="small" color="primary" />} label={<Typography variant="body1">https rest query</Typography>} />
-                                <FormControlLabel value="ext:dlt" control={<Radio size="small" color="primary" />} label="extension dlt-logs rest query" />
+                                <FormControlLabel value="http" control={<Radio size="small" />} label={<Typography variant="body1">https rest query</Typography>} />
+                                <FormControlLabel value="ext:dlt" control={<Radio size="small" />} label="extension dlt-logs rest query" />
                             </RadioGroup>
                         </Paper>
                     </Grid>
@@ -136,6 +140,7 @@ export default function DataProviderEditDialog(props) {
                                     Enter https URL
                                 </InputLabel>
                                 <Input id="dataSourceInput" inputComponent={OnBlurInputBase}
+                                    fullWidth
                                     placeholder="e.g. 'https://api.github.com/repos/mbehr1/fishbone/issues'"
                                     inputProps={{ value: dataSource, onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataSource(event.target.value); } }} />
                             </FormControl>
@@ -169,23 +174,21 @@ export default function DataProviderEditDialog(props) {
                                 onChange={(newValue) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataSource(newValue); if (!dataJsonPath?.length) { setDataJsonPath('$.data[*]') } }}
                                 onClose={() => setManualEditOpen(false)}
                             />}
-                            <FormControl variant="outlined" color="primary" fullWidth margin="normal">
-                                <InputLabel htmlFor="dataSourceInput" shrink color="primary">
-                                    "Enter dlt-logs rest query"
-                                </InputLabel>
-                                <Input id="dataSourceInput" inputComponent={OnBlurInputBase}
-                                    placeholder={props.applyMode ? "e.g. '/get/docs/0/filters?delete=(uriencode({...}))&add={...}'" : "e.g. '/get/docs/0/filters?query=...'"}
-                                    inputProps={{ value: dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource.slice(19) : dataSource, onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataSource('ext:mbehr1.dlt-logs' + event.target.value); } }} />
-                            </FormControl>
+                            <InputLabel htmlFor="dataSourceInput" shrink color="primary">
+                                "Enter dlt-logs rest query"
+                            </InputLabel>
+                            <Input id="dataSourceInput" inputComponent={OnBlurInputBase}
+                                fullWidth
+                                placeholder={props.applyMode ? "e.g. '/get/docs/0/filters?delete=(uriencode({...}))&add={...}'" : "e.g. '/get/docs/0/filters?query=...'"}
+                                inputProps={{ value: dataSource?.startsWith('ext:mbehr1.dlt-logs') ? dataSource.slice(19) : dataSource, onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataSource('ext:mbehr1.dlt-logs' + event.target.value); } }} />
                         </Paper>}
                         {!props.applyMode && <Paper>
-                            <FormControl variant='outlined' fullWidth margin="normal">
-                                <InputLabel shrink htmlFor="dataJsonPathInput">Enter jsonPath expression to extract results</InputLabel>
-                                <Input id="dataJsonPathInput" inputComponent={OnBlurInputBase}
-                                    placeholder="e.g. '$.state' or '$.data[*]"
-                                    inputProps={{ value: dataJsonPath, onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataJsonPath(event.target.value); } }}
-                                />
-                            </FormControl>
+                            <InputLabel shrink htmlFor="dataJsonPathInput">Enter jsonPath expression to extract results</InputLabel>
+                            <Input id="dataJsonPathInput" inputComponent={OnBlurInputBase}
+                                fullWidth
+                                placeholder="e.g. '$.state' or '$.data[*]"
+                                inputProps={{ value: dataJsonPath, onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataJsonPath(event.target.value); } }}
+                            />
                             <RadioGroup row value={dataConv?.split(':')[0]} onChange={(event) => {
                                 setPreviewQueryResult(previewApplyText);
                                 setPreviewBadgeStatus(props.applyMode ? 3 : 0);
@@ -196,19 +199,19 @@ export default function DataProviderEditDialog(props) {
                                     default: break;
                                 }
                             }}>
-                                <FormControlLabel value="length" control={<Radio size="small" color="primary" />} label="number of array elements" />
-                                <FormControlLabel value="index" control={<Radio size="small" color="primary" />} label="first element" />
-                                <FormControlLabel value="func" control={<Radio size="small" color="primary" />} label="javascript function" />
+                                <FormControlLabel value="length" control={<Radio size="small" />} label="number of array elements" />
+                                <FormControlLabel value="index" control={<Radio size="small" />} label="first element" />
+                                <FormControlLabel value="func" control={<Radio size="small" />} label="javascript function" />
                             </RadioGroup>
                             {dataConv?.startsWith("func") &&
-                                <FormControl variant="outlined" fullWidth margin="normal">
-                                <InputLabel shrink htmlFor="dataFuncInput">javascript function body</InputLabel>
-                                <Input id="dataFuncInput" inputComponent={OnBlurInputBase}
-                                    placeholder="e.g. '{return result.message;}'"
-                                    multiline
-                                    inputProps={{ multiline: true, value: dataConv.slice(dataConv.indexOf(':') + 1), onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataConv('func:' + event.target.value); } }}
-                                />
-                                </FormControl>
+                                <React.Fragment>
+                                    <InputLabel shrink htmlFor="dataFuncInput">javascript function body</InputLabel>
+                                    <Input id="dataFuncInput" inputComponent={OnBlurInputBase}
+                                        placeholder="e.g. '{return result.message;}'"
+                                        multiline
+                                        inputProps={{ multiline: true, value: dataConv.slice(dataConv.indexOf(':') + 1), onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataConv('func:' + event.target.value); } }}
+                                    />
+                                </React.Fragment>
                             }
                         </Paper>}
                     </Grid>
@@ -221,7 +224,7 @@ export default function DataProviderEditDialog(props) {
                     </Grid>}
                     <Grid item>
                         <Paper>
-                            {!props.applyMode && <Badge badgeContent={numberAbbrev(previewBadgeContent, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={NaN}>
+                            {!props.applyMode && <Badge badgeContent={numberAbbrev(previewBadgeContent, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circular" max={NaN}>
                                 badge content='{JSON.stringify(previewBadgeContent)}'
                             </Badge>}
                             <div>

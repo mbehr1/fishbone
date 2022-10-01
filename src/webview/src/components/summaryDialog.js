@@ -1,7 +1,7 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React from 'react';
-import Dialog from '@material-ui/core/Dialog';
-import { DialogContent } from '@material-ui/core';
+import Dialog from '@mui/material/Dialog';
+import { DialogContent } from '@mui/material';
 
 import SummaryTable from './summary/table';
 import { SummaryHeaderProvider, SummaryDataProvider } from './summary/dataProvider';

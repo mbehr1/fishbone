@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import InputBase from '@material-ui/core/InputBase';
+import InputBase from '@mui/material/InputBase';
 
 export default function OnBlurInputBase(props) {
     const [value, setValue] = React.useState(props.value);

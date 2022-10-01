@@ -12,7 +12,7 @@ import * as zlib from 'zlib';
 import * as vscode from 'vscode';
 import { getNonce, performHttpRequest } from './util';
 import * as yaml from 'js-yaml';
-import TelemetryReporter from 'vscode-extension-telemetry';
+import TelemetryReporter from '@vscode/extension-telemetry';
 
 interface AssetManifest {
     files: {
@@ -389,13 +389,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
         const main: string = assetManifest.files['main.js'];
         const styles: string = assetManifest.files['main.css'];
-        const runTime: string = assetManifest.files['runtime-main.js'];
-        const chunk: string = Object.keys(assetManifest.files).find((key) => key.endsWith('chunk.js')) as string;
 
         const mainUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', main));
         const stylesUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', styles));
-        const runTimeMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', runTime));
-        const chunkUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', chunk));
 
         // Use a nonce to whitelist which scripts can be run
         const nonce = getNonce();
@@ -431,8 +427,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     window.initialData = ${initialDataStr};
                 </script>
                 <div id="root"></div>
-                <script nonce="${nonce}" crossorigin="anonymous" src="${runTimeMainUri.toString(true)}"></script>
-                <script nonce="${nonce}" crossorigin="anonymous" src="${chunkUri.toString(true)}"></script>
                 <script nonce="${nonce}" crossorigin="anonymous" src="${mainUri.toString(true)}"></script>
 			</body>
 			</html>`;

@@ -1,9 +1,9 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React from 'react';
 import PropTypes from 'prop-types';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Tooltip from '@material-ui/core/Tooltip';
-import IconButton from '@material-ui/core/IconButton';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
 
 /**
  * MultiStateBox is like a Checkbox but with multiple states (useful if 3 or more)

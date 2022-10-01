@@ -1,11 +1,11 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React, { useEffect } from 'react';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import { Button, DialogContent, DialogTitle, IconButton, TextField } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import FormControlLabel from '@material-ui/core/FormControlLabel'
-import Switch from '@material-ui/core/Switch'
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import { Button, DialogContent, DialogTitle, IconButton, TextField } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
 
 /**
  * open a modal dialog to edit text field information
@@ -50,7 +50,11 @@ export default function TextFieldEditDialog(props) {
         <Dialog fullWidth={true} open={props.open} maxWidth='md' onClose={handleClose}>
             <DialogTitle id="textFieldEditDialogTitle">
                 {props.label}
-                <IconButton onClick={handleClose} color="inherit" style={{ position: 'absolute', right: 1 }}>
+                <IconButton
+                    onClick={handleClose}
+                    color="inherit"
+                    style={{ position: 'absolute', right: 1 }}
+                    size="large">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>

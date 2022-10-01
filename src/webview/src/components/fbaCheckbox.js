@@ -1,35 +1,35 @@
 // copyright (c) 2020 - 2021, Matthias Behr
 import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import Container from '@material-ui/core/Container';
-import Box from '@material-ui/core/Box';
-import Grid from '@material-ui/core/Grid';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
-import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography';
-import EditIcon from '@material-ui/icons/Edit';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import Container from '@mui/material/Container';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import EditIcon from '@mui/icons-material/Edit';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 
-import Accordion from '@material-ui/core/Accordion';
-import AccordionSummary from '@material-ui/core/AccordionSummary';
-import AccordionDetails from '@material-ui/core/AccordionDetails';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-import ErrorIcon from '@material-ui/icons/Error';
+import ErrorIcon from '@mui/icons-material/Error';
 
-import Input from '@material-ui/core/Input';
+import Input from '@mui/material/Input';
 
-import Dialog from '@material-ui/core/Dialog';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import Button from '@material-ui/core/Button';
-import Badge from '@material-ui/core/Badge';
-import MuiAlert from '@material-ui/lab/Alert';
-import { Snackbar } from '@material-ui/core';
-import { makeStyles } from '@material-ui/styles';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import Button from '@mui/material/Button';
+import Badge from '@mui/material/Badge';
+import Alert from '@mui/material/Alert';
+import { Snackbar } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 
 import { triggerRestQueryDetails, numberAbbrev } from './../util';
 import { AttributesContext } from './../App';
@@ -41,9 +41,9 @@ import DataProviderEditDialog from './dataProviderEditDialog';
 import TextFieldEditDialog from './textFieldEditDialog';
 var stableStringify = require('json-stable-stringify');
 
-// import Grid from '@material-ui/core/Grid';
-// import Autocomplete from '@material-ui/lab/Autocomplete';
-// import CircularProgress from '@material-ui/core/CircularProgress';
+// import Grid from '@mui/material/Grid';
+// import Autocomplete from '@mui/lab/Autocomplete';
+// import CircularProgress from '@mui/material/CircularProgress';
 // import { sendAndReceiveMsg } from '../util';
 
 // todo
@@ -53,11 +53,6 @@ var stableStringify = require('json-stable-stringify');
 // - highlight current selection with a different text. e.g. "keep as OK", ...
 // - add id= to buttons...
 // - add tooltips 
-
-function Alert(props) {
-    return <MuiAlert elevation={6} variant="filled" {...props} />;
-}
-
 
 const useStyles = makeStyles(theme => ({
     upperLeftBadge: {
@@ -322,24 +317,26 @@ export default function FBACheckbox(props) {
 
     const applyFilterFragment = (values.filter &&
         <React.Fragment>
-        <Button id={'apply-filter-' + props.name} size="small" color="secondary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(values.filter)}>
-                Apply filter
-            </Button>
-            <Snackbar open={applyFilterBarOpen} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} onClose={handleFilterBarClose}>
-                <Alert onClose={handleFilterBarClose} severity="info">
-                    {applyFilterResult}
-                </Alert>
-            </Snackbar>
+            <div>
+                <Snackbar id={'snackbar-apply-filter-' + props.name} open={applyFilterBarOpen} autoHideDuration={6000} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} onClose={handleFilterBarClose}>
+                    <Alert id={'alert-snackbar-apply-filter-' + props.name} variant="filled" onClose={handleFilterBarClose} severity="info" sx={{ width: '100%' }}>
+                        {applyFilterResult}
+                    </Alert>
+                </Snackbar>
+                <Button id={'apply-filter-' + props.name} size="small" color="secondary" startIcon={<FilterListIcon />} onClick={(e) => handleApplyFilter(values.filter)}>
+                    Apply filter
+                </Button>
+            </div>
         </React.Fragment>
     );
 
     return (
         <Container style={{ padding: '0px 0px 0px 10px' } /* a little padding left */}>
             <Box py='1px' /* py = padding-top+bottom <- padding around checkbox */>
-                <Grid container spacing={1} /* distance between checkbox and edit icon */ >
+                <Grid container spacing={1} m={'-4px'} /* distance between checkbox and edit icon */ >
                     <Grid item flex style={{ 'padding': '1px' }}>
-                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={numberAbbrev(badgeCounter, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circle" max={NaN} invisible={values.value === 'ok' || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
-                            <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={numberAbbrev(badge2Counter, 99)} max={NaN} color={/* doesn't exist for badge but makes the background inherit */"info"} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circle" invisible={values.value === 'ok' || badge2Status < 2} >
+                        <Badge classes={{ badge: classes.upperLeftBadge }} badgeContent={numberAbbrev(badgeCounter, 999)} color="error" anchorOrigin={{ vertical: 'top', horizontal: 'left', }} overlap="circular" max={NaN} invisible={values.value === 'ok' || badgeStatus < 2 || (typeof badgeCounter === 'number' && badgeCounter === 0)}>
+                            <Badge classes={{ badge: classes.lowerRightBadge }} badgeContent={numberAbbrev(badge2Counter, 99)} max={NaN} color={undefined} anchorOrigin={{ vertical: 'bottom', horizontal: 'right', }} overlap="circular" invisible={values.value === 'ok' || badge2Status < 2} showZero >
                                 <MultiStateBox values={[{ value: null, icon: <CheckBoxOutlineBlankIcon fontSize="small" /> }, { value: 'ok', icon: <CheckBoxIcon fontSize="small" /> }, { value: 'error', icon: <ErrorIcon fontSize="small" style={{ color: '#f44336' }} /> }]} {...props} size="small" color="primary" />
                         </Badge>
                     </Badge>
@@ -352,7 +349,7 @@ export default function FBACheckbox(props) {
             </Grid>
             </Box>
             <Dialog open={editOpen} onClose={() => handleClose()} fullWidth={true} maxWidth='md'>
-                <DialogTitle disableTypography id={'form-edit-' + props.name} align='left' gutterBottom>
+                <DialogTitle id={'form-edit-' + props.name} align='left' gutterBottom>
                     <Input id={'input-label'} name='label' value={values.label} onChange={handleValueChanges} ></Input>
                     <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={() => setDpEditOpen(1)}>
                         upper left badge
