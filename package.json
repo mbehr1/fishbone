@@ -36,7 +36,8 @@
 	],
 	"activationEvents": [
 		"onCommand:fishbone.addNewFile",
-		"onCustomEditor:fishbone.fba"
+		"onCustomEditor:fishbone.fba",
+		"onView:fishbone_explorer.fba"
 	],
 	"capabilities": {
 		"virtualWorkspaces": true,
@@ -62,7 +63,16 @@
 					}
 				]
 			}
-		]
+		],
+		"views": {
+			"mbehr1Logs": [
+				{
+					"type": "tree",
+					"id": "fishbone_tree.fba",
+					"name": "Fishbone"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"prepare": "husky install",

@@ -29,7 +29,7 @@ import InputDataProvided from './components/dataProvider';
 import FBACheckbox from './components/fbaCheckbox';
 import SummaryDialog from './components/summaryDialog';
 import OnBlurInputBase from './components/onBlurInputBase';
-import { receivedResponse } from './util';
+import { receivedResponse, customEventStack } from './util';
 import HomeIcon from '@mui/icons-material/Home';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -261,6 +261,24 @@ export default class App extends Component {
         case 'sAr':
           receivedResponse(msg);
           break;
+        case 'CustomEvent':
+          {
+            console.log(`App.onMessage(CustomEvent eventType=${msg.eventType} detail=${JSON.stringify(msg.detail)}`);
+            //const event = new CustomEvent(msg.eventType, { bubbles: false, cancelable: true, detail: msg.detail });
+            const event = { eventType: msg.eventType, detail: msg.detail };
+            //document.dispatchEvent(event);
+            if (customEventStack.length > 0) {
+              // call the hooks from the stack until one returns false:
+              for (var i = customEventStack.length - 1; i >= 0; i--) {
+                const [evType, handler] = customEventStack[i];
+                if (evType !== msg.eventType) continue;
+                if (!handler(event)) { break; }
+              }
+            } else {
+              console.log(`App.onMessage(CustomEvent eventType=${msg.eventType} detail=${JSON.stringify(msg.detail)} got no entries in customEventStack`);
+            }
+          }
+          break;
         case 'onDidChangeActiveRestQueryDoc':
           console.log(`App.onDidChangeActiveRestQueryDoc ext=${msg.ext} uri=${msg.uri}`);
           // for now simply update the attributes, to retrigger a badge redraw
@@ -274,9 +292,8 @@ export default class App extends Component {
           this.setState((state) => { return { title: state.title }; });
           break;
         default:
-          console.warn(`App received unknown type=${msg.type} msg:`);
-          console.log(msg);      
-            break;
+          console.warn(`App received unknown type='${msg.type}' msg:`, msg);
+          break;
       }
     });
 

@@ -24,6 +24,7 @@ interface AssetManifest {
 }
 
 interface DocData {
+    webviewPanel: vscode.WebviewPanel,
     gotAliveFromPanel: boolean;
     msgsToPost: any[];
     lastPostedDocVersion: number;
@@ -32,6 +33,23 @@ interface DocData {
         docVersion: number, // the document version at the time the update was queued
         toChangeObj: any // the object with the changes to apply. can be just a few fields
     }[];
+    treeItem?: FishboneTreeItem,
+}
+
+interface FishboneTreeItem extends vscode.TreeItem {
+    id?: string,
+    label?: string | vscode.TreeItemLabel,
+    tooltip?: string | vscode.MarkdownString,
+    description?: string | boolean,
+    contextValue?: string,
+    iconPath?: string | vscode.Uri | vscode.ThemeIcon | { dark: string | vscode.Uri, light: string | vscode.Uri },
+
+    parent?: FishboneTreeItem,
+    children: FishboneTreeItem[],
+
+    // collapsibleState?
+
+    docData?: DocData,
 }
 
 const currentFBAFileVersion = '0.6';
@@ -44,12 +62,17 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     public static register(context: vscode.ExtensionContext, reporter?: TelemetryReporter): void {
         const provider = new FBAEditorProvider(context, reporter);
         context.subscriptions.push(vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider));
-
-        // todo was only for testing. add later with e.g. nr errors, or unchecked ...
-        // context.subscriptions.push(vscode.window.registerFileDecorationProvider(provider));
+        // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
     }
 
     private static readonly viewType = 'fishbone.fba'; // has to match the package.json
+    private static readonly treeViewType = 'fishbone_tree.fba'; // has to match as well
+
+    // explorer tree view support:
+    private _treeView?: vscode.TreeView<FishboneTreeItem>;
+    private _onDidChangeTreeData: vscode.EventEmitter<FishboneTreeItem | null> = new vscode.EventEmitter<FishboneTreeItem | null>();
+    private _treeRootNodes: FishboneTreeItem[] = [];
+
     private _subscriptions: Array<vscode.Disposable> = new Array<vscode.Disposable>();
 
     /// some extensions might offer a rest api (currently only dlt-logs), store ext name and function here
@@ -78,6 +101,53 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             this.checkActiveExtensions();
         }, 2000); todo renable one the onDidChange works reliable... */
 
+        // Tree view
+        const _treeRootNodes = this._treeRootNodes;
+        const _postMsgOnceAlive = this.postMsgOnceAlive;
+        this._treeView = vscode.window.createTreeView(FBAEditorProvider.treeViewType, {
+            treeDataProvider: {
+                onDidChangeTreeData: this._onDidChangeTreeData.event,
+                getTreeItem(e: FishboneTreeItem): vscode.TreeItem {
+                    return e;
+                },
+                getParent(e: FishboneTreeItem) {
+                    return e.parent;
+                },
+                getChildren(e?: FishboneTreeItem) {
+                    if (!e) {
+                        return _treeRootNodes;
+                    } else {
+                        return e.children;
+                    }
+                }
+            },
+            dragAndDropController: {
+                dragMimeTypes: [], // ['text/uri-list'],
+                dropMimeTypes: ['application/vnd.code.tree.dltlifecycleexplorer', 'application/vnd.dlt-logs+json', 'text/uri-list'],
+                async handleDrop(target: FishboneTreeItem | undefined, sources: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
+                    let srcs: string[] = [];
+                    let valuePromises: Thenable<String>[] = [];
+                    sources.forEach((item, mimeType) => valuePromises.push(item.asString()));
+                    let values = await Promise.all(valuePromises);
+                    sources.forEach((item, mimeType) => srcs.push(mimeType));
+                    console.log(`FBAEditorProvider.handleDrop on target:'${target?.label}'`);
+                    if (target && target.docData) {
+                        let item = sources.get('application/vnd.dlt-logs+json');
+                        if (item !== undefined) {
+                            const docData = target.docData;
+                            item.asString().then((value) => {
+                                console.log(`FBAEditorProvider.handleDrop sending value:'${value}'`);
+                                _postMsgOnceAlive(docData, {
+                                    type: 'CustomEvent',
+                                    eventType: 'ext:drop',
+                                    detail: { mimeType: 'application/vnd.dlt-logs+json', values: JSON.parse(value) },
+                                });
+                            });
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private _onDidChangeActiveRestQueryDoc = new vscode.EventEmitter<{ ext: string, uri: vscode.Uri | undefined }>();
@@ -102,6 +172,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             }
         });
     }
+
+    /* doesn't work yet with CustomTextEditor
+    public provideDocumentDropEdits(document: vscode.TextDocument, position: vscode.Position, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): vscode.ProviderResult<vscode.DocumentDropEdit> {
+        console.warn(`FBAEditorProvider.provideDocumentDropEdits(...)...`);
+        return undefined;
+    } */
 
     async checkActiveExtensions() {
 
@@ -183,6 +259,39 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         }
     }
 
+    private postMsgOnceAlive(docData: DocData, msg: any) {
+        if (docData.gotAliveFromPanel) { // send instantly
+            const msgCmd = msg.command;
+            docData.webviewPanel.webview.postMessage(msg); /*.then((onFulFilled) => {
+                console.log(`WebsharkView.postMessage(${msgCmd}) direct ${onFulFilled}`);
+            });*/
+        } else {
+            docData.msgsToPost.push(msg);
+        }
+    };
+
+    private updateWebview(docData: DocData, document: vscode.TextDocument) {
+        if (docData.lastPostedDocVersion !== document.version) {
+            console.log(`updateWebview posting to webview: lastPostedDocVersion=${docData.lastPostedDocVersion}, new docVersion=${document.version}`);
+            const docObj: any = FBAEditorProvider.getFBDataFromDoc(docData, document);
+
+            this.postMsgOnceAlive(docData, {
+                type: 'update',
+                data: docObj.fishbone,
+                title: docObj.title,
+                attributes: docObj.attributes
+            });
+            docData.lastPostedDocVersion = document.version;
+
+            if (docData.treeItem && docData.treeItem.label !== docObj.title) {
+                docData.treeItem.label = docObj.title;
+                this._onDidChangeTreeData.fire(docData.treeItem);
+            }
+        } else {
+            console.log(`updateWebview skipped as version already posted.(lastPostedDocVersion=${docData.lastPostedDocVersion}`);
+        }
+    }
+
     /**
      * Called when our custom editor is opened.
      */
@@ -205,39 +314,16 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         // then we'll send our data:
 
         let docData: DocData = {
+            webviewPanel: webviewPanel,
             gotAliveFromPanel: false,
             msgsToPost: [],
             lastPostedDocVersion: document.version - 1, // we want one update
             editsPending: []
         };
+        docData.treeItem = { docData: docData, children: [], label: document.uri.path, tooltip: 'Drop filters here to use them in edit dialogs for badges and "apply filter".' };
 
-        function postMsgOnceAlive(msg: any) {
-            if (docData.gotAliveFromPanel) { // send instantly
-                const msgCmd = msg.command;
-                webviewPanel.webview.postMessage(msg); /*.then((onFulFilled) => {
-                    console.log(`WebsharkView.postMessage(${msgCmd}) direct ${onFulFilled}`);
-                });*/
-            } else {
-                docData.msgsToPost.push(msg);
-            }
-        };
-
-        function updateWebview() {
-            if (docData.lastPostedDocVersion !== document.version) {
-                console.log(`updateWebview posting to webview: lastPostedDocVersion=${docData.lastPostedDocVersion}, new docVersion=${document.version}`);
-                const docObj: any = FBAEditorProvider.getFBDataFromDoc(docData, document);
-
-                postMsgOnceAlive({
-                    type: 'update',
-                    data: docObj.fishbone,
-                    title: docObj.title,
-                    attributes: docObj.attributes
-                });
-                docData.lastPostedDocVersion = document.version;
-            } else {
-                console.log(`updateWebview skipped as version already posted.(lastPostedDocVersion=${docData.lastPostedDocVersion}`);
-            }
-        }
+        this._treeRootNodes.push(docData.treeItem);
+        this._onDidChangeTreeData.fire(null);
 
         // Hook up event handlers so that we can synchronize the webview with the text document.
         //
@@ -254,14 +340,14 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 console.warn(`FBAEditorProvider onDidChangeTextDocument isDirty=${e.document.isDirty} isClosed=${e.document.isClosed} version=${e.document.version}/${document.version}  doc.lineCount=${e.document.lineCount} e.contentChanges.length=${e.contentChanges.length}`, e.contentChanges.map(e => JSON.stringify({ rl: e.rangeLength, tl: e.text.length })).join(','));
                 // skip update if there are no content changes? (.length=0?) -> done inside updateWebview based on version
                 // todo: we can even skip update if its triggered by changes from the webview...
-                updateWebview();
+                this.updateWebview(docData, document);
             }
         });
 
         const changeActiveDltDocSubscription = this.onDidChangeActiveRestQueryDoc((event) => {
-            if (webviewPanel.visible) {
+            if (docData.webviewPanel.visible) {
                 console.log(`FBAEditorProvider webview(${document.uri.toString()}) onDidChangeActiveRestQueryDoc(ext='${event.ext}' uri=${event.uri?.toString()})...`);
-                postMsgOnceAlive({
+                this.postMsgOnceAlive(docData, {
                     type: 'onDidChangeActiveRestQueryDoc',
                     ext: event.ext,
                     uri: event.uri?.toString()
@@ -270,7 +356,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         });
 
         const changeThemeSubsription = vscode.window.onDidChangeActiveColorTheme((event) => {
-            postMsgOnceAlive({
+            this.postMsgOnceAlive(docData, {
                 type: 'onDidChangeActiveColorTheme',
                 kind: event.kind // 1 = light, 2 = dark, 3 = high contrast
             });
@@ -281,6 +367,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             changeDocumentSubscription.dispose();
             changeThemeSubsription.dispose();
             changeActiveDltDocSubscription.dispose();
+
+            let itemIdx = this._treeRootNodes.findIndex((item) => item.docData?.webviewPanel === webviewPanel);
+            if (itemIdx >= 0) {
+                this._treeRootNodes.splice(itemIdx, 1);
+                this._onDidChangeTreeData.fire(null);
+            }
+
         });
 
         // Receive message from the webview.
@@ -292,7 +385,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 let msg: any;
                 while (msg = docData.msgsToPost.shift()) { // keep fifo order
                     const msgCmd = JSON.stringify(msg);
-                    webviewPanel.webview.postMessage(msg); /*.then((onFulFilled) => {
+                    docData.webviewPanel.webview.postMessage(msg); /*.then((onFulFilled) => {
                         console.log(`WebsharkView.postMessage(${msgCmd}) queued ${onFulFilled}`);
                     });*/
                 }
@@ -375,7 +468,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         });
 
         // send initial data
-        updateWebview();
+        this.updateWebview(docData, document);
     }
 
     /**

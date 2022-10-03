@@ -213,3 +213,6 @@ export function numberAbbrev(data, max) {
     if (typeof data === 'number' && data > max) { return `${max}+`; }
     return data;
 }
+
+// array of [eventType:String, handler(event):bool]
+export const customEventStack = [];

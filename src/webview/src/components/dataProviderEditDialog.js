@@ -19,7 +19,7 @@ import DLTFilterAssistantDialog from './dltFilterAssistant';
 import DLTRestQueryManualDialog from './dltRestQueryManual';
 
 import { AttributesContext } from './../App';
-import { triggerRestQueryDetails, numberAbbrev } from './../util';
+import { triggerRestQueryDetails, numberAbbrev, customEventStack } from './../util';
 
 /* todos
 - add appy filter edit
@@ -41,12 +41,68 @@ export default function DataProviderEditDialog(props) {
     const [dataJsonPath, setDataJsonPath] = React.useState();
     const [dataConv, setDataConv] = React.useState('length:');
 
+    const onDrop = React.useCallback((e) => {
+        console.log(`DataProviderEditDialog.onDrop(e.detail=${JSON.stringify(e.detail)})`);
+        if (e.detail.mimeType === 'application/vnd.dlt-logs+json') {
+            // for now we do simply overwrite:
+            const filterFrags = e.detail.values?.filterFrags;
+            if (filterFrags !== undefined && Array.isArray(filterFrags) && filterFrags.length > 0) {
+                const posNegFilterFrags = filterFrags.filter((f) => f.type <= 1); // (only pos and neg for badges)
+                const reportFilterFrags = filterFrags.filter((f) => f.type === 3);
+                if ((!props.applyMode && posNegFilterFrags.length > 0) || (props.applyMode && (posNegFilterFrags.length > 0 || reportFilterFrags.length > 0))) {
+                    setDataType('ext:dlt');
+                    // keep conv
+                    // keep jsonpath if not empty
+                    if (!props.applyMode && !dataJsonPath?.length) { setDataJsonPath('$.data[*]') }
+                    const filterStrs = [];
+                    if (posNegFilterFrags.length > 0 && attributes.findIndex(attr => attr.hasOwnProperty('lifecycles')) >= 0) {
+                        // eslint-disable-next-line no-template-curly-in-string
+                        filterStrs.push('{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,' + (props.applyMode ? '"tmpFb":1,' : '') + '"type":1}');
+                    }
+                    posNegFilterFrags.forEach((frag) => filterStrs.push(JSON.stringify({ ...frag, id: undefined, configs: undefined, tmpFb: props.applyMode ? 1 : undefined }))); // remove id,configs, set tmpFb
+
+                    const reportStr = reportFilterFrags.length > 0 ? '&report=' + encodeURIComponent('[' + reportFilterFrags.map((f) => JSON.stringify({ ...f, id: undefined, configs: undefined })).join(',') + ']') : '';
+
+                    setDataSource(
+                        props.applyMode ?
+                            `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}${filterStrs.length > 0 ? '&disableAll=view&add=' + filterStrs.map((str) => encodeURIComponent(str)).join('&add=') : ''}${reportStr}` :
+                            `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(`[${filterStrs.join(',')}]`)}`
+                    );
+
+                    setPreviewBadgeStatus(props.applyMode ? 3 : 0);
+
+                    return false; // we handled, stop further processing        
+                } else {
+                    console.warn('DataProviderEditDialog.onDrop but no applicable filterFrags!');
+                }
+            } else {
+                console.warn('DataProviderEditDialog.onDrop but no filterFrags!', filterFrags);
+            }
+        }
+        return true; // we did not handle, keep on processing
+    }, [props.applyMode, attributes, dataJsonPath]);
+
     useEffect(() => {
         setDataSource(props.data?.source);
         setDataJsonPath(props.data?.jsonPath);
         setDataConv(props.data?.conv ? props.data?.conv : (props.applyMode ? undefined : 'length:'))
         setDataType(props.data?.source?.startsWith("ext:mbehr1.dlt-logs") ? "ext:dlt" : "http")
-    }, [props.data, props.applyMode]);
+    }, [props.data, props.applyMode]); // todo move into init values to safe one render!
+
+
+    useEffect(() => {
+        if (props.open) {
+            console.warn(`DataProviderEditDialog attached ext:drop handler to customsEventStack`, customEventStack.length);
+            customEventStack.push(['ext:drop', onDrop]);// elem.addEventListener('ext:drop', onDrop);
+            return () => {
+                const idx = customEventStack.findIndex(([, v]) => v === onDrop);
+                if (idx >= 0) { customEventStack.splice(idx, 1); };
+                console.warn(`DataProviderEditDialog removed ext:drop handler to elem. idx=${idx}`);
+            }
+        }
+    }, [onDrop, props.open]);
+
+
 
     // DLTFilterAssistantDialog handling
     const [dltFilterAssistantOpen, setDltFilterAssistantOpen] = React.useState(false);
