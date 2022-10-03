@@ -227,7 +227,7 @@ export default function FBACheckbox(props) {
         ) {
             props.onChange({ target: { type: 'textfield', values: newValues } });
         } else {
-            console.warn(`FBACheckbox.handleClose no changes! newValues.filter=${JSON.stringify(newValues.filter)} vs ${JSON.stringify(props.filter)}`);
+            // console.warn(`FBACheckbox.handleClose no changes! newValues.filter=${JSON.stringify(newValues.filter)} vs ${JSON.stringify(props.filter)}`);
         }
     };
 
