@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.16.0](https://github.com/mbehr1/fishbone/compare/v1.15.0...v1.16.0) (2022-10-03)
+
+
+### Features
+
+* add drop support for badge and apply filter dialog ([fab17b0](https://github.com/mbehr1/fishbone/commit/fab17b0839b0fff902f7d2d28fa1e47361bbb4dd))
+
 ## [1.15.0](https://github.com/mbehr1/fishbone/compare/v1.14.0...v1.15.0) (2022-10-01)
 
 
