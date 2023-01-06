@@ -1,4 +1,4 @@
-// copyright (c) 2020 - 2021, Matthias Behr
+// copyright (c) 2020 - 2023, Matthias Behr
 import React, { useEffect } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';

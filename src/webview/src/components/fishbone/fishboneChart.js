@@ -1,4 +1,4 @@
-// copyright (c) Matthias Behr, 2020 - 2021
+// copyright (c) Matthias Behr, 2020 - 2023
 // based on the ...
 // todo add copyright to initial github repo! (MIT license from ...)
 

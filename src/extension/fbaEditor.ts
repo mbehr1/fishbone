@@ -1,5 +1,5 @@
 /**
- * copyright (c) 2020 - 2021, Matthias Behr
+ * copyright (c) 2020 - 2023, Matthias Behr
  *
  * todo:
  * change to "request-light" (npm i request-light) for https requests

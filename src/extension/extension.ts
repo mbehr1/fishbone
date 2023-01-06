@@ -1,4 +1,4 @@
-// todo add copyright, 2020 - 2021 Matthias Behr
+// todo add copyright, 2020 - 2023 Matthias Behr
 // - inform webview of extension (restquery provider or document changes)
 // - use Secrets API from 1.53 for https auth info?
 
