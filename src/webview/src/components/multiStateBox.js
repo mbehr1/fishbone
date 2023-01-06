@@ -1,4 +1,4 @@
-// copyright (c) 2020 - 2021, Matthias Behr
+// copyright (c) 2020 - 2023, Matthias Behr
 import React from 'react';
 import PropTypes from 'prop-types';
 import Tooltip from '@mui/material/Tooltip';

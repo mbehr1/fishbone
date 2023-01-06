@@ -1,4 +1,4 @@
-// copyright (c) 2020 - 2021, Matthias Behr
+// copyright (c) 2020 - 2023, Matthias Behr
 import React from 'react';
 import Dialog from '@mui/material/Dialog';
 import { DialogContent } from '@mui/material';

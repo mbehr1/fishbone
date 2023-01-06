@@ -1,6 +1,6 @@
 # <img src="https://github.com/mbehr1/fishbone/blob/main/fishbone-icon2.png?raw=true" alt="icon" width="24"> Fishbone README
 
-[![Version](https://vsmarketplacebadge.apphb.com/version/mbehr1.fishbone.svg)](https://marketplace.visualstudio.com/items?itemName=mbehr1.fishbone)
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/mbehr1.fishbone.svg)](https://marketplace.visualstudio.com/items?itemName=mbehr1.fishbone)
 
 This Visual Studio Code(tm) extension adds support to create interactive fishbone aka [Ishikawa](https://en.wikipedia.org/wiki/Ishikawa_diagram) diagrams that can be used to 
 - analyse failures or
@@ -9,7 +9,7 @@ This Visual Studio Code(tm) extension adds support to create interactive fishbon
 
 ![example1](https://github.com/mbehr1/fishbone/blob/main/images/fishbone_example1.gif?raw=true)
 
-**Note:** It works well with [![Version](https://vsmarketplacebadge.apphb.com/version/mbehr1.dlt-logs.svg)](https://marketplace.visualstudio.com/items?itemName=mbehr1.dlt-logs) **dlt-logs** extension and supports e.g. querying data directly from the DLT log or applying filter automatically in the DLT log. 
+**Note:** It works well with [![Version](https://img.shields.io/visual-studio-marketplace/v/mbehr1.dlt-logs.svg)](https://marketplace.visualstudio.com/items?itemName=mbehr1.dlt-logs) **dlt-logs** extension and supports e.g. querying data directly from the DLT log or applying filter automatically in the DLT log. 
 
 **Note:** To start you can use the command *New fishbone* or create an empty file with extension .fba and simpy open that via regular "Open...".
 

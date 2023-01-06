@@ -1,4 +1,4 @@
-// copyright (c) 2020 - 2021, Matthias Behr
+// copyright (c) 2020 - 2023, Matthias Behr
 import React, { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Dialog from '@mui/material/Dialog';
@@ -264,6 +264,7 @@ export default function DataProviderEditDialog(props) {
                                     <InputLabel shrink htmlFor="dataFuncInput">javascript function body</InputLabel>
                                     <Input id="dataFuncInput" inputComponent={OnBlurInputBase}
                                         placeholder="e.g. '{return result.message;}'"
+                                        fullWidth
                                         multiline
                                         inputProps={{ multiline: true, value: dataConv.slice(dataConv.indexOf(':') + 1), onChange: (event) => { setPreviewQueryResult(previewApplyText); setPreviewBadgeStatus(props.applyMode ? 3 : 0); setDataConv('func:' + event.target.value); } }}
                                     />
