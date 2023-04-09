@@ -84,10 +84,10 @@ jobs:
   commitlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v2
+      - uses: wagoid/commitlint-github-action@v5
 ```
 
 ### Semantic release
@@ -204,11 +204,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Commitlint
-        uses: wagoid/commitlint-github-action@v2
+        uses: wagoid/commitlint-github-action@v5
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
