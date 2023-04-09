@@ -269,6 +269,10 @@ It's actually created, called and evalued internally with:
 ```
 The result from the rest query or if provided from the json path processor is passed to the javascript function as `result` parameter.
 
+:::tip
+You can use JSON5.parse(...) from inside the function body to parse e.g. JSON strings with comments or hex numbers. 
+:::
+
 ### Javascript function examples
 
 See here a few examples:
