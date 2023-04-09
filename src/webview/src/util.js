@@ -1,6 +1,15 @@
 // copyright (c) 2020 - 2023, Matthias Behr
 // util.js
-import jp from 'jsonpath' 
+import jp from 'jsonpath'
+
+// provide JSON5.parse for conversion functions:
+import JSON5 from 'json5'
+
+// eslint-disable-next-line no-undef
+if (!globalThis.JSON5) {
+    // eslint-disable-next-line no-undef
+    globalThis.JSON5 = JSON5;
+}
 
 // const vscode = window.acquireVsCodeApi();
 let vscode = undefined;
