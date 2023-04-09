@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.17.0](https://github.com/mbehr1/fishbone/compare/v1.16.1...v1.17.0) (2023-04-09)
+
+
+### Features
+
+* add JSON5 support for conv function ([8ad1bdd](https://github.com/mbehr1/fishbone/commit/8ad1bdd4ecdcc7f90ddb66a716d93139e8baf8f8))
+
 ## [1.16.1](https://github.com/mbehr1/fishbone/compare/v1.16.0...v1.16.1) (2023-01-06)
 
 
