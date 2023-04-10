@@ -6,6 +6,8 @@ import DialogActions from '@mui/material/DialogActions';
 import { Button, DialogContent, DialogTitle, IconButton, TextField, Typography, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ErrorIcon from '@mui/icons-material/Error';
+import JSON5 from 'json5';
+import { formatJson5 } from './utils/json5';
 
 // todo move those two functions into a util class. It's currently duplicated in docs.
 
@@ -26,10 +28,11 @@ const rqUriDecode = (rq) => {
             if (andCnt) { toRet += ' &\n'; }
             andCnt++;
             try {
-                toRet += command + '=' + JSON.stringify(JSON.parse(commandParams), ' ', 2) + '\n';
+                JSON5.parse(commandParams);
+                toRet += command + '=' + formatJson5(commandParams) + '\n';
             } catch {
                 if (commandParams.includes('{') || commandParams.includes('[') || commandParams.includes('"')) {
-                    toRet += `\n<cannot parse: \n'${command}=${commandParams}'\n as JSON>`;
+                    toRet += `\n<cannot parse: \n'${command}=${commandParams}'\n as JSON5>`;
                 } else {
                     toRet += `${command}=${commandParams}`;
                 }
@@ -59,12 +62,15 @@ const rqUriEncode = (rq) => {
                 const command = commandStr.slice(0, eqIdx);
                 const commandParam = commandStr.slice(eqIdx + 1);
                 try {
-                    const commandParamEncoded = encodeURIComponent(JSON.stringify(JSON.parse(commandParam)));
+                    // we do only check that its a valid json5 but then keep the orig data
+                    // todo add formatting e.g. with the jju tokenizer
+                    JSON5.parse(commandParam);
+                    const commandParamEncoded = encodeURIComponent(formatJson5(commandParam));
                     toRet += `${command}=${commandParamEncoded}`;
                 } catch {
                     // if its a simple string then it's ok
                     if (commandParam.includes('{') || commandParam.includes('[') || commandParam.includes('"')) {
-                        toRet += `&\n<cannot parse: \n'${command}=${commandParam}'\n as JSON>`;
+                        toRet += `&\n<cannot parse: \n'${command}=${commandParam}'\n as JSON5>`;
                         ok = false;
                     } else {
                         toRet += `${command}=${commandParam}`;
@@ -84,7 +90,7 @@ const rqUriEncode = (rq) => {
  */
 export default function DLTRestQueryManualDialog(props) {
 
-    console.log(`DLTRestQueryManualDialog(open=${props.open}, applyMode=${props.applyMode})`);
+    //console.log(`DLTRestQueryManualDialog(open=${props.open}, applyMode=${props.applyMode})`);
 
     // const [dataSource, setDataSource] = React.useState(props.dataSource);
     const [text, setText] = React.useState(props.dataSource);
@@ -110,8 +116,8 @@ export default function DLTRestQueryManualDialog(props) {
         props.onClose();
     }
     const handleSave = () => {
-        console.log(`DLTRestQueryManualDialog handleSave()`);
-        console.log(` dataSource=${text}`);
+        //console.log(`DLTRestQueryManualDialog handleSave()`);
+        //console.log(` dataSource=${text}`);
 
         props.onChange(text); // dont check for changes
         props.onClose();
