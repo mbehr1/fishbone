@@ -1,5 +1,13 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.18.0](https://github.com/mbehr1/fishbone/compare/v1.17.0...v1.18.0) (2023-04-11)
+
+
+### Features
+
+* add json5 support for rest query manual ([acc4218](https://github.com/mbehr1/fishbone/commit/acc42187c4688cd12c437b540419eca25722f084))
+* more error details for manuall query ([ae82ad5](https://github.com/mbehr1/fishbone/commit/ae82ad5a406116eb492e4935a37e3bb184a63f39))
+
 ## [1.17.0](https://github.com/mbehr1/fishbone/compare/v1.16.1...v1.17.0) (2023-04-09)
 
 
