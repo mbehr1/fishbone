@@ -13,7 +13,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
     "dompurify": "^2.4.0",
-    "jju": "^1.4.0",
+    "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "json5": "2.2.3",
     "json-stable-stringify": "^1.0.1",
     "marked": "^3.0.8",
@@ -21,9 +21,7 @@
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "react-table": "^7.8.0",
-    "web-vitals": "^3.0.2",
-    "fs": "npm:fs@0.0.2",
-    "assert": "npm:assert@2.0.0"
+    "web-vitals": "^3.0.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -37,12 +35,6 @@
       "react-app",
       "react-app/jest"
     ]
-  },
-  "browser": {
-    "fs": false,
-    "os": false,
-    "path": false,
-    "assert": false
   },
   "browserslist": {
     "production": [
