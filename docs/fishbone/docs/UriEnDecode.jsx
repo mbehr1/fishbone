@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import JSON5 from 'json5';
+import { formatJson5 } from '../../../src/webview/src/components/utils/json5';
 
 const rqUriDecode = (rq) => {
     if (!rq || rq.length === 0) { return ''; }
@@ -17,10 +19,11 @@ const rqUriDecode = (rq) => {
             if (andCnt) { toRet += ' &\n'; }
             andCnt++;
             try {
-                toRet += command + '=' + JSON.stringify(JSON.parse(commandParams), ' ', 2) + '\n';
+                JSON5.parse(commandParams);
+                toRet += command + '=' + formatJson5(commandParams) + '\n';
             } catch {
                 if (commandParams.includes('{') || commandParams.includes('[') || commandParams.includes('"')) {
-                    toRet += `<cannot parse: '${command}=${commandParams}' as JSON>`;
+                    toRet += `\n<cannot parse: \n'${command}=${commandParams}'\n as JSON5>`;
                 } else {
                     toRet += `${command}=${commandParams}`;
                 }
@@ -32,6 +35,7 @@ const rqUriDecode = (rq) => {
 };
 
 const rqUriEncode = (rq) => {
+    let ok = true;
     let toRet = '';
     const indexOfQ = rq?.indexOf('?');
     if (indexOfQ > 0) {
@@ -49,12 +53,24 @@ const rqUriEncode = (rq) => {
                 const command = commandStr.slice(0, eqIdx);
                 const commandParam = commandStr.slice(eqIdx + 1);
                 try {
-                    const commandParamEncoded = encodeURIComponent(JSON.stringify(JSON.parse(commandParam)));
+                    // we do only check that its a valid json5 but then keep the orig data
+                    JSON5.parse(commandParam);
+                    const commandParamEncoded = encodeURIComponent(formatJson5(commandParam));
                     toRet += `${command}=${commandParamEncoded}`;
-                } catch {
+                } catch (e) {
                     // if its a simple string then it's ok
                     if (commandParam.includes('{') || commandParam.includes('[') || commandParam.includes('"')) {
-                        toRet += `&<cannot parse: '${command}=${commandParam}' as JSON>`;
+                        // try to parse the location: .... at x:y as (line, col)
+                        const matches = /at (\d+):(\d+)$/.exec(e);
+                        if (matches) {
+                            const line = matches[1];
+                            const col = matches[2];
+                            const failLine = commandParam.split(/\r?\n/)[line - 1];
+                            toRet += `&\n<${e}:\n${failLine}\n${col > 0 ? ('-'.repeat(col - 1) + '^') : '^'}\n parsing JSON5 at \n'${command}=${commandParam}'\n>`;
+                        } else {
+                            toRet += `&\n<cannot parse: \n'${command}=${commandParam}'\n as JSON5 due to '${e}'>`;
+                        }
+                        ok = false;
                     } else {
                         toRet += `${command}=${commandParam}`;
                     }
@@ -64,7 +80,7 @@ const rqUriEncode = (rq) => {
             }
         }
     } else { toRet = rq; }
-    return toRet;
+    return [ok, toRet];
 };
 
 export default function UriEnDecode(props) {
@@ -81,7 +97,7 @@ export default function UriEnDecode(props) {
 
     useEffect(() => {
         try {
-            const newText = rqUriEncode(json);
+            const [ok, newText] = rqUriEncode(json);
             if (newText !== text2) {
                 setText2(newText);
             }

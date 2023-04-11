@@ -63,7 +63,6 @@ const rqUriEncode = (rq) => {
                 const commandParam = commandStr.slice(eqIdx + 1);
                 try {
                     // we do only check that its a valid json5 but then keep the orig data
-                    // todo add formatting e.g. with the jju tokenizer
                     JSON5.parse(commandParam);
                     const commandParamEncoded = encodeURIComponent(formatJson5(commandParam));
                     toRet += `${command}=${commandParamEncoded}`;
