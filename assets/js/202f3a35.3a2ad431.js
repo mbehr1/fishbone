@@ -1,1 +1,0 @@
-(self.webpackChunkfishbone=self.webpackChunkfishbone||[]).push([[718],{6353:function(e){"use strict";e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Welcome","permalink":"/fishbone/blog/welcome"}]}')}}]);
