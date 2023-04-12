@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkfishbone=self.webpackChunkfishbone||[]).push([[366],{4889:s=>{s.exports=JSON.parse('[{"label":"visual studio code","permalink":"/fishbone/blog/tags/visual-studio-code","count":1},{"label":"dlt-logs","permalink":"/fishbone/blog/tags/dlt-logs","count":1},{"label":"fishbone","permalink":"/fishbone/blog/tags/fishbone","count":1}]')}}]);
