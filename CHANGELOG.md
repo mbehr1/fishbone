@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.18.1](https://github.com/mbehr1/fishbone/compare/v1.18.0...v1.18.1) (2023-04-12)
+
+
+### Bug Fixes
+
+* manual rest query apply stringify for unformatted ([63165b3](https://github.com/mbehr1/fishbone/commit/63165b34883eaa29e3f5808d655374e1b049d4d4))
+
 ## [1.18.0](https://github.com/mbehr1/fishbone/compare/v1.17.0...v1.18.0) (2023-04-11)
 
 
