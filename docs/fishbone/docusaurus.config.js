@@ -9,10 +9,6 @@ module.exports = {
   organizationName: 'mbehr1',
   projectName: 'fishbone',
   themeConfig: {
-    gtag: {
-      trackingID: 'UA-180286216-1',
-      anonymizeIP: true
-    },
     navbar: {
       title: 'Fishbone',
       logo: {
@@ -98,6 +94,10 @@ module.exports = {
           editUrl:
             'https://github.com/mbehr1/fishbone/edit/master/docs/fishbone/',
         },
+        gtag: {
+          trackingID: 'UA-180286216-1',
+          anonymizeIP: true
+        },    
         blog: {
           showReadingTime: true,
           editUrl:
