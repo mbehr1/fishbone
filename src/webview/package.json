@@ -2,6 +2,7 @@
   "name": "webview",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@emotion/react": "11.10.4",
     "@emotion/styled": "11.10.4",
@@ -26,7 +27,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "rimraf ../../out/webview && mv build ../../out/webview",
+    "postbuild": "rimraf ../../out/webview && mv build ../../out/webview && rm -rf ../../docs/fishbone/static/online && cp -r ../../out/webview/ ../../docs/fishbone/static/online",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

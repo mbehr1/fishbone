@@ -4,6 +4,9 @@
 # Production
 /build
 
+# Copied from src/webview output
+/static/online
+
 # Generated files
 .docusaurus
 .cache-loader
