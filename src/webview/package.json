@@ -2,6 +2,7 @@
   "name": "webview",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@emotion/react": "11.10.4",
     "@emotion/styled": "11.10.4",
@@ -15,6 +16,7 @@
     "dompurify": "^2.4.0",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "json5": "2.2.3",
+    "jsonpath": "^1.1.1",
     "json-stable-stringify": "^1.0.1",
     "marked": "^3.0.8",
     "react": "^18.2.0",
@@ -26,7 +28,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "rimraf ../../out/webview && mv build ../../out/webview",
+    "postbuild": "mkdir -p ../../out && rimraf ../../out/webview && mv build ../../out/webview && rimraf ../../docs/fishbone/static/online && cp -r ../../out/webview/ ../../docs/fishbone/static/online",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

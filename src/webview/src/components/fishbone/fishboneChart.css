@@ -1,307 +1,307 @@
-.fishboneChart{
-    display: flex;        
-    justify-items: center;
-    min-height: 200px;
+.fishboneChart {
+  display: flex;
+  justify-items: center;
+  min-height: 200px;
 }
 
 .top {
-    border-bottom: 2px solid;
-    border-radius: 5%;
+  border-bottom: 2px solid;
+  border-radius: 5%;
 }
 
 .bottom {
-    border-top: 2px solid;
-    border-radius: 5%;
+  border-top: 2px solid;
+  border-radius: 5%;
 }
 
 .left {
-    border-left: 2px solid;
+  border-left: 2px solid;
 }
 
 .all {
-    border: 2px solid;
+  border: 2px solid;
 }
 
 .causes {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .causesGroup {
-    flex: 1;
-    display: flex;
-    margin-right: 10px;
+  flex: 1;
+  display: flex;
+  margin-right: 10px;
 }
 
-.cause {    
-    display: flex;
-    justify-content: center; 
-    align-items: center;   
-    width: 80%;
-    font-size: 0.95em;
-    font-weight: 400;        
-    color: #4f4f4f;
-    padding: 5px 0px;
+.cause {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80%;
+  font-size: 0.95em;
+  font-weight: 400;
+  color: #4f4f4f;
+  padding: 5px 0px;
 }
 
 .causeAndLine {
-    display: flex;
-    flex: 1;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  flex: 1;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
 }
 
 .rootCauses {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-    flex: 3;
-    font-size: 0.85em;
-    font-weight: 400;
-    color: var(--vscode-foreground);
-    text-align: right;
-    padding: 15px 0px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  flex: 3;
+  font-size: 0.85em;
+  font-weight: 400;
+  color: var(--vscode-foreground);
+  text-align: right;
+  padding: 15px 0px;
 }
 
 .nestedRootCauses {
-    color: var(--vscode-textLink-foreground);
-    background-color: var(--vscode-editorWidget-background);
+  color: var(--vscode-textLink-foreground);
+  background-color: var(--vscode-editorWidget-background);
 }
 
 .legend {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    margin-left: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-left: 10px;
 }
 
 .legendLabel {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--vscode-descriptionForeground);
-    font-size: 0.95em;
-    font-weight: 400; 
-    margin-bottom: 6px;   
-    cursor: default;     
-} 
-
-.blue_{
-    background: rgb(0, 192, 239, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.95em;
+  font-weight: 400;
+  margin-bottom: 6px;
+  cursor: default;
 }
 
-.black_{
-    background: rgb(17, 17, 17, 0.3);
+.blue_ {
+  background: rgb(0, 192, 239, 0.3);
+}
+
+.black_ {
+  background: rgb(17, 17, 17, 0.3);
 }
 
 .blue_two_ {
-    background: rgb(11, 120, 206, 0.3);
+  background: rgb(11, 120, 206, 0.3);
 }
 
 .gray_ {
-    background: rgb(104,115,140, 0.3);
+  background: rgb(104, 115, 140, 0.3);
 }
 
 .green_ {
-    background:rgb(48, 187, 187, 0.3);
+  background: rgb(48, 187, 187, 0.3);
 }
 
 .pink_ {
-    background: rgb(216, 27, 96, 0.3);
+  background: rgb(216, 27, 96, 0.3);
 }
 
 .purple_ {
-    background: rgb(85, 82, 153, 0.3);
+  background: rgb(85, 82, 153, 0.3);
 }
 
 .orange_ {
-    background:rgb(255, 119, 1, 0.3);
+  background: rgb(255, 119, 1, 0.3);
 }
 
-.blue_dark{
-    background: rgb(0, 192, 239, 0.7);
+.blue_dark {
+  background: rgb(0, 192, 239, 0.7);
 }
 
-.black_dark{
-    background: rgb(17, 17, 17, 0.7);
+.black_dark {
+  background: rgb(17, 17, 17, 0.7);
 }
 
 .blue_two_dark {
-    background: rgb(11, 120, 206, 0.7);
+  background: rgb(11, 120, 206, 0.7);
 }
 
 .gray_dark {
-    background: rgb(104,115,140, 0.7);
+  background: rgb(104, 115, 140, 0.7);
 }
 
 .green_dark {
-    background:rgb(48, 187, 187, 0.7);
+  background: rgb(48, 187, 187, 0.7);
 }
 
 .pink_dark {
-    background: rgb(216, 27, 96, 0.7);
+  background: rgb(216, 27, 96, 0.7);
 }
 
 .purple_dark {
-    background: rgb(85, 82, 153, 0.7);
+  background: rgb(85, 82, 153, 0.7);
 }
 
 .orange_dark {
-    background:rgb(255, 119, 1, 0.7);
+  background: rgb(255, 119, 1, 0.7);
 }
 
-.blueBorder{
-    border-color: rgb(0, 192, 239) !important;
+.blueBorder {
+  border-color: rgb(0, 192, 239) !important;
 }
 
-.blackBorder{
-    border-color: rgb(17, 17, 17) !important;
+.blackBorder {
+  border-color: rgb(17, 17, 17) !important;
 }
 
 .blue_twoBorder {
-    border-color: rgb(11, 120, 206) !important;
+  border-color: rgb(11, 120, 206) !important;
 }
 
 .grayBorder {
-    border-color: rgb(104,115,140) !important;
+  border-color: rgb(104, 115, 140) !important;
 }
 
 .greenBorder {
-    border-color: rgb(48, 187, 187) !important;
+  border-color: rgb(48, 187, 187) !important;
 }
 
 .pinkBorder {
-    border-color: rgb(216, 27, 96) !important;
+  border-color: rgb(216, 27, 96) !important;
 }
 
 .purpleBorder {
-    border-color: rgb(85, 82, 153) !important;
+  border-color: rgb(85, 82, 153) !important;
 }
 
 .orangeBorder {
-    border-color: rgb(255, 119, 1) !important;
+  border-color: rgb(255, 119, 1) !important;
 }
 
-.labelSquare{
-    flex: 1;
-    width: 42px;
-    height: 14px;    
-    margin: 0px 4px 0px 4px;
+.labelSquare {
+  flex: 1;
+  width: 42px;
+  height: 14px;
+  margin: 0px 4px 0px 4px;
 }
 
-.labelLineThrough{
-    text-decoration: line-through;
-    font-size: 0.95em;
-    font-weight: 400;
-    color: #4f4f4f;
+.labelLineThrough {
+  text-decoration: line-through;
+  font-size: 0.95em;
+  font-weight: 400;
+  color: #4f4f4f;
 }
 
-.label_{
-    font-size: 0.95em;
-    font-weight: 400;    
-    color: #4f4f4f;
+.label_ {
+  font-size: 0.95em;
+  font-weight: 400;
+  color: #4f4f4f;
 }
 
-.effect {    
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.effect {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.effectValue {    
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 0.95em;
-    font-weight: 400; 
-    color: #4f4f4f;
-    padding: 5px 10px 5px 10px;  
+.effectValue {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.95em;
+  font-weight: 400;
+  color: #4f4f4f;
+  padding: 5px 10px 5px 10px;
 }
 
 .diagonalLine {
-    flex: 1;
-    height:100%;
+  flex: 1;
+  height: 100%;
 }
 
 .blueTopBottom {
-    background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(0, 192, 239), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(0, 192, 239), transparent calc(50% + 1.5px));
 }
 
 .blueBottomTop {
-    background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(0, 192, 239), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(0, 192, 239), transparent calc(50% + 1.5px));
 }
 
 .blackTopBottom {
-    background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(17, 17, 17), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(17, 17, 17), transparent calc(50% + 1.5px));
 }
 
 .blackBottomTop {
-    background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(17, 17, 17), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(17, 17, 17), transparent calc(50% + 1.5px));
 }
 
 .blue_twoTopBottom {
-    background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(11, 120, 206), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(11, 120, 206), transparent calc(50% + 1.5px));
 }
 
 .blue_twoBottomTop {
-    background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(11, 120, 206), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(11, 120, 206), transparent calc(50% + 1.5px));
 }
 
 .grayTopBottom {
-    background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(104,115,140), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(104, 115, 140), transparent calc(50% + 1.5px));
 }
 
 .grayBottomTop {
-    background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(104,115,140), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(104, 115, 140), transparent calc(50% + 1.5px));
 }
 
 .greenTopBottom {
-    background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(48, 187, 187), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(48, 187, 187), transparent calc(50% + 1.5px));
 }
 
 .greenBottomTop {
-    background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(48, 187, 187), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(48, 187, 187), transparent calc(50% + 1.5px));
 }
 
 .pinkTopBottom {
-    background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(216, 27, 96), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(216, 27, 96), transparent calc(50% + 1.5px));
 }
 
 .pinkBottomTop {
-    background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(216, 27, 96), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(216, 27, 96), transparent calc(50% + 1.5px));
 }
 
 .purpleTopBottom {
-    background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(85, 82, 153), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(85, 82, 153), transparent calc(50% + 1.5px));
 }
 
 .purpleBottomTop {
-    background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(85, 82, 153), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(85, 82, 153), transparent calc(50% + 1.5px));
 }
 
 .orangeTopBottom {
-    background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(255, 119, 1), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to top right, transparent calc(50% - 2px), rgb(255, 119, 1), transparent calc(50% + 1.5px));
 }
 
 .orangeBottomTop {
-    background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(255, 119, 1), transparent calc(50% + 1.5px) );
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), rgb(255, 119, 1), transparent calc(50% + 1.5px));
 }
 
 .lineEffect {
-    width: 100%;    
-    border-bottom: 2px solid;
+  width: 100%;
+  border-bottom: 2px solid;
 }
 
-.causeContent{
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 50%;
+.causeContent {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 50%;
 }

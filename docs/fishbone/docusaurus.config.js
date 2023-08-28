@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/semi */
 module.exports = {
   title: 'Fishbone Visual Studio Code Extension',
   tagline: 'Create interactive fishbone analysis documents',
@@ -23,6 +24,7 @@ module.exports = {
           position: 'left',
         },
         { to: 'blog', label: 'Blog', position: 'left' },
+        { href: 'pathname:///online/', label: 'try online', position: 'left' },
         {
           href: 'https://github.com/mbehr1/fishbone',
           label: 'GitHub',
@@ -78,11 +80,12 @@ module.exports = {
               label: 'smart-log',
               href: 'https://github.com/mbehr1/smart-log',
             },
-
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear() > 2020 ? `2020 - ${new Date().getFullYear()}` : new Date().getFullYear()} Matthias Behr. Docs built with Docusaurus.`,
+      copyright: `Copyright © ${
+        new Date().getFullYear() > 2020 ? `2020 - ${new Date().getFullYear()}` : new Date().getFullYear()
+      } Matthias Behr. Docs built with Docusaurus.`,
     },
   },
   presets: [
@@ -91,17 +94,15 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl:
-            'https://github.com/mbehr1/fishbone/edit/master/docs/fishbone/',
+          editUrl: 'https://github.com/mbehr1/fishbone/edit/master/docs/fishbone/',
         },
         gtag: {
           trackingID: 'UA-180286216-1',
-          anonymizeIP: true
-        },    
+          anonymizeIP: true,
+        },
         blog: {
           showReadingTime: true,
-          editUrl:
-            'https://github.com/mbehr1/fishbone/edit/master/fishbone/blog/',
+          editUrl: 'https://github.com/mbehr1/fishbone/edit/master/fishbone/blog/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -109,4 +110,4 @@ module.exports = {
       },
     ],
   ],
-};
+}

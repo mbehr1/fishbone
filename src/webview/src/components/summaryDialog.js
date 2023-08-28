@@ -1,10 +1,10 @@
 // copyright (c) 2020 - 2023, Matthias Behr
-import React from 'react';
-import Dialog from '@mui/material/Dialog';
-import { DialogContent } from '@mui/material';
+import React from 'react'
+import Dialog from '@mui/material/Dialog'
+import { DialogContent } from '@mui/material'
 
-import SummaryTable from './summary/table';
-import { SummaryHeaderProvider, SummaryDataProvider } from './summary/dataProvider';
+import SummaryTable from './summary/table'
+import { SummaryHeaderProvider, SummaryDataProvider } from './summary/dataProvider'
 
 /**
  * Planned features:
@@ -17,21 +17,20 @@ import { SummaryHeaderProvider, SummaryDataProvider } from './summary/dataProvid
  * @param {*} props (open, onChange, onClose)
  */
 export default function SummaryDialog(props) {
+  console.log(`SummaryDialog (open=${props.open})`)
 
-    console.log(`SummaryDialog (open=${props.open})`);
+  const handleClose = () => {
+    props.onClose()
+  }
 
-    const handleClose = () => {
-        props.onClose();
-    }
+  const header = SummaryHeaderProvider()
+  const data = SummaryDataProvider(props.fbdata, props.title, props.onFbPathChange, props.onClose)
 
-    const header = SummaryHeaderProvider();
-    const data = SummaryDataProvider(props.fbdata, props.title, props.onFbPathChange, props.onClose);
-
-    return (
-        <Dialog fullScreen open={props.open} onClose={handleClose}>
-            <DialogContent dividers>
-                <SummaryTable onClose={handleClose} header={header} data={data}></SummaryTable>
-            </DialogContent>
-        </Dialog>
-    );
-};
+  return (
+    <Dialog fullScreen open={props.open} onClose={handleClose}>
+      <DialogContent dividers>
+        <SummaryTable onClose={handleClose} header={header} data={data}></SummaryTable>
+      </DialogContent>
+    </Dialog>
+  )
+}
