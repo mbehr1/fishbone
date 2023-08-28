@@ -1,5 +1,17 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.19.0](https://github.com/mbehr1/fishbone/compare/v1.18.1...v1.19.0) (2023-08-28)
+
+
+### Features
+
+* add first standalone poc-alike support ([5b28cda](https://github.com/mbehr1/fishbone/commit/5b28cdac86839f2c92c1f91c8d35f825b34f8cdf))
+
+
+### Bug Fixes
+
+* add jsonpath to webview ([edfd350](https://github.com/mbehr1/fishbone/commit/edfd350f8c1c168589d296c7318ae09272b8819e))
+
 ## [1.18.1](https://github.com/mbehr1/fishbone/compare/v1.18.0...v1.18.1) (2023-04-12)
 
 
