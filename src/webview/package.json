@@ -28,7 +28,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "rimraf ../../out/webview && mv build ../../out/webview && rm -rf ../../docs/fishbone/static/online && cp -r ../../out/webview/ ../../docs/fishbone/static/online",
+    "postbuild": "mkdir -p ../../out && rimraf ../../out/webview && mv build ../../out/webview && rimraf ../../docs/fishbone/static/online && cp -r ../../out/webview/ ../../docs/fishbone/static/online",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
