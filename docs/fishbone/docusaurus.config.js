@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/semi */
 module.exports = {
   title: 'Fishbone Visual Studio Code Extension',
   tagline: 'Create interactive fishbone analysis documents',

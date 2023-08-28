@@ -7,7 +7,7 @@ import TableCell from '@mui/material/TableCell'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import TableContainer from '@mui/material/TableContainer'
-import makeStyles from '@mui/styles/makeStyles';
+import makeStyles from '@mui/styles/makeStyles'
 import InputAdornment from '@mui/material/InputAdornment'
 import TextField from '@mui/material/TextField'
 import SearchIcon from '@mui/icons-material/Search'
@@ -16,95 +16,81 @@ import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 
 import TableToolbar from './tableToolbar'
 
-import {
-  useFilters,
-  useGlobalFilter,
-  useTable,
-  useExpanded,
-  useGroupBy
-} from 'react-table'
+import { useFilters, useGlobalFilter, useTable, useExpanded, useGroupBy } from 'react-table'
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   root: {},
   tableCell: {
     borderWidth: '1px',
     padding: '5px',
-    borderStyle: 'solid'
-  }
-}));
+    borderStyle: 'solid',
+  },
+}))
 
 // Define a default UI for filtering
-function DefaultColumnFilter({
-  column: { filterValue, preFilteredRows, setFilter }
-}) {
-  const count = preFilteredRows.length;
+function DefaultColumnFilter({ column: { filterValue, preFilteredRows, setFilter } }) {
+  const count = preFilteredRows.length
 
   return (
     <div>
       <TextField
         value={filterValue || ''}
-        onChange={e => {
+        onChange={(e) => {
           setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
         }}
         placeholder={`${count} records...`}
         InputProps={{
           startAdornment: (
-            <InputAdornment position="start">
+            <InputAdornment position='start'>
               <SearchIcon />
             </InputAdornment>
           ),
         }}
       />
     </div>
-  );
+  )
 }
 
 function Table({ onClose, columns, data }) {
-  const classes = useStyles();
+  const classes = useStyles()
 
   const filterTypes = React.useMemo(
     () => ({
       // Override the default text filter to use String.includes
       customFilter: (rows, id, filterValue) => {
         return rows.filter((row) => {
-          var match = false;
+          var match = false
 
-          id.forEach(column => {
-            const rowValue = row.values[column];
+          id.forEach((column) => {
+            const rowValue = row.values[column]
 
             // Check for trivial data types
             if (typeof rowValue === 'string') {
-              match = match || String(rowValue)
-                .toLowerCase()
-                .includes(String(filterValue).toLowerCase())
+              match = match || String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase())
             }
 
             // Check for special data types
-            var rowString = undefined;
+            var rowString = undefined
             if (rowValue && rowValue.props) {
-              if (typeof rowValue.props.children === 'string')
-                rowString = rowValue.props.children;
+              if (typeof rowValue.props.children === 'string') rowString = rowValue.props.children
               else if (rowValue.props.dangerouslySetInnerHTML && typeof rowValue.props.dangerouslySetInnerHTML.__html === 'string')
-                rowString = rowValue.props.dangerouslySetInnerHTML.__html;
-              else if (typeof rowValue.key === 'string')
-                rowString = rowValue.key;
+                rowString = rowValue.props.dangerouslySetInnerHTML.__html
+              else if (typeof rowValue.key === 'string') rowString = rowValue.key
 
-              match = match || String(rowString)
-                .toLowerCase()
-                .includes(String(filterValue).toLowerCase())
+              match = match || String(rowString).toLowerCase().includes(String(filterValue).toLowerCase())
             }
-          });
+          })
 
-          return match;
-        });
+          return match
+        })
       },
     }),
-    []
-  );
+    [],
+  )
 
   function customGroupBy(rows, columnId) {
     return rows.reduce((prev, row, i) => {
-      var resKey = '';
+      var resKey = ''
 
       if (typeof row.values[columnId] === 'string') {
         resKey = `${row.values[columnId]}`
@@ -121,10 +107,10 @@ function Table({ onClose, columns, data }) {
   const defaultColumn = React.useMemo(
     () => ({
       // Let's set up our default Filter UI
-      Filter: DefaultColumnFilter
+      Filter: DefaultColumnFilter,
     }),
-    []
-  );
+    [],
+  )
 
   const {
     getTableProps,
@@ -137,29 +123,30 @@ function Table({ onClose, columns, data }) {
     toggleAllRowsExpanded,
     expandAllSubComponents,
     state: { globalFilter },
-  } = useTable({
-    columns,
-    data,
-    defaultColumn,
-    initialState: {
-      groupBy: ['effect', 'category']
+  } = useTable(
+    {
+      columns,
+      data,
+      defaultColumn,
+      initialState: {
+        groupBy: ['effect', 'category'],
+      },
+      filterTypes,
+      globalFilter: 'customFilter',
+      groupByFn: customGroupBy,
+      autoResetPage: false,
+      autoResetExpanded: false,
     },
-    filterTypes,
-    globalFilter: 'customFilter',
-    groupByFn: customGroupBy,
-    autoResetPage: false,
-    autoResetExpanded: false,
-  },
     useGlobalFilter,
     useFilters,
     useGroupBy,
-    useExpanded
+    useExpanded,
   )
 
   /* https://github.com/tannerlinsley/react-table/issues/2404#issuecomment-644917151 */
   React.useEffect(() => {
-    toggleAllRowsExpanded(expandAllSubComponents);
-  }, [expandAllSubComponents, toggleAllRowsExpanded]);
+    toggleAllRowsExpanded(expandAllSubComponents)
+  }, [expandAllSubComponents, toggleAllRowsExpanded])
 
   return (
     <TableContainer>
@@ -171,16 +158,20 @@ function Table({ onClose, columns, data }) {
       />
       <MaUTable {...getTableProps()}>
         <TableHead>
-          {headerGroups.map(headerGroup => (
+          {headerGroups.map((headerGroup) => (
             <TableRow {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map(column => (
+              {headerGroup.headers.map((column) => (
                 <TableCell className={classes.tableCell} {...column.getHeaderProps()}>
                   <span style={{ whiteSpace: 'nowrap' }}>
                     {column.render('Header')}
                     {column.canGroupBy ? (
                       // If the column can be grouped, let's add a toggle
                       <span {...column.getGroupByToggleProps()}>
-                        {column.isGrouped ? <ViewHeadlineIcon style={{ verticalAlign: 'middle' }} /> : <ViewQuiltIcon style={{ verticalAlign: 'middle' }} />}
+                        {column.isGrouped ? (
+                          <ViewHeadlineIcon style={{ verticalAlign: 'middle' }} />
+                        ) : (
+                          <ViewQuiltIcon style={{ verticalAlign: 'middle' }} />
+                        )}
                       </span>
                     ) : null}
                   </span>
@@ -196,25 +187,19 @@ function Table({ onClose, columns, data }) {
             return (
               <React.Fragment>
                 <TableRow hover={true} {...row.getRowProps()}>
-                  {row.cells.map(cell => {
+                  {row.cells.map((cell) => {
                     return (
                       <TableCell className={classes.tableCell} style={{ whiteSpace: 'pre-line' }} {...cell.getCellProps()}>
                         {cell.isGrouped ? (
                           <div>
-                            <span {...row.getToggleRowExpandedProps()}>
-                              {row.isExpanded ? '➖' : '➕'}
-                            </span>{' '}
-                            {cell.render('Cell', { editable: false })} (
-                            {row.subRows.length})
+                            <span {...row.getToggleRowExpandedProps()}>{row.isExpanded ? '➖' : '➕'}</span>{' '}
+                            {cell.render('Cell', { editable: false })} ({row.subRows.length})
                           </div>
                         ) : cell.isAggregated ? (
-                          <span style={{ whiteSpace: 'nowrap' }}>
-                            {cell.render('Aggregated')}
-                          </span>
+                          <span style={{ whiteSpace: 'nowrap' }}>{cell.render('Aggregated')}</span>
                         ) : cell.isPlaceholder ? null : (
                           cell.render('Cell', { editable: true })
-                        )
-                        }
+                        )}
                       </TableCell>
                     )
                   })}
@@ -224,24 +209,20 @@ function Table({ onClose, columns, data }) {
           })}
         </TableBody>
       </MaUTable>
-    </TableContainer >
+    </TableContainer>
   )
 }
 
 function SummaryTable(props) {
   // Set all the rows index to true
   const defaultExpandedRows = props.data.map((element, index) => {
-    return { index: true };
-  });
+    return { index: true }
+  })
 
   return (
     <div>
       <CssBaseline />
-      <Table
-        defaultExpanded={defaultExpandedRows}
-        onClose={props.onClose}
-        columns={props.header}
-        data={props.data} />
+      <Table defaultExpanded={defaultExpandedRows} onClose={props.onClose} columns={props.header} data={props.data} />
     </div>
   )
 }
