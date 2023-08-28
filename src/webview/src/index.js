@@ -11,7 +11,24 @@ vscode.postMessage({ type: 'log', message: 'in webview/src/index.js' });
 
 ReactDOM.render(
   <React.StrictMode>
-    <App vscode={vscode} />
+    <App
+      vscode={vscode}
+      initialData={
+        vscode.isStandaloneApi
+          ? [
+              {
+                name: '<enter effect to analyse>',
+                categories: [
+                  {
+                    name: 'category 1',
+                    rootCauses: [],
+                  },
+                ],
+              },
+            ]
+          : undefined
+      }
+    />
   </React.StrictMode>,
   document.getElementById('root')
 );

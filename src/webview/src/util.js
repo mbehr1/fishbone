@@ -11,15 +11,42 @@ if (!globalThis.JSON5) {
     globalThis.JSON5 = JSON5;
 }
 
+class StandaloneApi {
+  isStandaloneApi = true;
+
+  #state = undefined;
+
+  constructor() {
+    console.log(`StandaloneApi constructor()`);
+  }
+  getState() {
+    // : any{
+    console.log(`StandaloneApi.getState()`);
+    return this.#state;
+  }
+  setState(newState /*: any*/) /* => any;*/ {
+    console.log(`StandaloneApi.setState()`);
+    this.#state = { ...newState };
+  }
+  postMessage(message /*: any) => void;*/) {
+    console.log(`StandaloneApi.postMessage(${JSON.stringify(message)}) nyi!`);
+  }
+}
+
 // const vscode = window.acquireVsCodeApi();
 let vscode = undefined;
 
 export function getVsCode() {
-    if (vscode === undefined) {
-        vscode = window.acquireVsCodeApi();
+  if (vscode === undefined) {
+    if (typeof window.acquireVsCodeApi === 'function') {
+      vscode = window.acquireVsCodeApi();
+    } else {
+      // we seem to run standalone (aka in a browser)
+      vscode = new StandaloneApi();
     }
-    //console.log(`getVsCode called. returning ${vscode}`)
-    return vscode;
+  }
+  //console.log(`getVsCode called. returning ${vscode}`)
+  return vscode;
 }
 
 let lastReqId = 0;
