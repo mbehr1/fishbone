@@ -32,7 +32,9 @@ import OnBlurInputBase from './components/onBlurInputBase'
 import { receivedResponse, customEventStack } from './util'
 import HomeIcon from '@mui/icons-material/Home'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
+import FileOpenIcon from '@mui/icons-material/FileOpen'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
+import * as yaml from 'js-yaml'
 var stableStringify = require('json-stable-stringify')
 
 export const AttributesContext = createContext()
@@ -1165,6 +1167,50 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
       this.setState({ anchorEl: null })
     }
 
+    const currentFBAFileVersion = '0.6' // todo read from central file shared with extension
+
+    const handleFileOpenEvent = (e) => {
+      console.log(`input.onChange... ${e.target.files.length}`, e.target.files)
+      if (e.target.files.length > 0) {
+        for (const file of e.target.files) {
+          console.log(`handleFileOpenEvent processing ${file.name}`, file)
+          try {
+            file.text().then((text) => {
+              try {
+                // todo use getFBDataFromText()... !
+                const yamlObj = yaml.load(text, { schema: yaml.JSON_SCHEMA, filename: file.name })
+                //console.log(`handleFileOpenEvent processing ${file.name} got yamlObj:'${JSON.stringify(yamlObj)}'`)
+                if (typeof yamlObj !== 'object') {
+                  console.error('Could not get document as yaml. Content is not valid yamlObj ' + JSON.stringify(yamlObj))
+                } else {
+                  // as we dont store on data file format migration (e.g. v0.3 -> v0.4) instantly
+                  // (to avoid a misleading "dirty file directly after opening" and non-working 'undo')
+                  // we notice the version mismatch here again, migrate again and use that data:
+                  if (yamlObj.version && yamlObj.version !== currentFBAFileVersion) {
+                    console.warn(
+                      `handleFileOpenEvent has unexpected version ${yamlObj.version}, expected ${currentFBAFileVersion}. Todo needs migration!`,
+                    )
+                  }
+                  const newFbPath = this.matchingFbPath(this.state.fbPath, yamlObj.fishbone, yamlObj.title)
+                  this.setState({
+                    data: yamlObj.fishbone,
+                    title: yamlObj.title,
+                    attributes: yamlObj.attributes,
+                    fbPath: newFbPath,
+                    clipboard: this.state?.clipboard !== undefined && !this.state.clipboard.doCut ? this.state.clipboard : undefined,
+                  })
+                }
+              } catch (e) {
+                console.error(`handleFileOpenEvent processing yaml from ${file.name} got error:'${e}'`)
+              }
+            })
+          } catch (e) {
+            console.error(`handleFileOpenEvent processing ${file.name} got error:'${e}'`)
+          }
+        }
+      }
+    }
+
     // alignItems = vertical alignment
     // justify = horiz.
     return (
@@ -1177,6 +1223,23 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
                   <div style={{ flexGrow: 1 }}></div>
                   <Breadcrumbs>{breadcrumbFragment}</Breadcrumbs>
                   <div style={{ flexGrow: 1 }}></div>
+                  {this.props.vscode.isStandaloneApi && (
+                    <>
+                      <input
+                        color='primary'
+                        accept='application/yaml'
+                        type='file'
+                        onChange={handleFileOpenEvent}
+                        id='icon-button-file'
+                        style={{ display: 'none' }}
+                      />
+                      <label htmlFor='icon-button-file'>
+                        <IconButton variant='contained' component='span' size='small' color='primary'>
+                          <FileOpenIcon />
+                        </IconButton>
+                      </label>
+                    </>
+                  )}
                   <IconButton size='small' edge='end' color='primary' onClick={handleClick}>
                     <MoreHorizIcon />
                   </IconButton>
