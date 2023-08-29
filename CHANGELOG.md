@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.20.0](https://github.com/mbehr1/fishbone/compare/v1.19.0...v1.20.0) (2023-08-29)
+
+
+### Features
+
+* **standalone:** add file open ([c0da2af](https://github.com/mbehr1/fishbone/commit/c0da2aff34ef63db6793ce0e941408fa5bb30e41))
+
 ## [1.19.0](https://github.com/mbehr1/fishbone/compare/v1.18.1...v1.19.0) (2023-08-28)
 
 
