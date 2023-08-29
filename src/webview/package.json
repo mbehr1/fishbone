@@ -15,6 +15,7 @@
     "@testing-library/user-event": "^14.4.3",
     "dompurify": "^2.4.0",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
+    "js-yaml": "^4.1.0",
     "json5": "2.2.3",
     "jsonpath": "^1.1.1",
     "json-stable-stringify": "^1.0.1",
