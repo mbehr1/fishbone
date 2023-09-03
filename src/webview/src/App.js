@@ -35,7 +35,10 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import FileOpenIcon from '@mui/icons-material/FileOpen'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import * as yaml from 'js-yaml'
+import ShortUniqueId from 'short-unique-id'
 var stableStringify = require('json-stable-stringify')
+
+const uid = new ShortUniqueId({ length: 8 })
 
 export const AttributesContext = createContext()
 
@@ -55,7 +58,8 @@ class MyCheckbox extends Component {
 }
 
 /**
- * copy a root cause element/object. Copies all but functions
+ * copy a root cause element/object. Copies all but functions.
+ * Assigns a new uid (fbUid) as well.
  * @param {*} rootCause
  */
 function deepCopyRootCause(rootCause) {
@@ -69,6 +73,7 @@ function deepCopyRootCause(rootCause) {
               if (typeof value === 'function') {
                 return undefined
               }
+              if (key === 'fbUid') return uid()
               return value
             }),
           )
@@ -87,6 +92,7 @@ function deepCopyRootCause(rootCause) {
 
 /**
  * copy a category object. Copies all but functions.
+ * Assigns new uids (fbUid) as well (deeply for all)
  * @param {*} category
  */
 function deepCopyCategory(category) {
@@ -97,6 +103,7 @@ function deepCopyCategory(category) {
           if (typeof value === 'function') {
             return undefined
           }
+          if (key === 'fbUid') return uid()
           return value
         }),
       )
@@ -591,6 +598,7 @@ export default class App extends Component {
     const newAttrs = [...this.state.attributes]
     newAttrs.push({
       ecu: {
+        fbUid: uid(),
         label: 'ECU identifier',
         dataProvider: {
           source: 'ext:mbehr1.dlt-logs/get/docs/0',
@@ -602,6 +610,7 @@ export default class App extends Component {
 
     newAttrs.push({
       sw: {
+        fbUid: uid(),
         label: 'SW name',
         dataProvider: {
           // eslint-disable-next-line no-template-curly-in-string
@@ -614,6 +623,7 @@ export default class App extends Component {
 
     newAttrs.push({
       lifecycles: {
+        fbUid: uid(),
         label: 'Lifecycles',
         multiple: true,
         dataProvider: {
@@ -644,6 +654,7 @@ export default class App extends Component {
     switch (type) {
       case 'FBACheckbox':
         newRootCause = {
+          fbUid: uid(),
           type: 'react',
           element: 'FBACheckbox',
           props: {
@@ -655,12 +666,14 @@ export default class App extends Component {
         break
       case 'nested':
         newRootCause = {
+          fbUid: uid(),
           type: 'nested',
           title: `nested fb ${rootCauses.length + 1}`,
           data: [
             {
+              fbUid: uid(),
               name: 'effect 1',
-              categories: [{ name: 'category 1', rootCauses: [] }],
+              categories: [{ fbUid: uid(), name: 'category 1', rootCauses: [] }],
             },
           ],
         }
@@ -707,13 +720,21 @@ export default class App extends Component {
         insertIndex = catIdx
       }
     }
-    data[effectIndex].categories.splice(insertIndex, 0, { name: `category ${data[effectIndex].categories.length + 1}`, rootCauses: [] })
+    data[effectIndex].categories.splice(insertIndex, 0, {
+      fbUid: uid(),
+      name: `category ${data[effectIndex].categories.length + 1}`,
+      rootCauses: [],
+    })
     this.setAllStates()
   }
 
   onAddEffect(data, effectIndex) {
     console.log(`onAddEffect called. effectIndex = ${effectIndex} data=`, data)
-    data.splice(effectIndex + 1, 0, { name: `effect ${effectIndex + 2}`, categories: [{ name: `category 1`, rootCauses: [] }] }) // todo add one root cause?
+    data.splice(effectIndex + 1, 0, {
+      fbUid: uid(),
+      name: `effect ${effectIndex + 2}`,
+      categories: [{ fbUid: uid(), name: `category 1`, rootCauses: [] }],
+    }) // todo add one root cause?
 
     // we do select the new one
     const curPath = this.state.fbPath
@@ -1167,7 +1188,7 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
       this.setState({ anchorEl: null })
     }
 
-    const currentFBAFileVersion = '0.6' // todo read from central file shared with extension
+    const currentFBAFileVersion = '0.7' // todo read from central file shared with extension
 
     const handleFileOpenEvent = (e) => {
       console.log(`input.onChange... ${e.target.files.length}`, e.target.files)
