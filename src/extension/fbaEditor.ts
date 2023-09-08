@@ -14,6 +14,7 @@ import { getNonce, performHttpRequest } from './util';
 import * as yaml from 'js-yaml';
 import TelemetryReporter from '@vscode/extension-telemetry';
 import ShortUniqueId from 'short-unique-id'
+import { FBAFSProvider } from './fbaFSProvider'
 
 const uid = new ShortUniqueId({ length: 8 })
 
@@ -31,6 +32,7 @@ interface DocData {
   gotAliveFromPanel: boolean
   msgsToPost: any[]
   lastPostedDocVersion: number
+  lastPostedObj?: any
   editsPending: {
     document: vscode.TextDocument // the document to update
     docVersion: number // the document version at the time the update was queued
@@ -39,7 +41,7 @@ interface DocData {
   treeItem?: FishboneTreeItem
 }
 
-interface FishboneTreeItem extends vscode.TreeItem {
+export interface FishboneTreeItem extends vscode.TreeItem {
   id?: string
   label?: string | vscode.TreeItemLabel
   tooltip?: string | vscode.MarkdownString
@@ -53,6 +55,7 @@ interface FishboneTreeItem extends vscode.TreeItem {
   // collapsibleState?
 
   docData?: DocData
+  _document?: vscode.TextDocument
 }
 
 const currentFBAFileVersion = '0.7'
@@ -64,16 +67,18 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   public static register(context: vscode.ExtensionContext, reporter?: TelemetryReporter): void {
     const provider = new FBAEditorProvider(context, reporter)
     context.subscriptions.push(vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider))
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider(FBAEditorProvider.fsSchema, provider._fsProvider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
   }
 
   private static readonly viewType = 'fishbone.fba' // has to match the package.json
   private static readonly treeViewType = 'fishbone_tree.fba' // has to match as well
+  private static readonly fsSchema = 'fbaFs'
 
   // explorer tree view support:
   private _treeView?: vscode.TreeView<FishboneTreeItem>
   private _onDidChangeTreeData: vscode.EventEmitter<FishboneTreeItem | null> = new vscode.EventEmitter<FishboneTreeItem | null>()
-  private _treeRootNodes: FishboneTreeItem[] = []
+  public _treeRootNodes: FishboneTreeItem[] = []
 
   private _subscriptions: Array<vscode.Disposable> = new Array<vscode.Disposable>()
 
@@ -83,8 +88,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   private _checkExtensionsTimer?: NodeJS.Timeout = undefined
   private _checkExtensionsLastActive = 0
 
+  private _fsProvider: FBAFSProvider
+
   constructor(private readonly context: vscode.ExtensionContext, private readonly reporter?: TelemetryReporter) {
     console.log(`FBAEditorProvider constructor() called...`)
+
+    this._fsProvider = new FBAFSProvider(this)
 
     // time-sync feature: check other extensions for api onDidChangeSelectedTime and connect to them.
     this._subscriptions.push(
@@ -303,6 +312,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         title: docObj.title,
         attributes: docObj.attributes,
       })
+      docData.lastPostedObj = docObj
       docData.lastPostedDocVersion = document.version
 
       if (docData.treeItem && docData.treeItem.label !== docObj.title) {
@@ -328,6 +338,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     // Setup initial content for the webview
     webviewPanel.webview.options = {
       enableScripts: true,
+      enableCommandUris: true,
     }
     webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview)
 
@@ -344,6 +355,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     }
     docData.treeItem = {
       docData: docData,
+      _document: document,
       children: [],
       label: document.uri.path,
       tooltip: 'Drop filters here to use them in edit dialogs for badges and "apply filter".',
