@@ -1376,9 +1376,10 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
   timeZoneOffsetInMs = new Date().getTimezoneOffset() * 60 * 1000
 
   getUIForAttribute(attribute) {
-    // we expect as attribute an Object with one key (the name)
+    // we expect as attribute an Object with one key (the name) and the fbUid
     // then the key value can be a string or an object with value, type,...
-    const attrName = Object.keys(attribute)[0]
+    // let fbUid = attribute.fbUid
+    const attrName = Object.keys(attribute).find((key) => key !== 'fbUid')
     console.log(`getUIForAttribute #keys=${Object.keys(attribute)} attr[0]=${attrName}`)
     const attrObj = attribute[attrName]
     let attrValue = ''

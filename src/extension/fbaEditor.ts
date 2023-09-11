@@ -15,6 +15,7 @@ import * as yaml from 'js-yaml';
 import TelemetryReporter from '@vscode/extension-telemetry';
 import ShortUniqueId from 'short-unique-id'
 import { FBAFSProvider } from './fbaFSProvider'
+import { FBANotebookProvider } from './fbaNotebookProvider'
 
 const uid = new ShortUniqueId({ length: 8 })
 
@@ -61,6 +62,62 @@ export interface FishboneTreeItem extends vscode.TreeItem {
 const currentFBAFileVersion = '0.7'
 
 /**
+ * types for the persisted fishbone
+ */
+export interface Fishbone {
+  type: 'fba'
+  version: string // 0.7
+  title: string
+  attributes: FBAttribute[]
+  fishbone: FBEffect[]
+}
+
+export interface FBACheckboxProps {
+  label: string
+  value?: any
+  instructions?: string | { markdownFormat: boolean; textValue: string }
+  backgroundDescription?: string | { markdownFormat: boolean; textValue: string }
+  filter?: any // todo
+  badge?: any
+  badge2?: any
+}
+
+export interface FBRootCause {
+  fbUid: string
+  type: string
+  element?: string
+  props?: FBACheckboxProps
+  relPath?: string
+  title?: string
+  data?: /* for type nested*/ FBEffect[]
+}
+
+export interface FBCategory {
+  fbUid: string
+  rootCauses: FBRootCause[]
+}
+
+export interface FBEffect {
+  fbUid: string
+  categories: FBCategory[]
+}
+
+export interface FBAttribute {
+  fbUid: string
+  [name: string]:
+    | {
+        label: string
+        type?: string
+        value?: any
+        dataProvider?: {
+          jsonPath: string
+          source: string
+        }
+      }
+    | string // for fbUid only
+}
+
+/**
  *
  */
 export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscode.Disposable {
@@ -68,6 +125,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     const provider = new FBAEditorProvider(context, reporter)
     context.subscriptions.push(vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider))
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider(FBAEditorProvider.fsSchema, provider._fsProvider))
+    context.subscriptions.push(new FBANotebookProvider(context, provider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
   }
 
@@ -383,6 +441,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         // skip update if there are no content changes? (.length=0?) -> done inside updateWebview based on version
         // todo: we can even skip update if its triggered by changes from the webview...
         this.updateWebview(docData, document)
+        if (docData.treeItem) {
+          this._fsProvider.onFbaDocChanges(docData.treeItem)
+        }
       }
     })
 
@@ -475,7 +536,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                       if (typeof res !== 'string') {
                         res = (await res) as string
                       }
-                      console.log(`FBAEditorProvider.restQuery response (first 1k chars)='${res.slice(0, 1000)}'`)
+                      //console.log(`FBAEditorProvider.restQuery response (first 1k chars)='${res.slice(0, 1000)}'`)
                       // todo try/catch
                       webviewPanel.webview.postMessage({ type: e.type, res: JSON.parse(res), id: e.id })
                     } else {

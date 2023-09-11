@@ -22,7 +22,7 @@
   },
   "homepage": "https://mbehr1.github.io/fishbone/",
   "engines": {
-    "vscode": "^1.67.0"
+    "vscode": "^1.80.0"
   },
   "categories": [
     "Visualization",
@@ -35,9 +35,8 @@
     "Ishikawa"
   ],
   "activationEvents": [
-    "onCommand:fishbone.addNewFile",
-    "onCustomEditor:fishbone.fba",
-    "onView:fishbone_explorer.fba"
+    "onView:fishbone_explorer.fba",
+    "onNotebook:fba-nb"
   ],
   "capabilities": {
     "virtualWorkspaces": true,
@@ -51,6 +50,17 @@
       {
         "command": "fishbone.addNewFile",
         "title": "New fishbone"
+      }
+    ],
+    "notebooks": [
+      {
+        "type": "fba-nb",
+        "displayName": "Fishbone Notebook",
+        "selector": [
+          {
+            "filenamePattern": "*.fba-nb"
+          }
+        ]
       }
     ],
     "customEditors": [
@@ -92,10 +102,11 @@
     "@semantic-release/git": "^10.0.1",
     "@types/glob": "^8.0.0",
     "@types/js-yaml": "^4.0.5",
+    "@types/json5": "2.2.0",
     "@types/mocha": "^9.1.1",
     "@types/node": "^16.11.7",
     "@types/request": "^2.48.8",
-    "@types/vscode": "^1.67.0",
+    "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
     "eslint": "^8.24.0",
@@ -104,13 +115,15 @@
     "mocha": "^10.0.0",
     "semantic-release": "^21.0.1",
     "semantic-release-vsce": "^5.5.6",
-    "typescript": "^4.8.3",
-    "vsce": "^2.11.0",
+    "typescript": "^5.2.2",
+    "vsce": "^2.15.0",
     "vscode-test": "^1.6.1"
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.6.2",
+    "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "js-yaml": "^4.1.0",
+    "json5": "2.2.3",
     "jsonpath": "^1.1.1",
     "request": "^2.88.2",
     "short-unique-id": "4.4.4"

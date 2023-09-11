@@ -254,6 +254,24 @@ export default function DataProviderEditDialog(props) {
                 >
                   Edit manually...
                 </Button>
+                {props.fbUid && props.data?.source?.startsWith('ext:mbehr1.dlt-logs') && (
+                  <Button
+                    variant='outlined'
+                    size='small'
+                    style={{ 'margin-left': '5px' }}
+                    href={`command:vscode.open?${encodeURIComponent(
+                      JSON.stringify([
+                        {
+                          scheme: 'fbaFs',
+                          path: '/' + props.fbUid + `/restquery/${props.applyMode ? 'apply filter' : 'badge'}.fba-nb`,
+                          authority: 'fbaFs',
+                        },
+                      ]),
+                    )}`}
+                  >
+                    Edit in Notebook (experimental)
+                  </Button>
+                )}
                 {dltFilterAssistantOpen && (
                   <DLTFilterAssistantDialog
                     applyMode={props.applyMode}
