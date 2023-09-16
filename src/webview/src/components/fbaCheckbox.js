@@ -489,6 +489,7 @@ export default function FBACheckbox(props) {
             apply filter
           </Button>
           <DataProviderEditDialog
+            fbUid={props.fbUid}
             applyMode={true}
             data={values.filter || {}}
             onChange={(newValue) => handleValueChanges({ target: { name: 'filter', value: newValue } })}

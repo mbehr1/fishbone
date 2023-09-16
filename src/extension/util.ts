@@ -12,7 +12,7 @@ export function getNonce() {
     return text;
 }
 
-const httpCache = new Map<string, { validTill: Number, res: any, body: any }>();
+const httpCache = new Map<string, { validTill: number; res: any; body: any }>()
 
 /**
  * perform a http request with support for http basic auth credential querying/caching
@@ -131,4 +131,18 @@ export function performHttpRequest(storage: vscode.Memento, urlString: string, h
             }
         });
     });
+}
+
+export const isEqualUint8Array = (a: Uint8Array, b: Uint8Array): boolean => {
+  // todo could change to buffer to be more generic?
+
+  if (a.length !== b.length) {
+    return false
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false
+    }
+  }
+  return true
 }

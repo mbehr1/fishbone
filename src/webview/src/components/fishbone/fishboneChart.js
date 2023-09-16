@@ -104,7 +104,11 @@ export default function FishboneChart(props) {
               }
 
               if (rootCause.elementName) {
-                fragment = <div key={`root_causes_${index}`}> {React.createElement(rootCause.elementName, rootCause.props, null)}</div>
+                fragment = (
+                  <div key={`root_causes_${index}`}>
+                    {React.createElement(rootCause.elementName, { fbUid: rootCause.fbUid, ...rootCause.props }, null)}
+                  </div>
+                )
               } else {
                 console.warn(`elementName undefined for element=${rootCause.element}`)
               }

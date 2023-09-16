@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// the aik is not really sec_ret. but lets avoid bo_ts finding it too easy:
 		const strKE = 'ZjJlMDA4NTQtNmU5NC00ZDVlLTkxNDAtOGFiNmIzNTllODBi';
 		const strK = Buffer.from(strKE, "base64").toString();
-		reporter = new TelemetryReporter(extensionId, extensionVersion, strK);
+		reporter = new TelemetryReporter(strK)
 		context.subscriptions.push(reporter);
 		reporter?.sendTelemetryEvent('activate');
 	} else {

@@ -1,225 +1,239 @@
 {
-	"name": "fishbone",
-	"displayName": "Fishbone / Ishikawa analysis",
-	"description": "Create interactive fishbone diagrams for a systematic defect/failure analysis.",
-	"version": "1.20.0",
-	"license": "CC-BY-NC-SA-4.0",
-	"publisher": "mbehr1",
-	"author": {
-		"name": "Matthias Behr",
-		"email": "mbehr+fishbone@mcbehr.de"
-	},
-	"icon": "fishbone-icon2.png",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/mbehr1/fishbone.git"
-	},
-	"sponsor": {
-		"url": "https://github.com/sponsors/mbehr1"
-	},
-	"bugs": {
-		"url": "https://github.com/mbehr1/fishbone/issues"
-	},
-	"homepage": "https://mbehr1.github.io/fishbone/",
-	"engines": {
-		"vscode": "^1.67.0"
-	},
-	"categories": [
-		"Visualization",
-		"Data Science",
-		"Other"
-	],
-	"keywords": [
-		"defect",
-		"analysis",
-		"Ishikawa"
-	],
-	"activationEvents": [
-		"onCommand:fishbone.addNewFile",
-		"onCustomEditor:fishbone.fba",
-		"onView:fishbone_explorer.fba"
-	],
-	"capabilities": {
-		"virtualWorkspaces": true,
-		"untrustedWorkspaces": {
-			"supported": true
-		}
-	},
-	"main": "./out/extension/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "fishbone.addNewFile",
-				"title": "New fishbone"
-			}
-		],
-		"customEditors": [
-			{
-				"viewType": "fishbone.fba",
-				"displayName": "Fishbone Analysis",
-				"selector": [
-					{
-						"filenamePattern": "*.fba"
-					}
-				]
-			}
-		],
-		"views": {
-			"mbehr1Logs": [
-				{
-					"type": "tree",
-					"id": "fishbone_tree.fba",
-					"name": "Fishbone"
-				}
-			]
-		}
-	},
-	"scripts": {
-		"prepare": "husky install",
-		"vscode:prepublish": "yarn run compile",
-		"compile": "tsc -p ./ && npm run build:webview",
-		"build:webview": "yarn --cwd ./src/webview build",
-		"lint": "eslint src --ext ts",
-		"watch": "tsc -watch -p ./",
-		"watch:webview": "webpack --watch --mode development",
-		"pretest": "yarn run compile && yarn run lint",
-		"test": "node ./out/test/runTest.js"
-	},
-	"devDependencies": {
-		"@commitlint/cli": "^17.1.2",
-		"@commitlint/config-conventional": "^17.1.0",
-		"@semantic-release/changelog": "^6.0.3",
-		"@semantic-release/git": "^10.0.1",
-		"@types/glob": "^8.0.0",
-		"@types/js-yaml": "^4.0.5",
-		"@types/mocha": "^9.1.1",
-		"@types/node": "^16.11.7",
-		"@types/request": "^2.48.8",
-		"@types/vscode": "^1.67.0",
-		"@typescript-eslint/eslint-plugin": "^5.38.0",
-		"@typescript-eslint/parser": "^5.38.0",
-		"eslint": "^8.24.0",
-		"glob": "^8.0.3",
-		"husky": "^8.0.1",
-		"mocha": "^10.0.0",
-		"semantic-release": "^21.0.1",
-		"semantic-release-vsce": "^5.5.6",
-		"typescript": "^4.8.3",
-		"vsce": "^2.11.0",
-		"vscode-test": "^1.6.1"
-	},
-	"dependencies": {
-		"@vscode/extension-telemetry": "^0.6.2",
-		"js-yaml": "^4.1.0",
-		"jsonpath": "^1.1.1",
-		"request": "^2.88.2"
-	},
-	"commitlint": {
-		"extends": [
-			"@commitlint/config-conventional"
-		]
-	},
-	"release": {
-		"branches": [
-			"main"
-		],
-		"plugins": [
-			[
-				"@semantic-release/commit-analyzer",
-				{
-					"releaseRules": [
-						{
-							"type": "docs",
-							"scope": "readme",
-							"release": "patch"
-						}
-					]
-				}
-			],
-			[
-				"@semantic-release/release-notes-generator",
-				{
-					"preset": "conventionalcommits",
-					"presetConfig": {
-						"types": [
-							{
-								"type": "feat",
-								"section": "Features"
-							},
-							{
-								"type": "fix",
-								"section": "Bug Fixes"
-							},
-							{
-								"type": "chore",
-								"hidden": true
-							},
-							{
-								"type": "docs",
-								"hidden": true
-							},
-							{
-								"type": "style",
-								"section": "Other",
-								"hidden": false
-							},
-							{
-								"type": "test",
-								"hidden": true
-							},
-							{
-								"type": "perf",
-								"section": "Performance",
-								"hidden": false
-							},
-							{
-								"type": "refactor",
-								"section": "Other",
-								"hidden": false
-							}
-						]
-					}
-				}
-			],
-			[
-				"@semantic-release/changelog",
-				{
-					"changelogFile": "CHANGELOG.md",
-					"changelogTitle": "# Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):"
-				}
-			],
-			[
-				"@semantic-release/npm",
-				{
-					"npmPublish": false
-				}
-			],
-			[
-				"semantic-release-vsce",
-				{
-					"packageVsix": "fishbone.vsix"
-				}
-			],
-			[
-				"@semantic-release/github",
-				{
-					"assets": [
-						{
-							"path": "fishbone.vsix",
-							"label": "Fishbone Visual Studio Code extension package"
-						}
-					],
-					"successComment": false,
-					"failTitle": false
-				}
-			],
-			[
-				"@semantic-release/git",
-				{
-					"message": "chore(release): ${nextRelease.version} [skip ci]"
-				}
-			]
-		],
-		"preset": "conventionalcommits"
-	}
+  "name": "fishbone",
+  "displayName": "Fishbone / Ishikawa analysis",
+  "description": "Create interactive fishbone diagrams for a systematic defect/failure analysis.",
+  "version": "1.20.0",
+  "license": "CC-BY-NC-SA-4.0",
+  "publisher": "mbehr1",
+  "author": {
+    "name": "Matthias Behr",
+    "email": "mbehr+fishbone@mcbehr.de"
+  },
+  "icon": "fishbone-icon2.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mbehr1/fishbone.git"
+  },
+  "sponsor": {
+    "url": "https://github.com/sponsors/mbehr1"
+  },
+  "bugs": {
+    "url": "https://github.com/mbehr1/fishbone/issues"
+  },
+  "homepage": "https://mbehr1.github.io/fishbone/",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Visualization",
+    "Data Science",
+    "Other"
+  ],
+  "keywords": [
+    "defect",
+    "analysis",
+    "Ishikawa"
+  ],
+  "activationEvents": [
+    "onView:fishbone_explorer.fba",
+    "onNotebook:fba-nb"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": true,
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "main": "./out/extension/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "fishbone.addNewFile",
+        "title": "New fishbone"
+      }
+    ],
+    "notebooks": [
+      {
+        "type": "fba-nb",
+        "displayName": "Fishbone Notebook",
+        "selector": [
+          {
+            "filenamePattern": "*.fba-nb"
+          }
+        ]
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "fishbone.fba",
+        "displayName": "Fishbone Analysis",
+        "selector": [
+          {
+            "filenamePattern": "*.fba"
+          }
+        ]
+      }
+    ],
+    "views": {
+      "mbehr1Logs": [
+        {
+          "type": "tree",
+          "id": "fishbone_tree.fba",
+          "name": "Fishbone"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "prepare": "husky install",
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./ && npm run build:webview",
+    "build:webview": "yarn --cwd ./src/webview build",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "watch:webview": "webpack --watch --mode development",
+    "pretest": "yarn run compile && yarn run lint",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@types/js-yaml": "^4.0.5",
+    "@types/json5": "2.2.0",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^16.11.7",
+    "@types/request": "^2.48.8",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "eslint": "^8.49.0",
+    "glob": "^10.3.4",
+    "husky": "^8.0.1",
+    "mocha": "^10.0.0",
+    "semantic-release": "^21.0.1",
+    "semantic-release-vsce": "^5.5.6",
+    "typescript": "^5.2.2",
+    "vsce": "^2.15.0",
+    "vscode-test": "^1.6.1"
+  },
+  "dependencies": {
+    "tslib": "2.6.2",
+    "@vscode/extension-telemetry": "^0.8.4",
+    "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
+    "js-yaml": "^4.1.0",
+    "json5": "2.2.3",
+    "jsonpath": "^1.1.1",
+    "request": "^2.88.2",
+    "short-unique-id": "4.4.4"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "releaseRules": [
+            {
+              "type": "docs",
+              "scope": "readme",
+              "release": "patch"
+            }
+          ]
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits",
+          "presetConfig": {
+            "types": [
+              {
+                "type": "feat",
+                "section": "Features"
+              },
+              {
+                "type": "fix",
+                "section": "Bug Fixes"
+              },
+              {
+                "type": "chore",
+                "hidden": true
+              },
+              {
+                "type": "docs",
+                "hidden": true
+              },
+              {
+                "type": "style",
+                "section": "Other",
+                "hidden": false
+              },
+              {
+                "type": "test",
+                "hidden": true
+              },
+              {
+                "type": "perf",
+                "section": "Performance",
+                "hidden": false
+              },
+              {
+                "type": "refactor",
+                "section": "Other",
+                "hidden": false
+              }
+            ]
+          }
+        }
+      ],
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md",
+          "changelogTitle": "# Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):"
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": false
+        }
+      ],
+      [
+        "semantic-release-vsce",
+        {
+          "packageVsix": "fishbone.vsix"
+        }
+      ],
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            {
+              "path": "fishbone.vsix",
+              "label": "Fishbone Visual Studio Code extension package"
+            }
+          ],
+          "successComment": false,
+          "failTitle": false
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "message": "chore(release): ${nextRelease.version} [skip ci]"
+        }
+      ]
+    ],
+    "preset": "conventionalcommits"
+  }
 }
