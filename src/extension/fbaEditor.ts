@@ -123,7 +123,11 @@ export interface FBAttribute {
 export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscode.Disposable {
   public static register(context: vscode.ExtensionContext, reporter?: TelemetryReporter): void {
     const provider = new FBAEditorProvider(context, reporter)
-    context.subscriptions.push(vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider))
+    context.subscriptions.push(
+      vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider, {
+        webviewOptions: { retainContextWhenHidden: true },
+      }),
+    )
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider(FBAEditorProvider.fsSchema, provider._fsProvider))
     context.subscriptions.push(new FBANotebookProvider(context, provider, provider._fsProvider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
