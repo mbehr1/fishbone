@@ -6,14 +6,16 @@
 import { TextDecoder, TextEncoder } from 'util'
 import * as vscode from 'vscode'
 import { Disposable } from 'vscode'
-import { FBAEditorProvider } from './fbaEditor'
+import { FBAEditorProvider, DocData } from './fbaEditor'
+import { FBANBRestQueryRenderer } from './fbaNBRQRenderer'
+import { FBAFSProvider } from './fbaFSProvider'
 
 export class FBANotebookProvider implements Disposable {
   private subscriptions: vscode.Disposable[] = []
   private nbController: vscode.NotebookController
   private nbSerializer: FBANotebookSerializer
 
-  constructor(context: vscode.ExtensionContext, private editorProvider: FBAEditorProvider) {
+  constructor(context: vscode.ExtensionContext, private editorProvider: FBAEditorProvider, private fsProvider: FBAFSProvider) {
     // console.log(`FBANotebookProvider()...`)
 
     this.nbController = vscode.notebooks.createNotebookController('fba-nb-controller-1', 'fba-nb', 'Fishbone Notebook')
@@ -45,37 +47,24 @@ export class FBANotebookProvider implements Disposable {
     context.subscriptions.push(this)
   }
 
+  private getDocDataForNotebook(notebook: vscode.NotebookDocument): DocData | undefined {
+    //console.log(`FBANotebookProvider.getDocDataForNotebook(${notebook.uri.toString()})`)
+    const openedFileData = this.fsProvider.getDataForUri(notebook.uri)
+    if (openedFileData) {
+      return openedFileData.doc.docData
+    }
+    return undefined
+  }
+
   private _executeAll(cells: vscode.NotebookCell[], notebook: vscode.NotebookDocument): void {
     console.log(`FBANotebookProvider._executeAll(#cells=${cells.length})...`)
     for (const cell of cells) {
       console.log(`FBANotebookProvider._executeAll cell#${cell.index}.metadata=${JSON.stringify(cell.metadata)}`)
       // poc for conversionFunction:
-      if (
-        cell.kind === vscode.NotebookCellKind.Code &&
-        cell.document.languageId === 'javascript' &&
-        cell.metadata &&
-        cell.metadata.fbUidMembers &&
-        Array.isArray(cell.metadata.fbUidMembers)
-      ) {
-        const fbUidMembers = <string[]>cell.metadata.fbUidMembers
-        if (fbUidMembers.length > 0 && fbUidMembers[fbUidMembers.length - 1] === 'conversionFunction') {
-          const exec = this.nbController.createNotebookCellExecution(cell)
-          exec.start()
-          exec.clearOutput()
-          const fnText = cell.document.getText()
-          try {
-            // todo add global json5...
-            const fn = Function('matches,params', fnText)
-            // todo do a restQuery for the filter surrounded.
-            const matches = ['a log']
-            const params = {} // todo fill with all members!
-            fn(matches, params)
-            exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stdout('compiles!')]))
-            exec.end(true)
-          } catch (e) {
-            exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`got exception ${e}`)]))
-            exec.end(false)
-          }
+      if (cell.metadata?.fbaRdr === 'FBANBRestQueryRenderer') {
+        const docData = this.getDocDataForNotebook(notebook)
+        if (docData) {
+          FBANBRestQueryRenderer.executeCell(this.nbController, cell, notebook, docData, this.editorProvider)
         }
       }
     }

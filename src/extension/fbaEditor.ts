@@ -28,7 +28,7 @@ interface AssetManifest {
   }
 }
 
-interface DocData {
+export interface DocData {
   webviewPanel: vscode.WebviewPanel
   gotAliveFromPanel: boolean
   msgsToPost: any[]
@@ -125,7 +125,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     const provider = new FBAEditorProvider(context, reporter)
     context.subscriptions.push(vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider))
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider(FBAEditorProvider.fsSchema, provider._fsProvider))
-    context.subscriptions.push(new FBANotebookProvider(context, provider))
+    context.subscriptions.push(new FBANotebookProvider(context, provider, provider._fsProvider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
   }
 
@@ -524,59 +524,18 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 {
                   // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
                   const url: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url // todo request.url should not occur any longer!
-                  if (url.startsWith('ext:')) {
-                    const extName = url.slice(4, url.indexOf('/'))
-                    const query = url.slice(url.indexOf('/'))
-                    console.log(`extName=${extName} request=${url}`)
-                    // did this extension offer the restQuery?
-                    const rq = this._restQueryExtFunctions.get(extName)
-                    if (rq) {
-                      // call it:
-                      let res: string | Thenable<string> = rq(query) // restQuery can return a string or a Promise<string>
-                      if (typeof res !== 'string') {
-                        res = (await res) as string
-                      }
-                      //console.log(`FBAEditorProvider.restQuery response (first 1k chars)='${res.slice(0, 1000)}'`)
-                      // todo try/catch
-                      webviewPanel.webview.postMessage({ type: e.type, res: JSON.parse(res), id: e.id })
-                    } else {
+                  this.performRestQuery(docData, url).then(
+                    (resJson) => {
+                      webviewPanel.webview.postMessage({ type: e.type, res: resJson, id: e.id })
+                    },
+                    (txtError: string) => {
                       webviewPanel.webview.postMessage({
                         type: e.type,
-                        res: { errors: [`extName '${extName}' does not offer restQuery (yet?)`] },
+                        res: { errors: [txtError] },
                         id: e.id,
                       })
-                    }
-                  } else {
-                    // console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via request`);
-
-                    performHttpRequest(this.context.globalState, url, { Accept: 'application/json' })
-                      .then((result: any) => {
-                        if (true /* result.res.statusCode !== 200 */) {
-                          console.log(`request ${JSON.stringify(e.req.request)} got statusCode=${result.res.statusCode}`)
-                        }
-                        if ('headers' in result.res && 'content-type' in result.res.headers) {
-                          const contentType = result.res.headers['content-type']
-                          // warn if header is not application/json: e.g.
-                          // "content-type": "application/json; charset=utf-8",
-                          //console.log(`request statusCode=${result.res.statusCode} content-type='${contentType}'`);
-                          if (typeof contentType === 'string' && !contentType.includes('pplication/json')) {
-                            console.warn(
-                              `triggerRestQuery '${JSON.stringify(e.req.request)}' returned wrong content-type : '${contentType}'`,
-                            )
-                            console.warn(` body first 2000 chars='${result.body.slice(0, 2000)}'`)
-                          }
-                        }
-                        const json = JSON.parse(result.body)
-                        webviewPanel.webview.postMessage({ type: e.type, res: json, id: e.id })
-                      })
-                      .catch((err) => {
-                        webviewPanel.webview.postMessage({
-                          type: e.type,
-                          res: { errors: [`request failed with err=${err.name}:${err.message}`] },
-                          id: e.id,
-                        })
-                      })
-                  }
+                    },
+                  )
                 }
                 break
               default:
@@ -597,6 +556,61 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
     // send initial data
     this.updateWebview(docData, document)
+  }
+
+  public performRestQuery(docData: DocData, url: string): Promise<any> {
+    const webviewPanel = docData.webviewPanel
+
+    if (url.startsWith('ext:')) {
+      const extName = url.slice(4, url.indexOf('/'))
+      const query = url.slice(url.indexOf('/'))
+      console.log(`extName=${extName} request=${url}`)
+      // did this extension offer the restQuery?
+      return new Promise((resolve, reject) => {
+        const rq = this._restQueryExtFunctions.get(extName)
+        if (rq) {
+          // call it:
+          let res: string | Thenable<string> = rq(query) // restQuery can return a string or a Promise<string>
+          if (typeof res !== 'string') {
+            res.then((value) => {
+              const asJson = JSON.parse(value)
+              resolve(asJson)
+            })
+          } else {
+            const asJson = JSON.parse(res)
+            resolve(asJson)
+          }
+        } else {
+          reject(`extName '${extName}' does not offer restQuery (yet?)`)
+        }
+      })
+    } else {
+      return new Promise((resolve, reject) => {
+        // console.log(`triggerRestQuery triggering ${JSON.stringify(e.req.request)} via request`);
+
+        performHttpRequest(this.context.globalState, url, { Accept: 'application/json' })
+          .then((result: any) => {
+            if (true /* result.res.statusCode !== 200 */) {
+              console.log(`request ${JSON.stringify(url)} got statusCode=${result.res.statusCode}`)
+            }
+            if ('headers' in result.res && 'content-type' in result.res.headers) {
+              const contentType = result.res.headers['content-type']
+              // warn if header is not application/json: e.g.
+              // "content-type": "application/json; charset=utf-8",
+              //console.log(`request statusCode=${result.res.statusCode} content-type='${contentType}'`);
+              if (typeof contentType === 'string' && !contentType.includes('pplication/json')) {
+                console.warn(`triggerRestQuery '${JSON.stringify(url)}' returned wrong content-type : '${contentType}'`)
+                console.warn(` body first 2000 chars='${result.body.slice(0, 2000)}'`)
+              }
+            }
+            const json = JSON.parse(result.body)
+            resolve(json)
+          })
+          .catch((err) => {
+            reject(`request failed with err=${err.name}:${err.message}`)
+          })
+      })
+    }
   }
 
   /**

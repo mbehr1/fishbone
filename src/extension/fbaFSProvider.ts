@@ -1,4 +1,4 @@
-/**
+/*
  * copyright (c) 2023, Matthias Behr
  *
  * todo:
@@ -97,7 +97,7 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
    * @param uri
    * @returns a member from the docData.lastPostedObj that can/must be modified directly!
    */
-  private getDataForUri(uri: vscode.Uri): OpenedFileData | undefined {
+  public getDataForUri(uri: vscode.Uri): OpenedFileData | undefined {
     const cachedEntry = this.openEntries.get(uri.toString())
     if (cachedEntry) {
       return cachedEntry

@@ -11,6 +11,7 @@ import * as JSON5 from 'json5'
 // import jju from 'jju'
 const jju = require('jju')
 import { RawNotebookCell } from './fbaNotebookProvider'
+import { DocData, FBAEditorProvider } from './fbaEditor'
 
 interface RQCmd {
   cmd: string
@@ -56,7 +57,7 @@ const rqUriEncode = (rq: RQ): string => {
     if (!toRet.endsWith('?')) {
       toRet += '?'
     }
-    toRet += rq.commands.map((rqCmd) => rqCmd + '=' + encodeURIComponent(rqCmd.param)).join('&')
+    toRet += rq.commands.map((rqCmd) => rqCmd.cmd + '=' + encodeURIComponent(rqCmd.param)).join('&')
     /*
     for (const [idx, rqCmd] of rq.commands.entries()) {
       const cmdStr = rqCmd.cmd + '=' + encodeURIComponent(rqCmd.param)
@@ -69,6 +70,16 @@ const rqUriEncode = (rq: RQ): string => {
   return toRet
 }
 
+class FBANBRQCell extends vscode.NotebookCellData {
+  constructor(kind: vscode.NotebookCellKind, value: string, languageId: string, metadata?: object) {
+    super(kind, value, languageId)
+    super.metadata = {
+      fbaRdr: 'FBANBRestQueryRenderer',
+      ...metadata,
+    }
+  }
+}
+
 export class FBANBRestQueryRenderer {
   static renderRestQuery(elem: string, fbUid: string, fbUidMembers: string[]): vscode.NotebookCellData[] {
     console.log(`FBANBRestQueryRenderer.renderRestQuery(${fbUid})`)
@@ -79,15 +90,15 @@ export class FBANBRestQueryRenderer {
 
     const rq = rqUriDecode(elem)
 
-    cells.push(new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, rq.path, 'markdown'))
-    // doesn't seem to have an impact. cells[cells.length - 1].metadata = { editable: false, deleteable: false, trusted: true }
+    cells.push(new FBANBRQCell(vscode.NotebookCellKind.Markup, rq.path, 'markdown', { fbUid, fbUidMembers }))
     for (const [cmdIdx, rqCmd] of rq.commands.entries()) {
-      cells.push(new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, `${rqCmd.cmd}=`, 'markdown'))
-      cells.push(new vscode.NotebookCellData(vscode.NotebookCellKind.Code, rqCmd.param, 'jsonc'))
-      cells[cells.length - 1].metadata = {
-        fbUid,
-        fbUidMembers: fbUidMembers.concat([cmdIdx.toString() + ':' + rqCmd.cmd]),
-      }
+      cells.push(new FBANBRQCell(vscode.NotebookCellKind.Markup, `${rqCmd.cmd}=`, 'markdown'))
+      cells.push(
+        new FBANBRQCell(vscode.NotebookCellKind.Code, rqCmd.param, 'jsonc', {
+          fbUid,
+          fbUidMembers: fbUidMembers.concat([cmdIdx.toString() + ':' + rqCmd.cmd]),
+        }),
+      )
       // conversionFunction included?
       try {
         const obj = JSON5.parse(rqCmd.param)
@@ -97,22 +108,19 @@ export class FBANBRestQueryRenderer {
             const rO = o.reportOptions
             if (rO && typeof rO === 'object' && 'conversionFunction' in rO) {
               cells.push(
-                new vscode.NotebookCellData(
-                  vscode.NotebookCellKind.Markup,
-                  'conversionFunction:\n\n```function(matches, param){```',
-                  'markdown',
-                ),
+                new FBANBRQCell(vscode.NotebookCellKind.Markup, 'conversionFunction:\n\n```function(matches, param){```', 'markdown'),
               )
-              cells.push(new vscode.NotebookCellData(vscode.NotebookCellKind.Code, rO.conversionFunction, 'javascript'))
-              cells[cells.length - 1].metadata = {
-                fbUid,
-                fbUidMembers: fbUidMembers.concat([
-                  cmdIdx.toString() + ':' + rqCmd.cmd,
-                  idx.toString(),
-                  'reportOptions',
-                  'conversionFunction',
-                ]),
-              }
+              cells.push(
+                new FBANBRQCell(vscode.NotebookCellKind.Code, rO.conversionFunction, 'javascript', {
+                  fbUid,
+                  fbUidMembers: fbUidMembers.concat([
+                    cmdIdx.toString() + ':' + rqCmd.cmd,
+                    idx.toString(),
+                    'reportOptions',
+                    'conversionFunction',
+                  ]),
+                }),
+              )
             }
           }
         }
@@ -121,9 +129,6 @@ export class FBANBRestQueryRenderer {
       }
     }
 
-    if (cells.length > 0) {
-      cells[0].metadata = { fbUid, fbUidMembers }
-    }
     return cells
   }
 
@@ -213,5 +218,169 @@ export class FBANBRestQueryRenderer {
       elemObj[elemMember] = rqUriEncode(rq)
     }
     return true
+  }
+
+  /**
+   * execute a single cell that was created by us (todo change way to detect that (e.g. via metadata))
+   * @param nbController
+   * @param cell
+   * @param notebook
+   */
+  static executeCell(
+    nbController: vscode.NotebookController,
+    cell: vscode.NotebookCell,
+    notebook: vscode.NotebookDocument,
+    docData: DocData,
+    editorProvider: FBAEditorProvider,
+  ): void {
+    console.log(`FBANBRestQueryRenderer.executeCell()... cell.metadata=${JSON.stringify(cell.metadata)}`)
+    if (
+      cell.kind === vscode.NotebookCellKind.Code &&
+      cell.document.languageId === 'javascript' &&
+      cell.metadata &&
+      cell.metadata.fbUidMembers &&
+      Array.isArray(cell.metadata.fbUidMembers)
+    ) {
+      const fbUidMembers = <string[]>cell.metadata.fbUidMembers
+      if (fbUidMembers.length > 0 && fbUidMembers[fbUidMembers.length - 1] === 'conversionFunction') {
+        const exec = nbController.createNotebookCellExecution(cell)
+        exec.start()
+        exec.clearOutput()
+        const fnText = cell.document.getText()
+        try {
+          // add global json5...
+          if (!(globalThis as any).JSON5) {
+            ;(globalThis as any).JSON5 = JSON5
+          }
+
+          const fn = Function('matches,params', fnText)
+          // do a restQuery for the filter surrounded.
+          const queryCell = FBANBRestQueryRenderer.getCellByMembers(notebook, fbUidMembers.slice(0, fbUidMembers.length - 3))
+          //console.log(`FBANBRestQueryRenderer.executeCell()... found queryCell=${JSON.stringify(queryCell)}`)
+          if (queryCell) {
+            try {
+              exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stdout('querying filter...')]))
+              const query = JSON5.parse(queryCell.document.getText())
+              if (Array.isArray(query)) {
+                const memberIdx = Number(fbUidMembers[fbUidMembers.length - 3])
+                const filter = query[memberIdx]
+                if (filter) {
+                  const filterWoReportOptions = { ...filter, reportOptions: undefined, type: 0, tmpFb: undefined, maxNrMsgs: 3 }
+                  exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json(filterWoReportOptions)]))
+                  // todo: this contains a lot on code with internals from dlt-logs. Should move to a lib or completely as a
+                  // new restQuery to dlt-logs.
+                  const filterRq: RQ = {
+                    path: 'ext:mbehr1.dlt-logs/get/docs/0/filters?', // todo get from cell data!
+                    commands: [
+                      {
+                        cmd: 'query',
+                        param: JSON.stringify([filterWoReportOptions]),
+                      },
+                    ],
+                  }
+                  editorProvider.performRestQuery(docData, rqUriEncode(filterRq)).then(
+                    (resJson) => {
+                      if ('error' in resJson) {
+                        exec.appendOutput(
+                          new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got error:${resJson.error}`)]),
+                        )
+                      } else {
+                        // msgs in resJson.data
+                        try {
+                          if ('data' in resJson && Array.isArray(resJson.data)) {
+                            exec.appendOutput(
+                              new vscode.NotebookCellOutput([
+                                vscode.NotebookCellOutputItem.stdout(`received ${resJson.data.length} messages, first 3:`),
+                              ]),
+                            )
+                            const msgs = (<any[]>resJson.data)
+                              .filter((d: any) => d.type === 'msg')
+                              .slice(0, 3)
+                              .map((d: any) => d.attributes)
+                            exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json(msgs)]))
+                            // iterate through msgs, apply payloadRegex and pass matches to fn
+                            const localObj = {}
+                            const reportObj = {} // todo solution for multiple filters?
+                            const regex = filterWoReportOptions.payloadRegex ? new RegExp(filterWoReportOptions.payloadRegex) : undefined
+                            for (const msg of msgs) {
+                              const matches = regex ? regex.exec(msg.payloadString) : []
+                              exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json({ matches: matches })]))
+                              const fnRes = fn(matches, { msg: msg, localObj, reportObj })
+                              exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json(fnRes)]))
+                            }
+                          } else {
+                            exec.appendOutput(
+                              new vscode.NotebookCellOutput([
+                                vscode.NotebookCellOutputItem.stderr(`query got no data!`),
+                                vscode.NotebookCellOutputItem.json(resJson),
+                              ]),
+                            )
+                          }
+                        } catch (e) {
+                          exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`error: ${e}`)]))
+                        }
+                      }
+                      exec.end(true)
+                    },
+                    (errTxt) => {
+                      exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got error:${errTxt}`)]))
+                      exec.end(true)
+                    },
+                  )
+                } else {
+                  exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`filter not found!`)]))
+                  exec.end(true)
+                }
+              } else {
+                exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`querying filter no array!`)]))
+                exec.end(true)
+              }
+            } catch (e) {
+              exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`querying filter got error:${e}`)]))
+              exec.end(true)
+            }
+          } else {
+            const matches: any[] = []
+            const params = {
+              msg: { payloadString: 'example msg.payloadString', ecu: 'ECU1', apid: 'APID', ctid: 'CTID' },
+              localObj: {},
+              reportObj: {},
+            }
+            fn(matches, params)
+            exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stdout('compiles!')]))
+            exec.end(true)
+          }
+        } catch (e) {
+          exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`got exception ${e}`)]))
+          exec.end(false)
+        }
+      }
+    }
+  }
+
+  /**
+   * return the cell with the (exactly) matching fbUidMembers
+   * @param notebook
+   * @param members
+   * @returns
+   */
+  static getCellByMembers(notebook: vscode.NotebookDocument, members: string[]): vscode.NotebookCell | undefined {
+    const cell = notebook.getCells().find((cell) => {
+      if (cell.metadata && cell.metadata.fbUidMembers && Array.isArray(cell.metadata.fbUidMembers)) {
+        const fbUidMembers = <string[]>cell.metadata.fbUidMembers
+        if (fbUidMembers.length !== members.length) {
+          return false
+        } else {
+          for (const [idx, member] of members.entries()) {
+            if (fbUidMembers.at(idx) !== member) {
+              return false
+            }
+          }
+          return true
+        }
+      }
+      return false
+    })
+    return cell
   }
 }
