@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.22.0](https://github.com/mbehr1/fishbone/compare/v1.21.0...v1.22.0) (2023-09-16)
+
+
+### Features
+
+* **webview:** use retainContextWhenHidden ([520899f](https://github.com/mbehr1/fishbone/commit/520899f82be4cff9f44c6941b64eccb36e9f5f69))
+
 ## [1.21.0](https://github.com/mbehr1/fishbone/compare/v1.20.0...v1.21.0) (2023-09-16)
 
 
