@@ -1,5 +1,14 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.21.0](https://github.com/mbehr1/fishbone/compare/v1.20.0...v1.21.0) (2023-09-16)
+
+
+### Features
+
+* **fbaFs:** minimal poc for fba filesystem provider ([f579f05](https://github.com/mbehr1/fishbone/commit/f579f05a0dea4b4f63799fa9eeebf1cefd928bf3))
+* **notebook:** add poc for notebooks to edit RQs ([2364873](https://github.com/mbehr1/fishbone/commit/2364873ed8c84b78d25bd61732b1bbf5f561e993))
+* **notebook:** execute conversionFunction ([c5c83cb](https://github.com/mbehr1/fishbone/commit/c5c83cbde0a4ec81c296deb19ff7e890715097e6))
+
 ## [1.20.0](https://github.com/mbehr1/fishbone/compare/v1.19.0...v1.20.0) (2023-08-29)
 
 
