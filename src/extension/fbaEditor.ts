@@ -353,9 +353,16 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     if (docData.gotAliveFromPanel) {
       // send instantly
       const msgCmd = msg.command
-      docData.webviewPanel.webview.postMessage(msg) /*.then((onFulFilled) => {
-                console.log(`WebsharkView.postMessage(${msgCmd}) direct ${onFulFilled}`);
-            });*/
+      docData.webviewPanel.webview.postMessage(msg).then(
+        (fullFilled) => {
+          if (!fullFilled) {
+            console.warn(`FBAEditorProvider.postMessage(...) direct not fullFilled ${fullFilled}`)
+          }
+        },
+        (rejectReason) => {
+          console.warn(`FBAEditorProvider.postMessage(...) direct rejected with ${rejectReason}`)
+        },
+      )
     } else {
       docData.msgsToPost.push(msg)
     }
@@ -364,7 +371,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   private updateWebview(docData: DocData, document: vscode.TextDocument) {
     if (docData.lastPostedDocVersion !== document.version) {
       console.log(
-        `updateWebview posting to webview: lastPostedDocVersion=${docData.lastPostedDocVersion}, new docVersion=${document.version}`,
+        `FBAEditorProvider updateWebview posting to webview(visible=${docData.webviewPanel.visible}, active=${docData.webviewPanel.active}): lastPostedDocVersion=${docData.lastPostedDocVersion}, new docVersion=${document.version}`,
       )
       const docObj: any = FBAEditorProvider.getFBDataFromDoc(docData, document)
 
@@ -382,7 +389,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         this._onDidChangeTreeData.fire(docData.treeItem)
       }
     } else {
-      console.log(`updateWebview skipped as version already posted.(lastPostedDocVersion=${docData.lastPostedDocVersion}`)
+      console.log(`FBAEditorProvider updateWebview skipped as version already posted.(lastPostedDocVersion=${docData.lastPostedDocVersion}`)
     }
   }
 
@@ -438,7 +445,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       if (e.document.uri.toString() === document.uri.toString()) {
         // this is called when either the text changes due to edits
         // but as well when e.g. the dirty flag changes.
-        console.warn(
+        console.log(
           `FBAEditorProvider onDidChangeTextDocument isDirty=${e.document.isDirty} isClosed=${e.document.isClosed} version=${e.document.version}/${document.version}  doc.lineCount=${e.document.lineCount} e.contentChanges.length=${e.contentChanges.length}`,
           e.contentChanges.map((e) => JSON.stringify({ rl: e.rangeLength, tl: e.text.length })).join(','),
         )
@@ -451,20 +458,52 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       }
     })
 
+    const lastActiveRestQueryDoc: { ext: string; uri?: string } = {
+      ext: '',
+      uri: '',
+    }
+
     const changeActiveDltDocSubscription = this.onDidChangeActiveRestQueryDoc((event) => {
       if (docData.webviewPanel.visible) {
-        console.log(
-          `FBAEditorProvider webview(${document.uri.toString()}) onDidChangeActiveRestQueryDoc(ext='${
-            event.ext
-          }' uri=${event.uri?.toString()})...`,
-        )
         this.postMsgOnceAlive(docData, {
           type: 'onDidChangeActiveRestQueryDoc',
           ext: event.ext,
           uri: event.uri?.toString(),
         })
+        lastActiveRestQueryDoc.ext = '' // marker to not send it if it becomes visible
+      } else {
+        // we store the last one and send it if the webview becomes visible
+        lastActiveRestQueryDoc.ext = event.ext
+        lastActiveRestQueryDoc.uri = event.uri?.toString()
       }
     })
+
+    const changeViewStateSubsription = webviewPanel.onDidChangeViewState((e) => {
+      try {
+        /*console.log(
+          `FBAEditorProvider webview(${document.uri.toString()}) onDidChangeViewState(active=${e.webviewPanel.active} visible=${
+            e.webviewPanel.visible
+          })...`,
+        )*/
+        if (e.webviewPanel.active && e.webviewPanel.visible) {
+          if (lastActiveRestQueryDoc.ext.length > 0) {
+            /*console.log(
+              `FBAEditorProvider webview(${document.uri.toString()}) delayed onDidChangeActiveRestQueryDoc(ext='${
+                lastActiveRestQueryDoc.ext
+              }' uri=${lastActiveRestQueryDoc.uri})`,
+            )*/
+            this.postMsgOnceAlive(docData, {
+              type: 'onDidChangeActiveRestQueryDoc',
+              ext: lastActiveRestQueryDoc.ext,
+              uri: lastActiveRestQueryDoc.uri,
+            })
+            lastActiveRestQueryDoc.ext = ''
+          }
+        }
+      } catch (e) {
+        console.error(`FBAEditorProvider webview.onDidChangeViewState got e=${e}`)
+      }
+    }, this)
 
     const changeThemeSubsription = vscode.window.onDidChangeActiveColorTheme((event) => {
       this.postMsgOnceAlive(docData, {
@@ -475,6 +514,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
     // Make sure we get rid of the listener when our editor is closed.
     webviewPanel.onDidDispose(() => {
+      changeViewStateSubsription.dispose()
       changeDocumentSubscription.dispose()
       changeThemeSubsription.dispose()
       changeActiveDltDocSubscription.dispose()
