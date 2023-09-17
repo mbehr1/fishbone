@@ -79,6 +79,38 @@ class FBANBRQCell extends vscode.NotebookCellData {
     }
   }
 }
+/**
+ * data for rendering a collapsible markdown text
+ */
+interface CollapsedMD {
+  summary: string
+  open?: boolean
+  texts: (string | CollapsedMD)[]
+}
+
+const markdownTextFor = (textOrCollapsedMDs: (string | CollapsedMD)[]): string => {
+  return textOrCollapsedMDs
+    .map((textOrCollapsedMD) => {
+      if (typeof textOrCollapsedMD === 'string') {
+        return textOrCollapsedMD
+      } else {
+        return `<details${textOrCollapsedMD.open ? ' open' : ''}>
+<summary>${textOrCollapsedMD.summary}</summary>
+
+${markdownTextFor(textOrCollapsedMD.texts)}
+</details>`
+      }
+    })
+    .join('\n')
+}
+
+const appendMarkdown = (exec: vscode.NotebookCellExecution, texts: (string | CollapsedMD)[]) => {
+  exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(markdownTextFor(texts), 'text/markdown')]))
+}
+
+const codeBlock = (text: string, type?: string): string[] => {
+  return ['```' + (type ? type : ''), text, '```']
+}
 
 export class FBANBRestQueryRenderer {
   static renderRestQuery(elem: string, fbUid: string, fbUidMembers: string[]): vscode.NotebookCellData[] {
@@ -259,14 +291,15 @@ export class FBANBRestQueryRenderer {
           //console.log(`FBANBRestQueryRenderer.executeCell()... found queryCell=${JSON.stringify(queryCell)}`)
           if (queryCell) {
             try {
-              exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stdout('querying filter...')]))
               const query = JSON5.parse(queryCell.document.getText())
               if (Array.isArray(query)) {
                 const memberIdx = Number(fbUidMembers[fbUidMembers.length - 3])
                 const filter = query[memberIdx]
                 if (filter) {
-                  const filterWoReportOptions = { ...filter, reportOptions: undefined, type: 0, tmpFb: undefined, maxNrMsgs: 3 }
-                  exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json(filterWoReportOptions)]))
+                  const filterWoReportOptions = { ...filter, reportOptions: undefined, type: 0, tmpFb: undefined, maxNrMsgs: 5 }
+                  appendMarkdown(exec, [
+                    { summary: 'querying filter:', texts: [...codeBlock(JSON.stringify(filterWoReportOptions, undefined, 2), 'json')] },
+                  ])
                   // todo: this contains a lot on code with internals from dlt-logs. Should move to a lib or completely as a
                   // new restQuery to dlt-logs.
                   const filterRq: RQ = {
@@ -288,26 +321,34 @@ export class FBANBRestQueryRenderer {
                         // msgs in resJson.data
                         try {
                           if ('data' in resJson && Array.isArray(resJson.data)) {
-                            exec.appendOutput(
-                              new vscode.NotebookCellOutput([
-                                vscode.NotebookCellOutputItem.stdout(`received ${resJson.data.length} messages, first 3:`),
-                              ]),
-                            )
                             const msgs = (<any[]>resJson.data)
                               .filter((d: any) => d.type === 'msg')
-                              .slice(0, 3)
+                              .slice(0, 5)
                               .map((d: any) => d.attributes)
-                            exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json(msgs)]))
+
+                            appendMarkdown(exec, [
+                              {
+                                summary: `received ${resJson.data.length} messages${
+                                  resJson.data.length > msgs.length ? `. Unfold to see first ${msgs.length}` : ':'
+                                }`,
+                                texts: msgs.map((msg) => codeBlock(JSON.stringify(msg, undefined, 2), 'json')).flat(),
+                              },
+                            ])
+
                             // iterate through msgs, apply payloadRegex and pass matches to fn
                             const localObj = {}
                             const reportObj = {} // todo solution for multiple filters?
                             const regex = filterWoReportOptions.payloadRegex ? new RegExp(filterWoReportOptions.payloadRegex) : undefined
+                            const textsMatches = []
+                            const textsConverted = []
                             for (const msg of msgs) {
                               const matches = regex ? regex.exec(msg.payloadString) : []
-                              exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json({ matches: matches })]))
+                              textsMatches.push(codeBlock(JSON.stringify(matches, undefined, 2), 'json'))
                               const fnRes = fn(matches, { msg: msg, localObj, reportObj })
-                              exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json(fnRes)]))
+                              textsConverted.push(codeBlock(JSON.stringify(fnRes, undefined, 2)))
                             }
+                            appendMarkdown(exec, [{ summary: 'regex matches:', texts: textsMatches.flat() }])
+                            appendMarkdown(exec, [{ summary: 'conversionFunction returned:', open: true, texts: textsConverted.flat() }])
                           } else {
                             exec.appendOutput(
                               new vscode.NotebookCellOutput([
