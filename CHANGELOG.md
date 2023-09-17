@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.23.0](https://github.com/mbehr1/fishbone/compare/v1.22.1...v1.23.0) (2023-09-17)
+
+
+### Features
+
+* **notebook:** use collapsible markdown ([002e2cd](https://github.com/mbehr1/fishbone/commit/002e2cddd703050906b63d89c9e1890b3d9aeabe))
+
 ## [1.22.1](https://github.com/mbehr1/fishbone/compare/v1.22.0...v1.22.1) (2023-09-17)
 
 
