@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.22.1](https://github.com/mbehr1/fishbone/compare/v1.22.0...v1.22.1) (2023-09-17)
+
+
+### Bug Fixes
+
+* inform webview about active rq doc ([2f35e00](https://github.com/mbehr1/fishbone/commit/2f35e008b5f6e6e6afd1e1a5bd30295d0b29d22c))
+
 ## [1.22.0](https://github.com/mbehr1/fishbone/compare/v1.21.0...v1.22.0) (2023-09-16)
 
 
