@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.24.0](https://github.com/mbehr1/fishbone/compare/v1.23.0...v1.24.0) (2023-09-24)
+
+
+### Features
+
+* **notebook:** add hover for conversionFunction ([8515f54](https://github.com/mbehr1/fishbone/commit/8515f5460c8010931e1c63462a0c18987be02486))
+
 ## [1.23.0](https://github.com/mbehr1/fishbone/compare/v1.22.1...v1.23.0) (2023-09-17)
 
 
