@@ -11,7 +11,7 @@ import * as vscode from 'vscode'
 import { FBAEditorProvider, FBEffect, Fishbone, FishboneTreeItem } from './fbaEditor'
 import { FBANBRestQueryRenderer } from './fbaNBRQRenderer'
 import { RawNotebookCell } from './fbaNotebookProvider'
-import { isEqualUint8Array } from './util'
+import { MemberPath, isEqualUint8Array } from './util'
 
 interface OpenedFileData {
   uri: vscode.Uri // for the one opened for fbaFs
@@ -21,6 +21,7 @@ interface OpenedFileData {
   doc: FishboneTreeItem // pointing to the underlying FBAEditorProvider document
   elem: any
   lastFBA: any // the fb/lastPostedObj where elem is from
+  lastRawCells: RawNotebookCell[]
 }
 
 // we do only use path from the uri
@@ -31,7 +32,7 @@ interface UriParameters {
   ext: string
   fbaTitle?: string // Fishbone.title
   fbUid: string // mandatory
-  fbUidMembers: string[]
+  fbUidMembers: MemberPath
   renderer: string // e.g. restquery
 }
 
@@ -120,6 +121,7 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
             elem,
             lastFBA,
             content: new Uint8Array(),
+            lastRawCells: [],
             stat: {
               ctime: Date.now(),
               mtime: Date.now(),
@@ -201,18 +203,21 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
    * @param entry
    * @param checkForChanges
    */
-  private updateEntry(entry: OpenedFileData, checkForChanges: boolean) {
+  private updateEntry(entry: OpenedFileData, checkForChanges: boolean, lastRawCells?: RawNotebookCell[]) {
     // update the entry (content, size) from the doc/elem:
     console.log(
       `FBAFSProvider.updateEntry (uri.path='${entry.uri.path}' uriParameters.ext='${entry.uriParameters.ext}', checkForChanges=${checkForChanges})`,
     )
     let lastMTime = entry.stat.mtime
+    if (lastRawCells) {
+      entry.lastRawCells = lastRawCells
+    }
     switch (entry.uriParameters.ext) {
       case 'fba-nb':
         {
           let cells: vscode.NotebookCellData[] = []
           let elem = entry.elem
-          let members: string[] = []
+          let members: MemberPath = []
           // search fbUidMembers
           for (const member of entry.uriParameters.fbUidMembers) {
             if (typeof elem === 'object' && member in elem) {
@@ -227,7 +232,7 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
             case 'restquery':
               {
                 // the elem should be the restQuery
-                cells = FBANBRestQueryRenderer.renderRestQuery(elem, entry.elem.fbUid, members)
+                cells = FBANBRestQueryRenderer.renderRestQuery(elem, entry.elem.fbUid, members, entry.lastRawCells)
               }
               break
             default:
@@ -284,7 +289,7 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
       const watch = this._watches.find((v) => v.toString() === uriString)
       if (watch) {
         setTimeout(() => {
-          console.warn(`FBAFSProvider.updateEntry (uri.path='${entry.uri.path}') firing Changed event uri=${watch.toString()}`)
+          console.log(`FBAFSProvider.updateEntry (uri.path='${entry.uri.path}') firing Changed event uri=${watch.toString()}`)
           entry.stat.mtime = Date.now()
           this.onDidChangeEmitter.fire([{ uri: watch, type: vscode.FileChangeType.Changed }])
         }, 1000) // todo how to avoid the need for a delay?
@@ -307,10 +312,10 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
       case 'fba-nb':
         {
           let elem = entry.elem
-          let members: string[] = []
+          let members: MemberPath = []
           // search fbUidMembers
           let elemObj: any | undefined // last obj
-          let elemMember: string | undefined
+          let elemMember: string | number | undefined
           for (const member of entry.uriParameters.fbUidMembers) {
             if (typeof elem === 'object' && member in elem) {
               elemObj = elem
@@ -325,7 +330,7 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
                 // the elem should be the restQuery
                 if (elemMember) {
                   if (FBANBRestQueryRenderer.editRestQuery(elemObj, elemMember, entry.elem.fbUid, members, newData)) {
-                    this.updateEntry(entry, false)
+                    this.updateEntry(entry, false, newData)
                     this.syncChangesToEditorProvider(entry)
                   }
                 }

@@ -1,5 +1,6 @@
 /*
  * todos:
+ * [] add hover and edit support for payloadRegex
  * [] fix reopen a notebook after restart works only if fishbone is opened before
  */
 
@@ -9,11 +10,14 @@ import { Disposable } from 'vscode'
 import { FBAEditorProvider, DocData } from './fbaEditor'
 import { FBANBRestQueryRenderer } from './fbaNBRQRenderer'
 import { FBAFSProvider } from './fbaFSProvider'
+import { getCommandUri, jsonTokenAtRange } from './util'
 
 export class FBANotebookProvider implements Disposable {
   private subscriptions: vscode.Disposable[] = []
   private nbController: vscode.NotebookController
   private nbSerializer: FBANotebookSerializer
+
+  private selectedNotebooks: vscode.NotebookDocument[] = []
 
   constructor(context: vscode.ExtensionContext, private editorProvider: FBAEditorProvider, private fsProvider: FBAFSProvider) {
     // console.log(`FBANotebookProvider()...`)
@@ -31,7 +35,16 @@ export class FBANotebookProvider implements Disposable {
           event.notebook.uri,
           event.notebook.version,
         )
-        // anything to do here? (todo)
+        if (event.selected) {
+          if (!this.selectedNotebooks.find((nb) => nb.uri.toString() === event.notebook.uri.toString())) {
+            this.selectedNotebooks.push(event.notebook)
+          }
+        } else {
+          const idx = this.selectedNotebooks.findIndex((nb) => nb.uri.toString() === event.notebook.uri.toString())
+          if (idx >= 0) {
+            this.selectedNotebooks.splice(idx, 1)
+          }
+        }
       },
       this,
       this.subscriptions,
@@ -44,7 +57,46 @@ export class FBANotebookProvider implements Disposable {
       }),
     )
 
-    context.subscriptions.push(this)
+    this.subscriptions.push(
+      vscode.languages.registerHoverProvider(
+        {
+          language: 'jsonc',
+          scheme: 'vscode-notebook-cell', // todo restrict further to our uris and not all jsonc in notebook cells!
+        },
+        {
+          async provideHover(document, position) {
+            console.log(`FBANotebookProvider.provideHover`)
+            const wordRange = document.getWordRangeAtPosition(position)
+            if (wordRange) {
+              const word = document.getText(wordRange)
+              // todo avoid hardcoding! generalize
+              if (word === 'conversionFunction') {
+                const convToken = jsonTokenAtRange(document.getText(), wordRange)
+                if (convToken) {
+                  const md = new vscode.MarkdownString(
+                    `$(edit) [Show as cell](${getCommandUri('fishbone.notebookCmd', [
+                      { doc: document.uri.toString(), cmd: 'showAsCell' },
+                      { token: convToken },
+                    ]).toString()})`,
+                    true,
+                  )
+                  md.supportHtml = true
+                  md.isTrusted = true
+                  return new vscode.Hover(md, wordRange)
+                }
+              }
+            }
+            return undefined
+          },
+        },
+      ),
+    )
+
+    this.subscriptions.push(
+      vscode.commands.registerCommand('fishbone.notebookCmd', (...args) => {
+        this.onCommand(args)
+      }),
+    )
   }
 
   private getDocDataForNotebook(notebook: vscode.NotebookDocument): DocData | undefined {
@@ -54,6 +106,42 @@ export class FBANotebookProvider implements Disposable {
       return openedFileData.doc.docData
     }
     return undefined
+  }
+
+  /**
+   * Process commands e.g. coming from hover provider links
+   * @param args array of args. First entry has to include 'cmd' and 'doc'. Other args will be passed on to the handler for the cmd.
+   */
+  public onCommand(args: any[]): void {
+    try {
+      console.log(`FBANotebookProvider.onCommand args=${JSON.stringify(args)}`)
+      // try to find the doc:
+      const cmd = <string | undefined>args[0]?.cmd
+      const docUri = args[0]?.doc ? vscode.Uri.parse(args[0].doc) : undefined
+      if (docUri && cmd) {
+        let docCell
+        for (const nb of this.selectedNotebooks) {
+          for (const cell of nb.getCells()) {
+            if (cell.document.uri.toString() === docUri.toString()) {
+              docCell = cell
+              break
+            }
+          }
+        }
+        if (docCell && docCell.metadata?.fbaRdr === 'FBANBRestQueryRenderer') {
+          FBANBRestQueryRenderer.onCellCmd(docCell, cmd, args.slice(1))
+        }
+        /*
+        const fbaFsUri = docUri.with({ scheme: 'fbaFs', fragment: '' })
+        console.log(`FBANotebookProvider.onCommand fbaFsUri=${fbaFsUri.toString()}`)
+        const openedFileData = this.fsProvider.getDataForUri(fbaFsUri)
+        */
+      } else {
+        console.warn(`FBANotebookProvider.onCommand no doc! args=${JSON.stringify(args)}`)
+      }
+    } catch (e) {
+      console.warn(`FBANotebookProvider.onCommand got error=${e}`)
+    }
   }
 
   private _executeAll(cells: vscode.NotebookCell[], notebook: vscode.NotebookDocument): void {
