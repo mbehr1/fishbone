@@ -6,13 +6,13 @@
  * - add nonce/random ids to each element? (for smaller edits/updates)
  */
 
-import * as path from 'path';
-import * as fs from 'fs';
-import * as zlib from 'zlib';
-import * as vscode from 'vscode';
-import { getNonce, performHttpRequest } from './util';
-import * as yaml from 'js-yaml';
-import TelemetryReporter from '@vscode/extension-telemetry';
+import * as path from 'path'
+import * as fs from 'fs'
+import * as zlib from 'zlib'
+import * as vscode from 'vscode'
+import { getNonce, performHttpRequest } from './util'
+import * as yaml from 'js-yaml'
+import TelemetryReporter from '@vscode/extension-telemetry'
 import ShortUniqueId from 'short-unique-id'
 import { FBAFSProvider } from './fbaFSProvider'
 import { FBANotebookProvider } from './fbaNotebookProvider'

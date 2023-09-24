@@ -12,6 +12,7 @@ import * as JSON5 from 'json5'
 const jju = require('jju')
 import { RawNotebookCell } from './fbaNotebookProvider'
 import { DocData, FBAEditorProvider } from './fbaEditor'
+import { arrayEquals, getMemberParent, MemberPath } from './util'
 
 interface RQCmd {
   cmd: string
@@ -94,11 +95,15 @@ const markdownTextFor = (textOrCollapsedMDs: (string | CollapsedMD)[]): string =
       if (typeof textOrCollapsedMD === 'string') {
         return textOrCollapsedMD
       } else {
-        return `<details${textOrCollapsedMD.open ? ' open' : ''}>
+        if (textOrCollapsedMD.texts.length > 0) {
+          return `<details${textOrCollapsedMD.open ? ' open' : ''}>
 <summary>${textOrCollapsedMD.summary}</summary>
 
 ${markdownTextFor(textOrCollapsedMD.texts)}
 </details>`
+        } else {
+          return textOrCollapsedMD.summary
+        }
       }
     })
     .join('\n')
@@ -113,8 +118,13 @@ const codeBlock = (text: string, type?: string): string[] => {
 }
 
 export class FBANBRestQueryRenderer {
-  static renderRestQuery(elem: string, fbUid: string, fbUidMembers: string[]): vscode.NotebookCellData[] {
-    console.log(`FBANBRestQueryRenderer.renderRestQuery(${fbUid})`)
+  static renderRestQuery(
+    elem: string,
+    fbUid: string,
+    fbUidMembers: MemberPath,
+    lastRawCells?: RawNotebookCell[],
+  ): vscode.NotebookCellData[] {
+    console.log(`FBANBRestQueryRenderer.renderRestQuery(${fbUid}, #lastRawCells=${lastRawCells ? lastRawCells.length : -1})`)
     if (typeof elem !== 'string') {
       return []
     }
@@ -131,7 +141,11 @@ export class FBANBRestQueryRenderer {
           fbUidMembers: fbUidMembers.concat([cmdIdx.toString() + ':' + rqCmd.cmd]),
         }),
       )
-      // conversionFunction included?
+      // conversionFunction included? we show them only if there is just 1. for more the hover needs to be used
+      // or if they are part of lastRawCells (from last serialized one)
+
+      let nrConvFunctions = 0
+      let convCells: vscode.NotebookCellData[][] = []
       try {
         const obj = JSON5.parse(rqCmd.param)
         const objs = Array.isArray(obj) ? obj : [obj]
@@ -139,19 +153,17 @@ export class FBANBRestQueryRenderer {
           if ('reportOptions' in o) {
             const rO = o.reportOptions
             if (rO && typeof rO === 'object' && 'conversionFunction' in rO) {
-              cells.push(
-                new FBANBRQCell(vscode.NotebookCellKind.Markup, 'conversionFunction:\n\n```function(matches, param){```', 'markdown'),
-              )
-              cells.push(
-                new FBANBRQCell(vscode.NotebookCellKind.Code, rO.conversionFunction, 'javascript', {
-                  fbUid,
-                  fbUidMembers: fbUidMembers.concat([
-                    cmdIdx.toString() + ':' + rqCmd.cmd,
-                    idx.toString(),
-                    'reportOptions',
-                    'conversionFunction',
-                  ]),
-                }),
+              nrConvFunctions += 1
+              convCells.push(
+                FBANBRestQueryRenderer.createMemberCell(
+                  rO,
+                  'conversionFunction',
+                  `### conversionFunction` + '\n\n```function(matches, param){```',
+                  {
+                    fbUid,
+                    fbUidMembers: fbUidMembers.concat([cmdIdx.toString() + ':' + rqCmd.cmd, idx, 'reportOptions']),
+                  },
+                ),
               )
             }
           }
@@ -159,12 +171,63 @@ export class FBANBRestQueryRenderer {
       } catch (e) {
         console.log(`FBANBRestQueryRenderer.renderRestQuery got e='${e}' parsing '${rqCmd.param}'`)
       }
+      if (nrConvFunctions === 1) {
+        cells.push(...convCells.flat())
+      } else if (nrConvFunctions > 0) {
+        // add any conv functions that have been prev. visible:
+        if (lastRawCells) {
+          console.log(`FBANBRestQueryRenderer.renderRestQuery checking ${lastRawCells.length} lastRawCells`)
+          for (const convCellAr of convCells) {
+            const convCell = convCellAr.find((cell) => cell.kind === vscode.NotebookCellKind.Code)
+            if (
+              convCell &&
+              lastRawCells.find(
+                (lastCell) =>
+                  lastCell.metadata?.fbUid === convCell.metadata?.fbUid &&
+                  arrayEquals(lastCell.metadata.fbUidMembers as MemberPath, convCell.metadata?.fbUidMembers as MemberPath),
+              )
+            ) {
+              cells.push(...convCellAr)
+              // console.log(`FBANBRestQueryRenderer.renderRestQuery lastRawCell found for ${JSON.stringify(convCell.metadata)}`)
+            }
+          }
+        }
+        // add a info cell
+        cells.push(
+          new vscode.NotebookCellData(
+            vscode.NotebookCellKind.Markup,
+            `${nrConvFunctions} conversionFunctions available. Use hover/tooltip to edit as cell.`,
+            'markdown',
+          ),
+        )
+      }
     }
 
     return cells
   }
 
-  static editRestQuery(elemObj: any, elemMember: string, fbUid: string, fbUidMembers: string[], newCellData: RawNotebookCell[]): boolean {
+  static createMemberCell(rO: Record<string, any>, member: string, mdTitle: string, metadata: any): vscode.NotebookCellData[] {
+    const cells: vscode.NotebookCellData[] = []
+
+    if (rO && typeof rO === 'object' && member in rO) {
+      cells.push(new FBANBRQCell(vscode.NotebookCellKind.Markup, mdTitle, 'markdown'))
+      cells.push(
+        new FBANBRQCell(vscode.NotebookCellKind.Code, rO[member], 'javascript', {
+          ...metadata,
+          fbUidMembers: Array.isArray(metadata.fbUidMembers) ? metadata.fbUidMembers.concat([member]) : [member],
+        }),
+      )
+    }
+    return cells
+  }
+
+  static editRestQuery(
+    elemObj: any,
+    elemMember: string | number,
+    fbUid: string,
+    fbUidMembers: MemberPath,
+    newCellData: RawNotebookCell[],
+  ): boolean {
     console.log(
       `FBANBRestQueryRenderer.editRestQuery(fbUid=${fbUid}, ${fbUidMembers.join('.')} updating '${elemMember}') from ${
         newCellData.length
@@ -196,7 +259,7 @@ export class FBANBRestQueryRenderer {
           didChange = true
         } else {
           // only if no update we check for the conversionFunction...
-          // conversionFunction included?
+          // conversionFunction included? todo generalize it for MemberPath!
           try {
             // here we should use jju.update to keep json5 format/comments,...
             const obj = JSON5.parse(rqCmd.param)
@@ -329,7 +392,11 @@ export class FBANBRestQueryRenderer {
                             appendMarkdown(exec, [
                               {
                                 summary: `received ${resJson.data.length} messages${
-                                  resJson.data.length > msgs.length ? `. Unfold to see first ${msgs.length}` : ':'
+                                  resJson.data.length > msgs.length
+                                    ? `. Unfold to see first ${msgs.length}`
+                                    : resJson.data.length > 0
+                                    ? ':'
+                                    : ''
                                 }`,
                                 texts: msgs.map((msg) => codeBlock(JSON.stringify(msg, undefined, 2), 'json')).flat(),
                               },
@@ -347,15 +414,15 @@ export class FBANBRestQueryRenderer {
                               const fnRes = fn(matches, { msg: msg, localObj, reportObj })
                               textsConverted.push(codeBlock(JSON.stringify(fnRes, undefined, 2)))
                             }
-                            appendMarkdown(exec, [{ summary: 'regex matches:', texts: textsMatches.flat() }])
-                            appendMarkdown(exec, [{ summary: 'conversionFunction returned:', open: true, texts: textsConverted.flat() }])
+                            if (textsMatches.length > 0 || textsConverted.length > 0) {
+                              appendMarkdown(exec, [{ summary: 'regex matches:', texts: textsMatches.flat() }])
+                              appendMarkdown(exec, [{ summary: 'conversionFunction returned:', open: true, texts: textsConverted.flat() }])
+                            }
                           } else {
-                            exec.appendOutput(
-                              new vscode.NotebookCellOutput([
-                                vscode.NotebookCellOutputItem.stderr(`query got no data!`),
-                                vscode.NotebookCellOutputItem.json(resJson),
-                              ]),
-                            )
+                            exec.appendOutput([
+                              new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got no data!`)]),
+                              new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.json(resJson)]),
+                            ])
                           }
                         } catch (e) {
                           exec.appendOutput(new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`error: ${e}`)]))
@@ -423,5 +490,93 @@ export class FBANBRestQueryRenderer {
       return false
     })
     return cell
+  }
+
+  static onCellCmd(cell: vscode.NotebookCell, cmd: string, args: any[]): void {
+    console.log(
+      `FBANBRestQueryRenderer.onCellCmd '${cmd}' docCell.metadata=${JSON.stringify(cell.metadata)} doc.metadata=${JSON.stringify(
+        cell.notebook.metadata,
+      )}`,
+    )
+
+    switch (cmd) {
+      case 'showAsCell':
+        const token = args[0]?.token as { stack: (number | string)[]; value: string }
+        if (token) {
+          console.log(`FBANBRestQueryRenderer.onCellCmd '${cmd}' token=${JSON.stringify(token)}, cell.index=${cell.index}`)
+          // check whether a cell with that members path exists already
+          const memberToShow = token.stack.concat(token.value)
+          const memberFbUidMembers = cell.metadata.fbUidMembers.concat(memberToShow)
+          const existingCellIdx = cell.notebook
+            .getCells()
+            .findIndex(
+              (existingCell) =>
+                existingCell.metadata?.fbUid === cell.metadata?.fbUid &&
+                arrayEquals(existingCell.metadata.fbUidMembers as MemberPath, memberFbUidMembers),
+            )
+          if (existingCellIdx < 0) {
+            // create a notebook edit
+            // conversionFunction included?
+            const cells: vscode.NotebookCellData[] = []
+            try {
+              const obj = JSON5.parse(cell.document.getText())
+              const member = getMemberParent(obj, memberToShow)
+              if (member) {
+                const memberRef = memberToShow[memberToShow.length - 1] as string
+                cells.push(
+                  ...FBANBRestQueryRenderer.createMemberCell(
+                    member,
+                    memberRef,
+                    `### ${memberRef}` + '\n\n```function(matches, param){```', // todo this needs to match exactly the initial creation text!
+                    { ...cell.metadata, fbUidMembers: cell.metadata.fbUidMembers.concat(token.stack) },
+                  ),
+                )
+              }
+            } catch (e) {
+              console.log(`FBANBRestQueryRenderer.onCellCmd got e='${e}'`)
+            }
+            if (cells.length) {
+              const wsEdit = new vscode.WorkspaceEdit()
+              const newCellIdx = cell.index + 1
+              wsEdit.set(cell.notebook.uri, [
+                new vscode.NotebookEdit(new vscode.NotebookRange(newCellIdx, newCellIdx) /* insert after cur cell */, cells),
+              ])
+
+              vscode.workspace.applyEdit(wsEdit).then((didApply) => {
+                if (didApply) {
+                  const activeNotebookEditor = vscode.window.activeNotebookEditor
+                  if (activeNotebookEditor && activeNotebookEditor.notebook === cell.notebook) {
+                    /*console.log(
+                      `FBANBRestQueryRenderer.onCellCmd applyEdit revealing ${newCellIdx}-${newCellIdx + cells.length + 1}/${
+                        cell.notebook.cellCount
+                      }`,
+                    )*/
+                    activeNotebookEditor.revealRange(
+                      new vscode.NotebookRange(newCellIdx, newCellIdx + cells.length),
+                      vscode.NotebookEditorRevealType.InCenter,
+                    )
+                  }
+                } else {
+                  console.warn(`FBANBRestQueryRenderer.onCellCmd applyEdit failed!`)
+                }
+              })
+            }
+          } else {
+            console.log(`FBANBRestQueryRenderer.onCellCmd '${cmd}': already visible. Revealing`)
+            const activeNotebookEditor = vscode.window.activeNotebookEditor
+            if (activeNotebookEditor && activeNotebookEditor.notebook === cell.notebook) {
+              activeNotebookEditor.revealRange(
+                new vscode.NotebookRange(existingCellIdx, existingCellIdx + 1),
+                vscode.NotebookEditorRevealType.InCenter,
+              )
+            }
+          }
+        } else {
+          console.warn(`FBANBRestQueryRenderer.onCellCmd '${cmd}': token missing!`, args)
+        }
+        break
+      default:
+        console.warn(`FBANBRestQueryRenderer.onCellCmd '${cmd}': cmd unknown!`)
+    }
   }
 }
