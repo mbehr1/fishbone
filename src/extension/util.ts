@@ -215,7 +215,7 @@ export const getMemberParent = (o: any, members: MemberPath): any | undefined =>
 /**
  * Return a jju.Token for a range of a text
  * @param text json string/text to tokenize
- * @param range
+ * @param range range the token should be matching/overlapping. startLine needs to match. endline is ignored.
  * @returns the token at the range or undefined
  */
 export const jsonTokenAtRange = (text: string, range: vscode.Range): Token | undefined => {
