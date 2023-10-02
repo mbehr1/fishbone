@@ -76,18 +76,19 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
   }
 
   private static decodeUri(uri: vscode.Uri): UriParameters {
-    // uri.path = /<fbUid>/<renderer>/title.ext
+    // uri.path = /<fbUid>/<fbUidMembersSepByDot><renderer>/title.ext
     const paths = uri.path.slice(1).split('/')
-
+    const fbUidMembers = paths.length > 1 ? paths[1].split('.') : []
+    // console.log(`FBAFSProvider.decodeUri fbUidMembers=${JSON.stringify(fbUidMembers)}`)
     const title = paths[paths.length - 1]
     const indexOfDot = title.lastIndexOf('.')
     const ext = indexOfDot >= 0 && indexOfDot < title.length ? title.substring(indexOfDot + 1) : ''
-    const renderer = paths.length > 2 ? paths[1] : ''
+    const renderer = paths.length > 2 ? paths[paths.length - 2] : ''
     return {
       ext,
       fbaTitle: title.length ? title : undefined,
       fbUid: paths[0],
-      fbUidMembers: ['props', 'filter', 'source'],
+      fbUidMembers: fbUidMembers,
       renderer,
     }
   }

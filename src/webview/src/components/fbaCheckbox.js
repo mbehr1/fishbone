@@ -467,6 +467,8 @@ export default function FBACheckbox(props) {
             upper left badge
           </Button>
           <DataProviderEditDialog
+            fbUid={props.fbUid}
+            fbUidMember='badge'
             data={values.badge || {}}
             onChange={(newValue) => handleValueChanges({ target: { name: 'badge', value: newValue } })}
             open={dpEditOpen === 1}
@@ -478,6 +480,8 @@ export default function FBACheckbox(props) {
             lower right badge
           </Button>
           <DataProviderEditDialog
+            fbUid={props.fbUid}
+            fbUidMember='badge2'
             data={values.badge2 || {}}
             onChange={(newValue) => handleValueChanges({ target: { name: 'badge2', value: newValue } })}
             open={dpEditOpen === 2}
@@ -490,6 +494,7 @@ export default function FBACheckbox(props) {
           </Button>
           <DataProviderEditDialog
             fbUid={props.fbUid}
+            fbUidMember='filter'
             applyMode={true}
             data={values.filter || {}}
             onChange={(newValue) => handleValueChanges({ target: { name: 'filter', value: newValue } })}
