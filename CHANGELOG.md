@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.25.0](https://github.com/mbehr1/fishbone/compare/v1.24.0...v1.25.0) (2023-10-02)
+
+
+### Features
+
+* **notebook:** support editing of badges ([687d312](https://github.com/mbehr1/fishbone/commit/687d3125d910f263ecfbeabc0f5eee96e638298e))
+
 ## [1.24.0](https://github.com/mbehr1/fishbone/compare/v1.23.0...v1.24.0) (2023-09-24)
 
 
