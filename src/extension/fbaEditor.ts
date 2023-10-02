@@ -78,8 +78,8 @@ export interface FBACheckboxProps {
   instructions?: string | { markdownFormat: boolean; textValue: string }
   backgroundDescription?: string | { markdownFormat: boolean; textValue: string }
   filter?: any // todo
-  badge?: any
-  badge2?: any
+  badge?: FBBadge
+  badge2?: FBBadge
 }
 
 export interface FBRootCause {
@@ -115,6 +115,12 @@ export interface FBAttribute {
         }
       }
     | string // for fbUid only
+}
+
+export interface FBBadge {
+  source: string // restQuery
+  jsonPath?: string
+  conv?: string // length | index:idx | func: fn(result)...
 }
 
 /**

@@ -263,7 +263,12 @@ export default function DataProviderEditDialog(props) {
                       JSON.stringify([
                         {
                           scheme: 'fbaFs',
-                          path: '/' + props.fbUid + `/restquery/${props.applyMode ? 'apply filter' : 'badge'}.fba-nb`,
+                          path:
+                            '/' +
+                            props.fbUid +
+                            `/props.${props.fbUidMember}${props.applyMode ? '.source' : ''}/restquery/${
+                              props.applyMode ? 'apply filter' : 'badge'
+                            }.fba-nb`,
                           authority: 'fbaFs',
                         },
                       ]),

@@ -207,8 +207,6 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
             //console.log(`typeof fnRes='${typeof fnRes}'`);
             switch (typeof fnRes) {
               case 'string':
-                answer.convResult = fnRes
-                break
               case 'number':
                 answer.convResult = fnRes
                 break
