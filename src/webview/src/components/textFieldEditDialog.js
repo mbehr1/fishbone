@@ -12,7 +12,7 @@ import Switch from '@mui/material/Switch'
  * @param {*} props (open, onChange, onClose)
  */
 export default function TextFieldEditDialog(props) {
-  console.log(`TextFieldEditDialog (open=${props.open})`)
+  // console.log(`TextFieldEditDialog (open=${props.open})`)
 
   const [dataTextValue, setDataTextValue] = React.useState() // Contains the text that was entered into the text field
   const [markdownFormat, setMarkdownFormat] = React.useState() // 0 = not active normal text, 1 = active markdown format

@@ -31,7 +31,7 @@ import { triggerRestQueryDetails, numberAbbrev, customEventStack } from './../ut
  * @param {*} props (open, onChange, onClose)
  */
 export default function DataProviderEditDialog(props) {
-  console.log(`DataProviderEditDialog(open=${props.open})`)
+  // console.log(`DataProviderEditDialog(open=${props.open})`)
 
   const attributes = useContext(AttributesContext)
 
@@ -139,9 +139,9 @@ export default function DataProviderEditDialog(props) {
 
   useEffect(() => {
     if (props.open && !previewBadgeStatus && dataSource) {
-      console.log(
+      /*console.log(
         `DLTFilterAssistant effect for badge processing called (badgeStatus=${previewBadgeStatus}, source=${JSON.stringify(dataSource)})`,
-      )
+      )*/
       const fetchdata = async () => {
         try {
           setPreviewBadgeError('querying...')
@@ -178,19 +178,23 @@ export default function DataProviderEditDialog(props) {
     props.onClose()
   }
 
-  const handleSave = () => {
-    console.log(`DataProviderEditDialog handleSave()`)
-    console.log(` dataType=${dataType}`)
-    console.log(` dataType=${dataSource}`)
-    console.log(` dataJsonPath=${dataJsonPath}`)
-    console.log(` dataConv=${dataConv}`)
-
-    // if one differs from props.data call props.onChange
+  const persistValueChanges = () => {
     if (typeof props.data === 'object') {
       if (dataSource !== props.data.source || dataJsonPath !== props.data.jsonPath || dataConv !== props.data.conv) {
         props.onChange({ ...props.data, source: dataSource, jsonPath: dataJsonPath, conv: dataConv })
       }
     }
+  }
+
+  const handleSave = () => {
+    /*console.log(`DataProviderEditDialog handleSave()`)
+    console.log(` dataType=${dataType}`)
+    console.log(` dataType=${dataSource}`)
+    console.log(` dataJsonPath=${dataJsonPath}`)
+    console.log(` dataConv=${dataConv}`)*/
+
+    // if one differs from props.data call props.onChange
+    persistValueChanges()
     props.onClose()
   }
 
@@ -256,6 +260,7 @@ export default function DataProviderEditDialog(props) {
                 </Button>
                 {props.fbUid && props.data?.source?.startsWith('ext:mbehr1.dlt-logs') && (
                   <Button
+                    onClick={() => persistValueChanges()}
                     variant='outlined'
                     size='small'
                     style={{ 'margin-left': '5px' }}

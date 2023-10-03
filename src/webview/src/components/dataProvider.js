@@ -61,11 +61,11 @@ export default function InputDataProvided(props) {
     [loadOptions, options, props.value],
   )
 
-  console.log(
+  /*console.log(
     `InputDataProvided(value=${JSON.stringify(props?.value)} props=${
       props?.dataProvider?.source
     }) loading=${loading} called. hasUnknownValue=${hasUnknownValue}`,
-  )
+  )*/
 
   // if attributes change we do have to reload the options:
   React.useEffect(() => {
@@ -79,22 +79,22 @@ export default function InputDataProvided(props) {
       return undefined
     }
     let active = true
-    console.log(`InputDataProvided effect for loading options triggering...`)
-
-    ;(async () => {
+    //console.log(`InputDataProvided effect for loading options triggering...`)
+    const triggerFn = async () => {
       triggerRestQueryDetails(props.dataProvider, props.attributes).then((res) => {
-        console.log(`InputDataProvided active=${active} got response with len=${JSON.stringify(res).length}`)
+        // console.log(`InputDataProvided active=${active} got response with len=${JSON.stringify(res).length}`)
         if (active) {
           setOptions('result' in res ? res.result : [res.error])
           setLoadOptions(false)
         }
       })
-    })()
+    }
+    triggerFn()
 
     // this function as we return it from the hook will be called on cleanup
     // see e.g. https://reactjs.org/docs/hooks-effect.html
     return () => {
-      console.log(`InputDataProvided cleanup hook called active=${active}`)
+      // console.log(`InputDataProvided cleanup hook called active=${active}`)
       active = false
     }
   }, [loadOptions, props.dataProvider, props.attributes])
