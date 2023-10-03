@@ -224,15 +224,27 @@ export class FBANBRestQueryRenderer {
         const indexFirstC = convFunction.indexOf(':')
         const convType = convFunction.slice(0, indexFirstC) // length | index | func
         console.log(`FBANBRestQueryRenderer.renderRestQuery got badge.conv.${convType}`)
-        if (convType === 'func') {
-          const convParam = convFunction.slice(indexFirstC + 1)
-          cells.push(new FBANBRQCell(vscode.NotebookCellKind.Markup, `### conversion function` + '\n\n```function(result){```', 'markdown'))
-          cells.push(
-            new FBANBRQCell(vscode.NotebookCellKind.Code, convParam, 'javascript', {
-              fbUid,
-              fbUidMembers: [...fbUidMembers, 'conv.func'],
-            }),
-          )
+        const convParam = convFunction.slice(indexFirstC + 1)
+        switch (convType) {
+          case 'func':
+            {
+              cells.push(
+                new FBANBRQCell(vscode.NotebookCellKind.Markup, `### conversion function` + '\n\n```function(result){```', 'markdown'),
+              )
+              cells.push(
+                new FBANBRQCell(vscode.NotebookCellKind.Code, convParam, 'javascript', {
+                  fbUid,
+                  fbUidMembers: [...fbUidMembers, 'conv.func'],
+                }),
+              )
+            }
+            break
+          case 'length':
+            cells.push(new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, `returning length of result`, 'markdown'))
+            break
+          case 'index':
+            cells.push(new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, `returning result[${convParam}]`, 'markdown'))
+            break
         }
       }
     }
