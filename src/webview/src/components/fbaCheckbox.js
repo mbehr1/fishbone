@@ -186,11 +186,26 @@ export default function FBACheckbox(props) {
     }
   }, [badge2Status, badge2Query, badge2Counter, values.badge2, attributes])
 
-  const handleValueChanges = (e) => {
-    console.log(`handleValueChanges e=`, e)
+  const handleValueChanges = (e, instantPropChange, ...args) => {
+    console.log(`FBACheckbox.handleValueChanges instantPropChange=${!!instantPropChange} #args=${args.length} e=`, e)
     const { name, value } = e.target
-    console.log(`handleValueChanges name=${name} value=`, value)
-    setValues({ ...values, [name]: value })
+    console.log(`FBACheckbox.handleValueChanges name=${name} value=`, value)
+    const newValues = { ...values, [name]: value }
+    setValues(newValues)
+    if (instantPropChange) {
+      if (
+        newValues.comments !== props.comments ||
+        newValues.value !== props.value ||
+        newValues.label !== props.label ||
+        newValues.backgroundDescription !== props.backgroundDescription ||
+        newValues.instructions !== props.instructions ||
+        newValues.badge !== props.badge ||
+        newValues.badge2 !== props.badge2 ||
+        newValues.filter !== props.filter
+      ) {
+        props.onChange({ target: { type: 'textfield', values: newValues } })
+      }
+    }
   }
 
   const handleClickOpen = () => {
@@ -470,7 +485,7 @@ export default function FBACheckbox(props) {
             fbUid={props.fbUid}
             fbUidMember='badge'
             data={values.badge || {}}
-            onChange={(newValue) => handleValueChanges({ target: { name: 'badge', value: newValue } })}
+            onChange={(newValue) => handleValueChanges({ target: { name: 'badge', value: newValue } }, true)}
             open={dpEditOpen === 1}
             onClose={() => {
               setDpEditOpen(0)
@@ -483,7 +498,7 @@ export default function FBACheckbox(props) {
             fbUid={props.fbUid}
             fbUidMember='badge2'
             data={values.badge2 || {}}
-            onChange={(newValue) => handleValueChanges({ target: { name: 'badge2', value: newValue } })}
+            onChange={(newValue) => handleValueChanges({ target: { name: 'badge2', value: newValue } }, true)}
             open={dpEditOpen === 2}
             onClose={() => {
               setDpEditOpen(0)
@@ -497,7 +512,7 @@ export default function FBACheckbox(props) {
             fbUidMember='filter'
             applyMode={true}
             data={values.filter || {}}
-            onChange={(newValue) => handleValueChanges({ target: { name: 'filter', value: newValue } })}
+            onChange={(newValue) => handleValueChanges({ target: { name: 'filter', value: newValue } }, true)}
             open={dpEditOpen === 3}
             onClose={() => {
               setDpEditOpen(0)
