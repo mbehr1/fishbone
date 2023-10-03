@@ -1,5 +1,13 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.25.1](https://github.com/mbehr1/fishbone/compare/v1.25.0...v1.25.1) (2023-10-03)
+
+
+### Bug Fixes
+
+* **notebook:** reflect changes with open dialog ([41bbc35](https://github.com/mbehr1/fishbone/commit/41bbc35dfc1dd16a19864f8ce2c44ca8b3cd02a3))
+* **notebook:** show conv type length and index ([745442f](https://github.com/mbehr1/fishbone/commit/745442fa8c22d3212dc10d56efe08180263cc315))
+
 ## [1.25.0](https://github.com/mbehr1/fishbone/compare/v1.24.0...v1.25.0) (2023-10-02)
 
 
