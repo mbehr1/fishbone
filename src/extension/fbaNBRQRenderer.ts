@@ -668,7 +668,9 @@ export class FBANBRestQueryRenderer {
               appendMarkdown(exec, [
                 {
                   open: convFunction.length === 0,
-                  summary: `after jsonpath conversion of ${jpResult.length} items:`,
+                  summary: `jsonpath conversion of ${msgs.length} msgs got ${jpResult.length} ${
+                    jpResult.length > 0 ? typeof jpResult[0] : 'item'
+                  }${jpResult.length !== 1 ? 's' : ''}:`,
                   texts: jpResult.map((msg) => codeBlock(JSON.stringify(msg, undefined, 2), 'json')).flat(),
                 },
               ])
