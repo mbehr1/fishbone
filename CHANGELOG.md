@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.25.2](https://github.com/mbehr1/fishbone/compare/v1.25.1...v1.25.2) (2023-10-04)
+
+
+### Bug Fixes
+
+* **notebook:** improve output for jsonpath conversion ([af8c07a](https://github.com/mbehr1/fishbone/commit/af8c07afe26102d0266475af1f3d82cb91771764))
+
 ## [1.25.1](https://github.com/mbehr1/fishbone/compare/v1.25.0...v1.25.1) (2023-10-03)
 
 
