@@ -664,7 +664,7 @@ export class FBANBRestQueryRenderer {
 
             let jpResult: any[] | undefined
             if (jsonPath.length > 0) {
-              jpResult = jp.query({ ...resJson, data: msgs }, jsonPath) // we reduce msgs here to 5
+              jpResult = jp.query({ ...resJson, data: resJson.data.slice(0, 5) }, jsonPath)
               appendMarkdown(exec, [
                 {
                   open: convFunction.length === 0,
