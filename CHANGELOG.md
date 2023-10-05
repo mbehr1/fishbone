@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.25.3](https://github.com/mbehr1/fishbone/compare/v1.25.2...v1.25.3) (2023-10-05)
+
+
+### Bug Fixes
+
+* **notebook:** jsonPath using restQuery data ([dcb583d](https://github.com/mbehr1/fishbone/commit/dcb583dacd48eebb23d64482a9d5ac3338e569d8))
+
 ## [1.25.2](https://github.com/mbehr1/fishbone/compare/v1.25.1...v1.25.2) (2023-10-04)
 
 
