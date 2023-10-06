@@ -297,7 +297,7 @@ export class FBANBRestQueryRenderer {
             c.metadata.fbUidMembers.join('/') === membersStr,
         )
         if (jpCell) {
-          const newJp = jpCell.value
+          const newJp = jpCell.value.trim() // remove all newlines (that e.g. vscode added "on save"
           if (newJp !== badge.jsonPath) {
             // console.log(`FBANBRestQueryRenderer.editRestQuery changing jsonPath from '${badge.jsonPath}' to '${newJp}'`)
             badge.jsonPath = newJp
@@ -552,7 +552,7 @@ export class FBANBRestQueryRenderer {
               exec.end(true)
             }
           } else if (fbUidMembers[fbUidMembers.length - 1] === 'jsonPath') {
-            const jsonPath = cell.document.getText()
+            const jsonPath = cell.document.getText().trim()
             const queryCell = FBANBRestQueryRenderer.getCellByMembers(
               notebook,
               fbUidMembers.slice(0, fbUidMembers.length - 1).concat(['0:query']) /*.concat(['source'])*/,
@@ -586,7 +586,7 @@ export class FBANBRestQueryRenderer {
               notebook,
               fbUidMembers.slice(0, fbUidMembers.length - 1).concat(['jsonPath']),
             )
-            const jsonPath = jpCell ? jpCell.document.getText() : ''
+            const jsonPath = jpCell ? jpCell.document.getText().trim() : ''
             const queryCell = FBANBRestQueryRenderer.getCellByMembers(
               notebook,
               fbUidMembers.slice(0, fbUidMembers.length - 1).concat(['0:query']),
@@ -664,16 +664,26 @@ export class FBANBRestQueryRenderer {
 
             let jpResult: any[] | undefined
             if (jsonPath.length > 0) {
-              jpResult = jp.query({ ...resJson, data: resJson.data.slice(0, 5) }, jsonPath)
-              appendMarkdown(exec, [
-                {
-                  open: convFunction.length === 0,
-                  summary: `jsonpath conversion of ${msgs.length} msgs got ${jpResult.length} ${
-                    jpResult.length > 0 ? typeof jpResult[0] : 'item'
-                  }${jpResult.length !== 1 ? 's' : ''}:`,
-                  texts: jpResult.map((msg) => codeBlock(JSON.stringify(msg, undefined, 2), 'json')).flat(),
-                },
-              ])
+              try {
+                jpResult = jp.query({ ...resJson, data: resJson.data.slice(0, 5) }, jsonPath)
+                appendMarkdown(exec, [
+                  {
+                    open: convFunction.length === 0,
+                    summary: `jsonpath conversion of ${msgs.length} msgs got ${jpResult.length} ${
+                      jpResult.length > 0 ? typeof jpResult[0] : 'item'
+                    }${jpResult.length !== 1 ? 's' : ''}:`,
+                    texts: jpResult.map((msg) => codeBlock(JSON.stringify(msg, undefined, 2), 'json')).flat(),
+                  },
+                ])
+              } catch (e) {
+                appendMarkdown(exec, [
+                  {
+                    open: convFunction.length === 0,
+                    summary: `jsonpath conversion of ${msgs.length} msgs got error '${e}'`,
+                    texts: [],
+                  },
+                ])
+              }
             }
             if (convFunction.length > 0) {
               const result = jsonPath.length > 0 ? jpResult : resJson
