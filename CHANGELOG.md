@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.25.4](https://github.com/mbehr1/fishbone/compare/v1.25.3...v1.25.4) (2023-10-06)
+
+
+### Bug Fixes
+
+* **notebook:** use trim around jsonPath ([57446d0](https://github.com/mbehr1/fishbone/commit/57446d0517c6d345764e0315e47d2a86d3007b28))
+
 ## [1.25.3](https://github.com/mbehr1/fishbone/compare/v1.25.2...v1.25.3) (2023-10-05)
 
 
