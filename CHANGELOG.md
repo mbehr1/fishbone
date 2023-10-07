@@ -1,5 +1,17 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.26.0](https://github.com/mbehr1/fishbone/compare/v1.25.4...v1.26.0) (2023-10-07)
+
+
+### Features
+
+* **notebook:** add basic jsonpath language ([ac6a307](https://github.com/mbehr1/fishbone/commit/ac6a3079eb4c81dfcb6d9063f46ec694fa6673c9))
+
+
+### Bug Fixes
+
+* **notebook:** use jsonPath language ([00a4266](https://github.com/mbehr1/fishbone/commit/00a42669ba25ab77322ae52e48ef408bf1418f57))
+
 ## [1.25.4](https://github.com/mbehr1/fishbone/compare/v1.25.3...v1.25.4) (2023-10-06)
 
 
