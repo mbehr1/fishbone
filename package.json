@@ -82,7 +82,23 @@
           "name": "Fishbone"
         }
       ]
-    }
+    },
+    "languages": [
+      {
+        "id": "fbJsonPath",
+        "aliases": [
+          "JSONPath"
+        ],
+        "configuration": "./fbJsonPath_language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "fbJsonPath",
+        "scopeName": "source.jsonpath",
+        "path": "./fbJsonPath.tmLanguage.json"
+      }
+    ]
   },
   "scripts": {
     "prepare": "husky install",

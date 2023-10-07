@@ -1,0 +1,44 @@
+{
+  "scopeName": "source.jsonpath",
+  "patterns": [
+    {
+      "include": "#Query"
+    }
+  ],
+  "repository": {
+    "Query": {
+      "name": "meta.query",
+      "patterns": [
+        {
+          "include": "#Root"
+        },
+        {
+          "include": "#Operators"
+        }
+      ]
+    },
+    "Root": {
+      "match": "\\$",
+      "name": "keyword.other"
+    },
+    "Operators": {
+      "patterns": [
+        {
+          "include": "#DotChild"
+        },
+        {
+          "include": "#BracketChildren"
+        },
+        {
+          "include": "#RecursiveDescentChildren"
+        }
+      ]
+    },
+    "DotChild": {
+      "name": "keyword.operator",
+      "match": "\\."
+    },
+    "BracketChildren": {},
+    "RecursiveDescentChildren": {}
+  }
+}
