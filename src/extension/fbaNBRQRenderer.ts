@@ -213,7 +213,7 @@ export class FBANBRestQueryRenderer {
     if (badge) {
       if (badge.jsonPath) {
         cells.push(
-          new FBANBRQCell(vscode.NotebookCellKind.Code, `${badge.jsonPath}`, 'javascript', {
+          new FBANBRQCell(vscode.NotebookCellKind.Code, `${badge.jsonPath}`, 'fbJsonPath', {
             fbUid,
             fbUidMembers: [...fbUidMembers, 'jsonPath'],
           }),
@@ -422,7 +422,7 @@ export class FBANBRestQueryRenderer {
     console.log(`FBANBRestQueryRenderer.executeCell()... cell.metadata=${JSON.stringify(cell.metadata)}`)
     if (
       cell.kind === vscode.NotebookCellKind.Code &&
-      cell.document.languageId === 'javascript' &&
+      (cell.document.languageId === 'javascript' || cell.document.languageId === 'fbJsonPath') &&
       cell.metadata &&
       cell.metadata.fbUidMembers &&
       Array.isArray(cell.metadata.fbUidMembers)

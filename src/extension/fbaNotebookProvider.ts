@@ -24,7 +24,7 @@ export class FBANotebookProvider implements Disposable {
 
     this.nbController = vscode.notebooks.createNotebookController('fba-nb-controller-1', 'fba-nb', 'Fishbone Notebook')
     this.subscriptions.push(this.nbController)
-    this.nbController.supportedLanguages = ['javascript', 'json']
+    this.nbController.supportedLanguages = ['javascript', 'json', 'fbJsonPath']
     this.nbController.supportsExecutionOrder = true // or false?
     this.nbController.description = 'Fishbone Notebook to edit/test root causes, filters, conversionFns,...'
     this.nbController.executeHandler = this._executeAll.bind(this)
