@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.28.0](https://github.com/mbehr1/fishbone/compare/v1.27.0...v1.28.0) (2023-10-08)
+
+
+### Features
+
+* **notebook:** add exec cell support for filter ([1835627](https://github.com/mbehr1/fishbone/commit/1835627a175881a4dfcf97d5473dd37df7e8409d))
+
 ## [1.27.0](https://github.com/mbehr1/fishbone/compare/v1.26.0...v1.27.0) (2023-10-08)
 
 
