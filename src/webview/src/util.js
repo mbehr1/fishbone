@@ -4,11 +4,18 @@ import jp from 'jsonpath'
 
 // provide JSON5.parse for conversion functions:
 import JSON5 from 'json5'
+import * as uv0 from 'dlt-logs-utils'
 
 // eslint-disable-next-line no-undef
 if (!globalThis.JSON5) {
   // eslint-disable-next-line no-undef
   globalThis.JSON5 = JSON5
+}
+
+// eslint-disable-next-line no-undef
+if (!globalThis.uv0) {
+  // eslint-disable-next-line no-undef
+  globalThis.uv0 = uv0
 }
 
 class StandaloneApi {

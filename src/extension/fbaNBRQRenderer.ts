@@ -15,6 +15,7 @@ const jju = require('jju')
 import { RawNotebookCell } from './fbaNotebookProvider'
 import { DocData, FBAEditorProvider, FBBadge } from './fbaEditor'
 import { arrayEquals, getMemberParent, MemberPath } from './util'
+import * as uv0 from 'dlt-logs-utils'
 import { NotebookCellOutput } from 'vscode'
 
 interface RQCmd {
@@ -439,6 +440,9 @@ export class FBANBRestQueryRenderer {
             if (!(globalThis as any).JSON5) {
               ;(globalThis as any).JSON5 = JSON5
             }
+            if (!('uv0' in globalThis)) {
+              ;(globalThis as any).uv0 = uv0
+            }
             const fn = Function('matches,params', fnText)
             // do a restQuery for the filter surrounded.
             const queryCell = FBANBRestQueryRenderer.getCellByMembers(notebook, fbUidMembers.slice(0, fbUidMembers.length - 3))
@@ -454,7 +458,7 @@ export class FBANBRestQueryRenderer {
                     appendMarkdown(exec, [
                       { summary: 'querying filter:', texts: [...codeBlock(JSON.stringify(filterWoReportOptions, undefined, 2), 'json')] },
                     ])
-                    // todo: this contains a lot on code with internals from dlt-logs. Should move to a lib or completely as a
+                    // todo: this contains a lot of code with internals from dlt-logs. Should move to a lib or completely as a
                     // new restQuery to dlt-logs.
                     const filterRq: RQ = {
                       path: 'ext:mbehr1.dlt-logs/get/docs/0/filters?', // todo get from cell data!

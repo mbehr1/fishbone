@@ -136,6 +136,7 @@
     "vscode-test": "^1.6.1"
   },
   "dependencies": {
+    "dlt-logs-utils": "0.0.2",
     "tslib": "2.6.2",
     "@vscode/extension-telemetry": "^0.8.4",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
