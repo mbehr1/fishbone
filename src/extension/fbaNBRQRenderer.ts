@@ -423,7 +423,7 @@ export class FBANBRestQueryRenderer {
     console.log(`FBANBRestQueryRenderer.executeCell()... cell.metadata=${JSON.stringify(cell.metadata)}`)
     if (
       cell.kind === vscode.NotebookCellKind.Code &&
-      (cell.document.languageId === 'javascript' || cell.document.languageId === 'fbJsonPath') &&
+      ['jsonc', 'json', 'javascript', 'fbJsonPath'].includes(cell.document.languageId) &&
       cell.metadata &&
       cell.metadata.fbUidMembers &&
       Array.isArray(cell.metadata.fbUidMembers)
@@ -625,6 +625,22 @@ export class FBANBRestQueryRenderer {
               )
               exec.end(true)
             }
+          } else if (
+            fbUidMembers[fbUidMembers.length - 1].endsWith(':query') ||
+            fbUidMembers[fbUidMembers.length - 1].endsWith(':report')
+          ) {
+            const filter = JSON5.parse(cell.document.getText())
+            appendMarkdown(exec, [{ summary: 'querying filter:', texts: [...codeBlock(JSON.stringify(filter, undefined, 2), 'json')] }])
+            const filterRq: RQ = {
+              path: 'ext:mbehr1.dlt-logs/get/docs/0/filters?', // todo get from cell data!
+              commands: [
+                {
+                  cmd: 'query',
+                  param: JSON.stringify(filter),
+                },
+              ],
+            }
+            FBANBRestQueryRenderer.execRestQuery(editorProvider, exec, docData, filterRq, '', '')
           } else {
             exec.end(false)
           }
@@ -659,6 +675,7 @@ export class FBANBRestQueryRenderer {
 
             appendMarkdown(exec, [
               {
+                open: jsonPath.length === 0 && convFunction.length === 0,
                 summary: `received ${resJson.data.length} messages${
                   resJson.data.length > msgs.length ? `. Unfold to see first ${msgs.length}` : resJson.data.length > 0 ? ':' : ''
                 }`,
