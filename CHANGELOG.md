@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.27.0](https://github.com/mbehr1/fishbone/compare/v1.26.0...v1.27.0) (2023-10-08)
+
+
+### Features
+
+* add dlt-logs-utils support ([b2d0760](https://github.com/mbehr1/fishbone/commit/b2d076033614808afda883eba99f13c4eda1c4e1))
+
 ## [1.26.0](https://github.com/mbehr1/fishbone/compare/v1.25.4...v1.26.0) (2023-10-07)
 
 
