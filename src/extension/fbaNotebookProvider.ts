@@ -57,6 +57,21 @@ export class FBANotebookProvider implements Disposable {
       }),
     )
 
+    /*
+    this.subscriptions.push(
+      vscode.workspace.onDidChangeNotebookDocument((event) => {
+        try {
+          const idx = this.selectedNotebooks.findIndex((nb) => nb === event.notebook)
+          if (idx >= 0) {
+            // console.log(`FBANotebookProvider.onDidChangeNotebookDocument idx=${idx}}`)
+            FBANBRestQueryRenderer.onDidChangeNotebookDocument(event)
+          }
+        } catch (e) {
+          console.warn(`FBANotebookProvider.onDidChangeNotebookDocument got e=${e}`)
+        }
+      }),
+    )*/
+
     this.subscriptions.push(
       vscode.languages.registerHoverProvider(
         {
