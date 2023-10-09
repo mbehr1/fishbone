@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.28.1](https://github.com/mbehr1/fishbone/compare/v1.28.0...v1.28.1) (2023-10-09)
+
+
+### Bug Fixes
+
+* **notebook:** dont ignore member cell changes ([2109a8b](https://github.com/mbehr1/fishbone/commit/2109a8bd67a29e7418a28ab104f60878e7b4bd5d))
+
 ## [1.28.0](https://github.com/mbehr1/fishbone/compare/v1.27.0...v1.28.0) (2023-10-08)
 
 
