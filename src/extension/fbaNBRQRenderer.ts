@@ -148,6 +148,7 @@ export class FBANBRestQueryRenderer {
         new FBANBRQCell(vscode.NotebookCellKind.Code, rqCmd.param, 'jsonc', {
           fbUid,
           fbUidMembers: fbUidMembers.concat([cmdIdx.toString() + ':' + rqCmd.cmd]),
+          fbMemberCells: {},
         }),
       )
       // conversionFunction included? we show them only if there is just 1. for more the hover needs to be used
@@ -163,17 +164,19 @@ export class FBANBRestQueryRenderer {
             const rO = o.reportOptions
             if (rO && typeof rO === 'object' && 'conversionFunction' in rO) {
               nrConvFunctions += 1
-              convCells.push(
-                FBANBRestQueryRenderer.createMemberCell(
-                  rO,
-                  'conversionFunction',
-                  `### conversionFunction` + '\n\n```function(matches, param){```',
-                  {
-                    fbUid,
-                    fbUidMembers: fbUidMembers.concat([cmdIdx.toString() + ':' + rqCmd.cmd, idx, 'reportOptions']),
-                  },
-                ),
+              const memberCells = FBANBRestQueryRenderer.createMemberCell(
+                rO,
+                'conversionFunction',
+                `### conversionFunction` + '\n\n```function(matches, param){```',
+                {
+                  fbUid,
+                  fbUidMembers: fbUidMembers.concat([cmdIdx.toString() + ':' + rqCmd.cmd, idx, 'reportOptions']),
+                },
               )
+              convCells.push(memberCells)
+              // store orig value for later comparison on editRestQuery
+              cells[cells.length - 1].metadata!.fbMemberCells[memberCells[memberCells.length - 1].metadata?.fbUidMembers.join('/')] =
+                rO.conversionFunction
             }
           }
         }
@@ -268,6 +271,38 @@ export class FBANBRestQueryRenderer {
     return cells
   }
 
+  /*
+  // not used yet
+  static onDidChangeNotebookDocument(event: vscode.NotebookDocumentChangeEvent): void {
+    console.log(
+      `FBANBRestQueryRenderer.onDidChangeNotebookDocument() #cellChanges=${event.cellChanges.length} #contentChanges=${event.contentChanges.length}`,
+    )
+    for (const cellChange of event.cellChanges) {
+      // any cell from us changed?
+      const cell = cellChange.cell
+      if (cell.metadata?.fbaRdr === 'FBANBRestQueryRenderer') {
+        console.log(
+          `FBANBRestQueryRenderer.onDidChangeNotebookDocument()... found document.text:'${
+            cellChange.document ? cellChange.document.getText() : '<undef>'
+          }' cellChange.metadata=${JSON.stringify(cellChange.metadata)} cell.metadata=${JSON.stringify(cell.metadata)}`,
+        )
+        // todo? we do need to keep the "redundant" cells in sync
+        // currently we throw away member cell changes if parent cell changed that member value as well
+      }
+    }
+    for (const contentChange of event.contentChanges) {
+      console.log(
+        `FBANBRestQueryRenderer.onDidChangeNotebookDocument()... contentChange.addedCells#${contentChange.addedCells.length} .removedCells#${contentChange.removedCells.length}`,
+      )
+      for (const addedCell of contentChange.addedCells) {
+        console.log(`FBANBRestQueryRenderer.onDidChangeNotebookDocument()... addedCell.metadata=${JSON.stringify(addedCell.metadata)}`)
+      }
+      for (const removedCell of contentChange.removedCells) {
+        console.log(`FBANBRestQueryRenderer.onDidChangeNotebookDocument()... removedCell.metadata=${JSON.stringify(removedCell.metadata)}`)
+      }
+    }
+  }*/
+
   static editRestQuery(
     elemObj: any,
     elemMember: string | number,
@@ -276,7 +311,7 @@ export class FBANBRestQueryRenderer {
     newCellData: RawNotebookCell[],
   ): boolean {
     console.log(
-      `FBANBRestQueryRenderer.editRestQuery(fbUid=${fbUid}, ${fbUidMembers.join('.')} updating '${elemMember}') from ${
+      `FBANBRestQueryRenderer.editRestQuery(fbUid=${fbUid}, ${fbUidMembers.join('.')}) updating '${elemMember}' from ${
         newCellData.length
       } cells`,
     )
@@ -345,7 +380,11 @@ export class FBANBRestQueryRenderer {
           // todo check whether its a valid json5? (except the special commands? (delete=view...))
           rqCmd.param = cell.value
           didChangeRq = true
-        } else {
+        }
+        /*else*/ {
+          // check the (changed or unchanged) data for any 'memberCells'
+          // if they have changed and the orig cell data did not change, apply the change (else ignore! overwrite memberCell)
+
           // only if no update we check for the conversionFunction...
           // conversionFunction included? todo generalize it for MemberPath!
           try {
@@ -364,19 +403,25 @@ export class FBANBRestQueryRenderer {
                     'conversionFunction',
                   ])
                   const membersStr = members.join('/')
-                  const cell = newCellData.find(
+                  const memberCell = newCellData.find(
                     (c) =>
                       c.metadata &&
                       c.metadata.fbUid === fbUid &&
                       Array.isArray(c.metadata.fbUidMembers) &&
                       c.metadata.fbUidMembers.join('/') === membersStr,
                   )
-                  if (cell) {
-                    // console.log(`FBANBRestQueryRenderer.editRestQuery got a cell to update '${membersStr}'`, cell)
-                    if (rO.conversionFunction !== cell.value) {
-                      console.log(`FBANBRestQueryRenderer.editRestQuery new value for ${membersStr}: '${cell.value}'`)
-                      rO.conversionFunction = cell.value
-                      didChangeO = true
+                  if (memberCell) {
+                    const origValue = cell.metadata?.fbMemberCells[membersStr]
+                    if (origValue !== memberCell.value) {
+                      if (rO.conversionFunction !== origValue) {
+                        console.warn(
+                          `FBANBRestQueryRenderer.editRestQuery parentCell updated member value '${membersStr}' from '${origValue}' to '${rO.conversionFunction}' ignoring member cell with value '${memberCell.value}'`,
+                        )
+                      } else {
+                        console.log(`FBANBRestQueryRenderer.editRestQuery new value for ${membersStr}: '${memberCell.value}'`)
+                        rO.conversionFunction = memberCell.value
+                        didChangeO = true
+                      }
                     }
                   }
                 }
