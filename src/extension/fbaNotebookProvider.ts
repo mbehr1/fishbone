@@ -143,14 +143,25 @@ export class FBANotebookProvider implements Disposable {
             }
           }
         }
+        if (docCell === undefined) {
+          // fallback to search in all notebooks
+          console.log(
+            `FBANotebookProvider.onCommand cell not found in ${this.selectedNotebooks.length} selected notebooks. Fallback to search in a all.`,
+          )
+          for (const nb of vscode.workspace.notebookDocuments) {
+            for (const cell of nb.getCells()) {
+              if (cell.document.uri.toString() === docUri.toString()) {
+                docCell = cell
+                break
+              }
+            }
+          }
+        }
         if (docCell && docCell.metadata?.fbaRdr === 'FBANBRestQueryRenderer') {
           FBANBRestQueryRenderer.onCellCmd(docCell, cmd, args.slice(1))
+        } else {
+          console.warn(`FBANotebookProvider.onCommand docCell not found or wrong metadata:`, docCell)
         }
-        /*
-        const fbaFsUri = docUri.with({ scheme: 'fbaFs', fragment: '' })
-        console.log(`FBANotebookProvider.onCommand fbaFsUri=${fbaFsUri.toString()}`)
-        const openedFileData = this.fsProvider.getDataForUri(fbaFsUri)
-        */
       } else {
         console.warn(`FBANotebookProvider.onCommand no doc! args=${JSON.stringify(args)}`)
       }
