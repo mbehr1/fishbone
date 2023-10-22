@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.28.2](https://github.com/mbehr1/fishbone/compare/v1.28.1...v1.28.2) (2023-10-22)
+
+
+### Bug Fixes
+
+* **notebook:** show cell sometimes w.o. action ([b996578](https://github.com/mbehr1/fishbone/commit/b996578aab4e31f3503754ba343c6d87d8474e9b))
+
 ## [1.28.1](https://github.com/mbehr1/fishbone/compare/v1.28.0...v1.28.1) (2023-10-09)
 
 
