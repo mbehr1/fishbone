@@ -373,10 +373,10 @@ export default class App extends Component {
   }
 
   handleInputChange(object, event, propsField) {
-    console.warn(`handleInputChange this=`, this)
-    console.warn(`handleInputChange object=`, object)
-    console.warn(`handleInputChange event=`, event)
-    console.warn(`handleInputChange propsField=`, propsField)
+    console.log(`handleInputChange this=`, this)
+    console.log(`handleInputChange object=`, object)
+    console.log(`handleInputChange event=`, event)
+    console.log(`handleInputChange propsField=`, propsField)
 
     // if propsField is provided this determines the field to update (e.g. object.props[propsField]=...)
     const target = event.target
@@ -429,9 +429,10 @@ export default class App extends Component {
         /*object.props[propsFieldName] = value; */ didUpdate = true
       } else {
         // for attributes object contains just one key: (the name)
-        if (Object.keys(object).length === 1) {
+        const { fbUid: _a, ...objectWoFbUid } = object
+        if (Object.keys(objectWoFbUid).length === 1) {
           console.log(`App.handleInputChange found attribute like object to update: ${JSON.stringify(object)}`)
-          const curValue = object[Object.keys(object)[0]]
+          const curValue = object[Object.keys(objectWoFbUid)[0]]
           if (typeof curValue === 'object') {
             const attrObj = curValue
             console.log(`App.handleInputChange found object inside attribute to update: ${JSON.stringify(attrObj)}`)
@@ -453,7 +454,11 @@ export default class App extends Component {
               object[key] = value
               didUpdate = true
             } else {
-              console.warn(`handleInputChange didn't found key '${key}' in object to update to value '${value}'!`)
+              console.warn(
+                `handleInputChange didn't found key '${key}' in object to update to value '${JSON.stringify(
+                  value,
+                )}' in object: '${JSON.stringify(object)}'!`,
+              )
             }
           }
         }
@@ -580,7 +585,7 @@ export default class App extends Component {
 
     // reset attributes:
     this.state.attributes.forEach((attribute) => {
-      const attrName = Object.keys(attribute)[0]
+      const attrName = Object.keys(attribute).find((key) => key !== 'fbUid')
       const attrObj = attribute[attrName]
       if ('value' in attrObj) {
         attrObj['value'] = null

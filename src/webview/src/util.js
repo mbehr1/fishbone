@@ -5,6 +5,7 @@ import jp from 'jsonpath'
 // provide JSON5.parse for conversion functions:
 import JSON5 from 'json5'
 import * as uv0 from 'dlt-logs-utils'
+import { rqUriDecode, rqUriEncode } from 'dlt-logs-utils/dist/restQuery'
 
 // eslint-disable-next-line no-undef
 if (!globalThis.JSON5) {
@@ -137,17 +138,20 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
           attrKey = attrName.slice(dotPos + 1)
           attrName = attrName.slice(0, dotPos)
         }
-        console.log(`triggerRestQueryDetails attrName='${attrName}' attrKey='${attrKey}'`)
-        const attribute = attributes?.find((attr) => Object.keys(attr)[0] === attrName)
+        // console.log(`triggerRestQueryDetails attrName='${attrName}' attrKey='${attrKey}'`)
+        const attribute = attributes?.find((attr) => {
+          const name = Object.keys(attr).find((key) => key !== 'fbUid')
+          return name === attrName
+        })
         if (attribute !== undefined) {
           const attrValue = attribute[attrName].value
           const attrKeyValue = Array.isArray(attrValue)
             ? attrValue.map((e) => (attrKey ? e[attrKey] : e))
             : attrKey
-            ? attrValue && attrKey in attrValue
-              ? attrValue[attrKey]
-              : null
-            : attrValue
+              ? attrValue && attrKey in attrValue
+                ? attrValue[attrKey]
+                : null
+              : attrValue
           if (typeof attrKeyValue === 'string') {
             // console.log(`attrKeyValue='${attrKeyValue}'`, attribute);
             return wrapStringInQuotes ? `"${attrKeyValue}"` : attrKeyValue
@@ -156,7 +160,7 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
             return JSON.stringify(attrKeyValue)
           }
         }
-        return `<unknown attribute:${attrName}>`
+        return wrapStringInQuotes ? `"<unknown attribute:${attrName}>"` : `<unknown attribute:${attrName}>`
       }
       return wrapStringInQuotes ? `"${p1}"` : p1
     }
@@ -169,13 +173,64 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
       //  -> JSON representation otherwise (e.g. for arrays [...])
       // problem is that arrays should not be "" quoted.
 
-      requestStr = reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => replaceAttr(match, p1, offset, true))
-      // replace the URI encoded ones as well, but uri encode them then:
-      requestStr = requestStr.replace(/%22%24%7B(.*?)%7D%22/g, (match, p1, offset) =>
-        encodeURIComponent(replaceAttr(match, p1, offset, true)),
-      )
-      // support uri encoded attrs like ${attributes.*} (w.o. being double enquoted) as well:
-      requestStr = requestStr.replace(/%24%7B(.*?)%7D/g, (match, p1, offset) => encodeURIComponent(replaceAttr(match, p1, offset, false)))
+      // to reduce risk we limit the new handling of replacing ${attribute..*} only to requests with "conversionFunction" inside:
+      if (!reqSource.includes('conversionFunction')) {
+        requestStr = reqSource.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => replaceAttr(match, p1, offset, true))
+        // replace the URI encoded ones as well, but uri encode them then:
+        requestStr = requestStr.replace(/%22%24%7B(.*?)%7D%22/g, (match, p1, offset) =>
+          encodeURIComponent(replaceAttr(match, p1, offset, true)),
+        )
+        // support uri encoded attrs like ${attributes.*} (w.o. being double enquoted) as well:
+        requestStr = requestStr.replace(/%24%7B(.*?)%7D/g, (match, p1, offset) => encodeURIComponent(replaceAttr(match, p1, offset, false)))
+      } else {
+        // console.log(`triggerRestQueryDetails got conversionFunction. Replacing attributes in requestStr='${reqSource}'`)
+        // we only want attributes in the form of "${attributes.name}" to be replaced within filter expression (apid, ctid,... but not within reportOptions...)
+        try {
+          const rq = rqUriDecode(reqSource)
+          // console.log(`triggerRestQueryDetails got rq.path=${rq.path} rq.cmds.length=${rq.commands.length}`)
+          // scan all cmds for filter and replace attributes:
+          for (const cmd of rq.commands) {
+            if (cmd.param?.includes('${attributes.')) {
+              switch (cmd.cmd) {
+                case 'report':
+                case 'query':
+                  // filters are the array
+                  const filters = JSON5.parse(cmd.param)
+                  if (Array.isArray(filters)) {
+                    for (const filter of filters) {
+                      if (typeof filter === 'object') {
+                        for (const key of Object.keys(filter)) {
+                          const val = filter[key]
+                          if (typeof val === 'string' && val.includes('${attributes.')) {
+                            console.log(`triggerRestQueryDetails replacing attributes in filter[${key}] from '${val}'`)
+                            // todo optimize! need to replace to object/array/string and not a string representation of it...
+                            filter[key] = JSON.parse(
+                              JSON.stringify(val).replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => replaceAttr(match, p1, offset, true)),
+                            )
+                            console.log(`triggerRestQueryDetails replacing attributes in filter[${key}] to   '${filter[key]}'`)
+                          }
+                        }
+                      } else {
+                        console.warn(`triggerRestQueryDetails got non object filter=${filter}`)
+                      }
+                    }
+                    cmd.param = JSON.stringify(filters)
+                  } else {
+                    console.warn(`triggerRestQueryDetails got non array filters=${filters}`)
+                  }
+                  break
+                default:
+                  // replace all attributes in the cmd.param:
+                  cmd.param = cmd.param.replace(/"\$\{(.*?)\}"/g, (match, p1, offset) => replaceAttr(match, p1, offset, true))
+              }
+            }
+          }
+          requestStr = rqUriEncode(rq)
+        } catch (e) {
+          console.warn(`triggerRestQueryDetails replacing attributes failed with ${e} using initial str`)
+          requestStr = reqSource
+        }
+      }
     }
 
     const res = await triggerRestQuery(requestStr)
@@ -237,8 +292,8 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
       answer.convResult !== undefined
         ? answer.convResult
         : answer.jsonPathResult !== undefined
-        ? answer.jsonPathResult
-        : answer.restQueryResult
+          ? answer.jsonPathResult
+          : answer.restQueryResult
     // console.log(`triggerRestQueryDetails got result='${JSON.stringify(answer.result)}'`);
   } catch (e) {
     console.log(`triggerRestQueryDetails got error=`, e)

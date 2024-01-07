@@ -138,7 +138,7 @@
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.8.4",
-    "dlt-logs-utils": "0.0.2",
+    "dlt-logs-utils": "^0.1.0",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "js-yaml": "^4.1.0",
     "json5": "2.2.3",

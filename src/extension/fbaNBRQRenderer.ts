@@ -17,64 +17,8 @@ import { DocData, FBAEditorProvider } from './fbaEditor'
 import { FBBadge } from './fbaFormat'
 import { arrayEquals, getMemberParent, MemberPath } from './util'
 import * as uv0 from 'dlt-logs-utils'
+import { RQ, rqUriDecode, rqUriEncode } from 'dlt-logs-utils/dist/restQuery'
 import { NotebookCellOutput } from 'vscode'
-
-interface RQCmd {
-  cmd: string
-  param: any
-}
-
-interface RQ {
-  path: string
-  commands: RQCmd[]
-}
-
-const rqUriDecode = (rq: string): RQ => {
-  const res: RQ = {
-    path: '',
-    commands: [],
-  }
-  if (!rq || rq.length === 0) {
-    return res
-  }
-
-  const indexOfQ = rq?.indexOf('?')
-  if (indexOfQ > 0) {
-    res.path = rq.slice(0, indexOfQ + 1) // + '\n'
-
-    const options = rq.slice(indexOfQ + 1)
-    const optionArr = options.split('&')
-    for (const commandStr of optionArr) {
-      const eqIdx = commandStr.indexOf('=')
-      const command = commandStr.slice(0, eqIdx)
-      const commandParams = decodeURIComponent(commandStr.slice(eqIdx + 1))
-      res.commands.push({ cmd: command, param: commandParams })
-    }
-  } else {
-    res.path = rq
-  }
-
-  return res
-}
-
-const rqUriEncode = (rq: RQ): string => {
-  let toRet = rq.path
-  if (rq.commands.length > 0) {
-    if (!toRet.endsWith('?')) {
-      toRet += '?'
-    }
-    toRet += rq.commands.map((rqCmd) => rqCmd.cmd + '=' + encodeURIComponent(rqCmd.param)).join('&')
-    /*
-    for (const [idx, rqCmd] of rq.commands.entries()) {
-      const cmdStr = rqCmd.cmd + '=' + encodeURIComponent(rqCmd.param)
-      if (idx > 0) {
-        toRet += '&'
-      }
-      toRet += cmdStr
-    }*/
-  }
-  return toRet
-}
 
 class FBANBRQCell extends vscode.NotebookCellData {
   constructor(kind: vscode.NotebookCellKind, value: string, languageId: string, metadata?: object) {

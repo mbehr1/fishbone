@@ -966,13 +966,17 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
    */
   static mergeAttributes(mainAttrs: any[], newAttrs: any[] | undefined) {
     console.warn(`FBAEditorProvider.mergeAttributes mainAttrs=${JSON.stringify(mainAttrs)} newAttrs=${JSON.stringify(newAttrs)}`)
-    // attributes are arrays of objects with a single key (the name)
+    // attributes are arrays of objects with a single key (the name) (and the fbUid as 2nd key)
     if (newAttrs === undefined) {
       return
     }
-    const mainKeys = mainAttrs.map((a) => Object.keys(a)[0])
+    const mainKeys = mainAttrs.map((a) => {
+      const { fbUid: _a, ...aWoFbUid } = a
+      return Object.keys(aWoFbUid)[0]
+    })
     for (const newKeyObj of newAttrs) {
-      const newKey = Object.keys(newKeyObj)[0]
+      const { fbUid: _a, ...newKeyObjWoFbUid } = newKeyObj
+      const newKey = Object.keys(newKeyObjWoFbUid)[0]
       if (!mainKeys.includes(newKey)) {
         mainAttrs.push(newKeyObj)
       }
