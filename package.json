@@ -129,6 +129,7 @@
     "glob": "^10.3.4",
     "husky": "^8.0.1",
     "mocha": "^10.0.0",
+    "prettier": "^3.1.1",
     "semantic-release": "^21.0.1",
     "semantic-release-vsce": "^5.5.6",
     "typescript": "^5.2.2",
@@ -136,15 +137,15 @@
     "vscode-test": "^1.6.1"
   },
   "dependencies": {
-    "dlt-logs-utils": "0.0.2",
-    "tslib": "2.6.2",
     "@vscode/extension-telemetry": "^0.8.4",
+    "dlt-logs-utils": "^0.1.0",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "js-yaml": "^4.1.0",
     "json5": "2.2.3",
     "jsonpath": "^1.1.1",
     "request": "^2.88.2",
-    "short-unique-id": "4.4.4"
+    "short-unique-id": "4.4.4",
+    "tslib": "2.6.2"
   },
   "commitlint": {
     "extends": [

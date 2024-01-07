@@ -289,24 +289,24 @@ export default function DataProviderEditDialog(props) {
                       dataSource?.startsWith('ext:mbehr1.dlt-logs')
                         ? dataSource
                         : props.applyMode
-                        ? // eslint-disable-next-line no-template-curly-in-string
-                          `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}&disableAll=view${
-                            attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
-                              ? `&add=${encodeURIComponent(
-                                  // eslint-disable-next-line no-template-curly-in-string
-                                  '{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,"tmpFb":1,"type":1}',
-                                )}`
-                              : ''
-                          }`
-                        : // eslint-disable-next-line no-template-curly-in-string
-                          `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(
-                            `[{${
+                          ? // eslint-disable-next-line no-template-curly-in-string
+                            `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}&disableAll=view${
                               attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
-                                ? // eslint-disable-next-line no-template-curly-in-string
-                                  '"lifecycles":"${attributes.lifecycles.id}",'
+                                ? `&add=${encodeURIComponent(
+                                    // eslint-disable-next-line no-template-curly-in-string
+                                    '{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,"tmpFb":1,"type":1}',
+                                  )}`
                                 : ''
-                            }"name":"not selected lifecycles","not":true,"type":1}]`,
-                          )}`
+                            }`
+                          : // eslint-disable-next-line no-template-curly-in-string
+                            `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(
+                              `[{${
+                                attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
+                                  ? // eslint-disable-next-line no-template-curly-in-string
+                                    '"lifecycles":"${attributes.lifecycles.id}",'
+                                  : ''
+                              }"name":"not selected lifecycles","not":true,"type":1}]`,
+                            )}`
                     }
                     onChange={(newValue) => {
                       setDataSource(newValue)
@@ -325,24 +325,24 @@ export default function DataProviderEditDialog(props) {
                       dataSource?.startsWith('ext:mbehr1.dlt-logs')
                         ? dataSource
                         : props.applyMode
-                        ? // eslint-disable-next-line no-template-curly-in-string
-                          `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}&disableAll=view${
-                            attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
-                              ? `&add=${encodeURIComponent(
-                                  // eslint-disable-next-line no-template-curly-in-string
-                                  '{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,"tmpFb":1,"type":1}',
-                                )}`
-                              : ''
-                          }`
-                        : // eslint-disable-next-line no-template-curly-in-string
-                          `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(
-                            `[{${
+                          ? // eslint-disable-next-line no-template-curly-in-string
+                            `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}&disableAll=view${
                               attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
-                                ? // eslint-disable-next-line no-template-curly-in-string
-                                  '"lifecycles":"${attributes.lifecycles.id}",'
+                                ? `&add=${encodeURIComponent(
+                                    // eslint-disable-next-line no-template-curly-in-string
+                                    '{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,"tmpFb":1,"type":1}',
+                                  )}`
                                 : ''
-                            }"name":"not selected lifecycles","not":true,"type":1}]`,
-                          )}`
+                            }`
+                          : // eslint-disable-next-line no-template-curly-in-string
+                            `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(
+                              `[{${
+                                attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
+                                  ? // eslint-disable-next-line no-template-curly-in-string
+                                    '"lifecycles":"${attributes.lifecycles.id}",'
+                                  : ''
+                              }"name":"not selected lifecycles","not":true,"type":1}]`,
+                            )}`
                     }
                     open={manualEditOpen}
                     onChange={(newValue) => {

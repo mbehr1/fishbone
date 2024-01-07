@@ -8,7 +8,8 @@
 
 import { TextDecoder, TextEncoder } from 'util'
 import * as vscode from 'vscode'
-import { FBAEditorProvider, FBEffect, Fishbone, FishboneTreeItem } from './fbaEditor'
+import { FBAEditorProvider, FishboneTreeItem } from './fbaEditor'
+import { Fishbone, FBEffect } from './fbaFormat'
 import { FBANBRestQueryRenderer } from './fbaNBRQRenderer'
 import { RawNotebookCell } from './fbaNotebookProvider'
 import { MemberPath, isEqualUint8Array } from './util'
