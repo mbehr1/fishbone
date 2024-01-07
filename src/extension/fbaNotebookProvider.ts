@@ -19,7 +19,11 @@ export class FBANotebookProvider implements Disposable {
 
   private selectedNotebooks: vscode.NotebookDocument[] = []
 
-  constructor(context: vscode.ExtensionContext, private editorProvider: FBAEditorProvider, private fsProvider: FBAFSProvider) {
+  constructor(
+    context: vscode.ExtensionContext,
+    private editorProvider: FBAEditorProvider,
+    private fsProvider: FBAFSProvider,
+  ) {
     // console.log(`FBANotebookProvider()...`)
 
     this.nbController = vscode.notebooks.createNotebookController('fba-nb-controller-1', 'fba-nb', 'Fishbone Notebook')

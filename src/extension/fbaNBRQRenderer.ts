@@ -536,8 +536,8 @@ export class FBANBRestQueryRenderer {
                                     resJson.data.length > msgs.length
                                       ? `. Unfold to see first ${msgs.length}`
                                       : resJson.data.length > 0
-                                      ? ':'
-                                      : ''
+                                        ? ':'
+                                        : ''
                                   }`,
                                   texts: msgs.map((msg) => codeBlock(JSON.stringify(msg, undefined, 2), 'json')).flat(),
                                 },
@@ -760,7 +760,7 @@ export class FBANBRestQueryRenderer {
               let convResult: string | number | undefined
               switch (convType) {
                 case 'length':
-                  convResult = Array.isArray(result) ? result.length : 0
+                  convResult = Array.isArray(result) ? result.length : Array.isArray(result.data) ? result.data.length : 0
                   break
                 case 'index':
                   convResult =

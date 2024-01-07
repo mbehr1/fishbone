@@ -94,7 +94,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
   private _fsProvider: FBAFSProvider
 
-  constructor(private readonly context: vscode.ExtensionContext, private readonly reporter?: TelemetryReporter) {
+  constructor(
+    private readonly context: vscode.ExtensionContext,
+    private readonly reporter?: TelemetryReporter,
+  ) {
     console.log(`FBAEditorProvider constructor() called...`)
 
     this._fsProvider = new FBAFSProvider(this)

@@ -1,7 +1,7 @@
-import * as vscode from 'vscode';
-import * as request from 'request';
-import { extensionId } from './constants';
-import { URL } from 'url';
+import * as vscode from 'vscode'
+import * as request from 'request'
+import { extensionId } from './constants'
+import { URL } from 'url'
 import { Token, tokenize } from 'jju'
 
 export function getNonce() {
@@ -156,9 +156,9 @@ export const isEqualUint8Array = (a: Uint8Array, b: Uint8Array): boolean => {
  * @returns true if both are equal, e.g. have same length and same ('===') items
  */
 export const arrayEquals = <T>(a: T[], b: T[]) => {
-    return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((val, idx) => val === b[idx])
+  return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((val, idx) => val === b[idx])
 }
-    
+
 /**
  * return a Uri that executes the command with the arguments.
  * @param cmd - vscode command that will be called if the Uri is clicked (e.g. from hover text). Needs to be a registered command.
