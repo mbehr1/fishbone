@@ -1,5 +1,17 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.28.3](https://github.com/mbehr1/fishbone/compare/v1.28.2...v1.28.3) (2024-01-07)
+
+
+### Bug Fixes
+
+* lifecycle selection and attribute handling ([b819bcb](https://github.com/mbehr1/fishbone/commit/b819bcb4bcea0d9cac02ff8842ec8aad6e700470)), closes [#39](https://github.com/mbehr1/fishbone/issues/39)
+
+
+### Other
+
+* move fba format/file functions to sep file ([d8fb59f](https://github.com/mbehr1/fishbone/commit/d8fb59f446ff804a75a82a1a1a97c3d2a87ddd63))
+
 ## [1.28.2](https://github.com/mbehr1/fishbone/compare/v1.28.1...v1.28.2) (2023-10-22)
 
 
