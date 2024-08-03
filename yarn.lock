@@ -2285,10 +2285,10 @@ dir-glob@^3.0.0, dir-glob@^3.0.1:
   dependencies:
     path-type "^4.0.0"
 
-dlt-logs-utils@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/dlt-logs-utils/-/dlt-logs-utils-0.1.0.tgz#440cad79bf2d045d27e5c1b6210db7ff3bbba85a"
-  integrity sha512-XlAolmR4UfDGimvlhzwW0N2xF7g70MibyforFLC76c5sTbgYd49IUSQY67C1wJSEcX3KqxQ5rcSCX7wk8B2Mjg==
+dlt-logs-utils@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/dlt-logs-utils/-/dlt-logs-utils-0.2.0.tgz#13dc3c7c8305d0a77d7b937c6bc028f0fe1234bb"
+  integrity sha512-aByT16KJKlylHlQVBrN71gAQ+eRm9FSWAXCWkWwZcBxgrdusdlBVH6YwbNPlM2Rwndx09TGp5yaqtLCnukUDMw==
 
 doctrine@^3.0.0:
   version "3.0.0"

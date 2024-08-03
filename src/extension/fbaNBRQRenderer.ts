@@ -112,7 +112,7 @@ export class FBANBRestQueryRenderer {
               const memberCells = FBANBRestQueryRenderer.createMemberCell(
                 rO,
                 'conversionFunction',
-                `### conversionFunction` + '\n\n```function(matches, param){```',
+                `### conversionFunction` + '\n\n```function(matches, params){```',
                 {
                   fbUid,
                   fbUidMembers: fbUidMembers.concat([cmdIdx.toString() + ':' + rqCmd.cmd, idx, 'reportOptions']),
@@ -823,7 +823,7 @@ export class FBANBRestQueryRenderer {
                   ...FBANBRestQueryRenderer.createMemberCell(
                     member,
                     memberRef,
-                    `### ${memberRef}` + '\n\n```function(matches, param){```', // todo this needs to match exactly the initial creation text!
+                    `### ${memberRef}` + '\n\n```function(matches, params){```', // todo this needs to match exactly the initial creation text!
                     { ...cell.metadata, fbUidMembers: cell.metadata.fbUidMembers.concat(token.stack) },
                   ),
                 )
