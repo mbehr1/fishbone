@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.29.0](https://github.com/mbehr1/fishbone/compare/v1.28.3...v1.29.0) (2024-08-03)
+
+
+### Features
+
+* update to dlt-logs-utils v0.2.0 with tlAll ([b5b9687](https://github.com/mbehr1/fishbone/commit/b5b9687a622b050a82b6bd51d9c4efe81003453a))
+
 ## [1.28.3](https://github.com/mbehr1/fishbone/compare/v1.28.2...v1.28.3) (2024-01-07)
 
 
