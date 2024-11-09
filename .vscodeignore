@@ -1,3 +1,6 @@
+node_modules
+esbuild.js
+tsconfig_test.json
 .vscode/**
 .vscode-test/**
 out/test/**
