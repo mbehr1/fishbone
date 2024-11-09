@@ -491,8 +491,8 @@ export class FBANBRestQueryRenderer {
                               const localObj = {}
                               const reportObj = {} // todo solution for multiple filters?
                               const regex = filterWoReportOptions.payloadRegex ? new RegExp(filterWoReportOptions.payloadRegex) : undefined
-                              const textsMatches = []
-                              const textsConverted = []
+                              const textsMatches: string[][] = []
+                              const textsConverted: string[][] = []
                               for (const msg of msgs) {
                                 const matches = regex ? regex.exec(msg.payloadString) : []
                                 textsMatches.push(codeBlock(JSON.stringify(matches, undefined, 2), 'json'))

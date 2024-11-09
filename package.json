@@ -113,7 +113,7 @@
     "lint": "eslint src --ext ts",
     "watch:webview": "webpack --watch --mode development",
     "pretest": "yarn run compile && yarn run lint",
-    "test": "node ./out/test/runTest.js"
+    "test": "tsc --project tsconfig_test.json && node ./out/test/test/runTest.js"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.1.2",
