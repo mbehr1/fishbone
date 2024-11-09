@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.29.2](https://github.com/mbehr1/fishbone/compare/v1.29.1...v1.29.2) (2024-11-09)
+
+
+### Bug Fixes
+
+* remove node_modules from package ([09ca2bf](https://github.com/mbehr1/fishbone/commit/09ca2bf6c3b08569c06c7b9726cce3672f7de97a))
+
 ## [1.29.1](https://github.com/mbehr1/fishbone/compare/v1.29.0...v1.29.1) (2024-11-09)
 
 
