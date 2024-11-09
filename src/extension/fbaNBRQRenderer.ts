@@ -8,7 +8,7 @@
 import * as vscode from 'vscode'
 
 import * as JSON5 from 'json5'
-import * as jp from 'jsonpath'
+import * as jp from 'jsonpath/jsonpath.min.js' // otherwise we get load error with esbuild
 
 // import jju from 'jju'
 const jju = require('jju')

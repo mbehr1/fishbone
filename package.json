@@ -102,11 +102,15 @@
   },
   "scripts": {
     "prepare": "husky install",
-    "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./ && npm run build:webview",
+    "compile": "npm run check-types && node esbuild.js && npm run build:webview",
+    "check-types": "tsc --noEmit",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "vscode:prepublish": "yarn run package",
+    "package": "npm run check-types && node esbuild.js --production && npm run build:webview",
     "build:webview": "yarn --cwd ./src/webview build",
     "lint": "eslint src --ext ts",
-    "watch": "tsc -watch -p ./",
     "watch:webview": "webpack --watch --mode development",
     "pretest": "yarn run compile && yarn run lint",
     "test": "node ./out/test/runTest.js"
@@ -118,13 +122,14 @@
     "@semantic-release/git": "^10.0.1",
     "@types/js-yaml": "^4.0.5",
     "@types/json5": "2.2.0",
-    "@types/jsonpath": "0.2.1",
+    "@types/jsonpath": "0.2.4",
     "@types/mocha": "^9.1.1",
     "@types/node": "^16.11.7",
     "@types/request": "^2.48.8",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
+    "esbuild": "^0.24.0",
     "eslint": "^8.50.0",
     "glob": "^10.3.4",
     "husky": "^8.0.1",
@@ -254,5 +259,6 @@
       ]
     ],
     "preset": "conventionalcommits"
-  }
+  },
+  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }
