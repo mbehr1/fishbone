@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.29.1](https://github.com/mbehr1/fishbone/compare/v1.29.0...v1.29.1) (2024-11-09)
+
+
+### Bug Fixes
+
+* unmark edit in notebook as experimental ([5f894c1](https://github.com/mbehr1/fishbone/commit/5f894c10e12daf51ffa3e53a763ee56e70e646fd))
+
 ## [1.29.0](https://github.com/mbehr1/fishbone/compare/v1.28.3...v1.29.0) (2024-08-03)
 
 
