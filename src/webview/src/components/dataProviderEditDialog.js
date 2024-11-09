@@ -279,7 +279,7 @@ export default function DataProviderEditDialog(props) {
                       ]),
                     )}`}
                   >
-                    Edit in Notebook (experimental)
+                    Edit in Notebook
                   </Button>
                 )}
                 {dltFilterAssistantOpen && (
