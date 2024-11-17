@@ -17,8 +17,13 @@ import { DocData, FBAEditorProvider } from './fbaEditor'
 import { FBBadge } from './fbaFormat'
 import { arrayEquals, getMemberParent, MemberPath } from './util'
 import * as uv0 from 'dlt-logs-utils'
-import { RQ, rqUriDecode, rqUriEncode } from 'dlt-logs-utils/dist/restQuery'
+import { RQ, rqUriDecode, rqUriEncode } from 'dlt-logs-utils/restQuery'
+import { DltFilter, DltLifecycleInfoMinIF, FbSequenceResult, SeqChecker, seqResultToMdAst } from 'dlt-logs-utils/sequence'
 import { NotebookCellOutput } from 'vscode'
+
+import { toMarkdown } from 'mdast-util-to-markdown'
+import { gfmTableToMarkdown } from 'mdast-util-gfm-table'
+import { assert as mdassert } from 'mdast-util-assert'
 
 class FBANBRQCell extends vscode.NotebookCellData {
   constructor(kind: vscode.NotebookCellKind, value: string, languageId: string, metadata?: object) {
@@ -631,6 +636,8 @@ export class FBANBRestQueryRenderer {
               ],
             }
             FBANBRestQueryRenderer.execRestQuery(editorProvider, exec, docData, filterRq, '', '')
+          } else if (fbUidMembers[fbUidMembers.length - 1].endsWith(':sequences')) {
+            this.executeSequences(editorProvider, exec, docData, cell)
           } else {
             exec.end(false)
           }
@@ -639,6 +646,144 @@ export class FBANBRestQueryRenderer {
           exec.end(false)
         }
       }
+    }
+  }
+
+  static getLCInfoFromRQLc(rqLc: any): DltLifecycleInfoMinIF {
+    return {
+      ecu: rqLc.ecu,
+      persistentId: rqLc.id,
+      lifecycleStart: new Date(rqLc.startTimeUtc),
+      lifecycleEnd: new Date(rqLc.endTimeUtc),
+      isResume: rqLc.isResume,
+      lifecycleResume: rqLc.resumeTimeUtc ? new Date(rqLc.resumeTimeUtc) : undefined,
+      nrMsgs: rqLc.nrMsgs,
+      tooltip: rqLc.tooltip || '',
+      swVersions: rqLc.sws,
+      getTreeNodeLabel: () => rqLc.label,
+    }
+  }
+
+  static async executeSequences(
+    editorProvider: FBAEditorProvider,
+    exec: vscode.NotebookCellExecution,
+    docData: DocData,
+    cell: vscode.NotebookCell,
+  ): Promise<void> {
+    const sequences = JSON5.parse(cell.document.getText())
+    if (Array.isArray(sequences) && sequences.length > 0) {
+      // code similar to fba-cli.processSequences (todo refactor to dlt-log-utils/sequences?)
+      for (const jsonSeq of sequences) {
+        const seqResult: FbSequenceResult = {
+          sequence: jsonSeq,
+          occurrences: [],
+          logs: [],
+        }
+        const seqChecker = new SeqChecker(jsonSeq, seqResult, DltFilter)
+        // determine all filters to query from steps and failures:
+        const allFilters = seqChecker.getAllFilters()
+        if (allFilters.length === 0) {
+          console.warn(`processSequences: no filters found for sequence '${seqChecker.name}'`)
+          seqResult.logs.push(`no filters found for sequence '${seqChecker.name}'`)
+          continue
+        } else {
+          // we do want lifecycle infos as well
+          allFilters[0].addLifecycles = true
+        }
+        const allFiltersRq: RQ = {
+          path: 'ext:mbehr1.dlt-logs/get/docs/0/filters?', // todo get from cell data!
+          commands: [
+            {
+              cmd: 'query',
+              param: JSON.stringify(allFilters),
+            },
+          ],
+        }
+        await editorProvider.performRestQuery(docData, rqUriEncode(allFiltersRq)).then(
+          async (resJson: any) => {
+            if ('error' in resJson) {
+              exec.appendOutput(
+                new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got error:${JSON.stringify(resJson.error)}`)]),
+              )
+            } else {
+              if ('data' in resJson && Array.isArray(resJson.data)) {
+                const lifecycles = new Map(
+                  (<any[]>resJson.data)
+                    .filter((d: any) => d.type === 'lifecycles')
+                    .map((d: any) => [d.id as number, this.getLCInfoFromRQLc(d.attributes)]),
+                )
+                const msgs = <any[]>resJson.data
+                  .filter((d: any) => d.type === 'msg')
+                  .map((d: any) => {
+                    const lifecycle = lifecycles.get(d.attributes.lifecycle)
+                    return {
+                      index: d.id,
+                      ...d.attributes,
+                      lifecycle,
+                      receptionTimeInMs: lifecycle ? lifecycle.lifecycleStart.valueOf() + d.attributes.timeStamp / 10000 : 0,
+                    }
+                  })
+                const slicedMsgs = msgs.slice(0, 50)
+                appendMarkdown(exec, [
+                  {
+                    open: false,
+                    summary: `received ${lifecycles.size} lifecycles and ${msgs.length} messages${
+                      msgs.length > slicedMsgs.length ? `. Unfold to see first ${slicedMsgs.length}` : resJson.data.length > 0 ? ':' : ''
+                    }`,
+                    texts: msgs.map((msg) => codeBlock(JSON.stringify(slicedMsgs, undefined, 2), 'json')).flat(),
+                  },
+                ])
+                seqChecker.processMsgs(msgs)
+                /*appendMarkdown(exec, [
+                  {
+                    open: false,
+                    summary: `seqResult`,
+                    texts: codeBlock(JSON.stringify(seqResult, undefined, 2), 'json'),
+                  },
+                ])*/
+                try {
+                  const resAsMd = seqResultToMdAst(seqResult)
+                  /*appendMarkdown(exec, [
+                    {
+                      open: false,
+                      summary: `resAsMd`,
+                      texts: codeBlock(JSON.stringify(resAsMd, undefined, 2), 'json'),
+                    },
+                  ])*/
+                  for (const res of resAsMd) {
+                    mdassert(res)
+                  }
+                  const resAsMarkdown = toMarkdown(
+                    { type: 'root', children: resAsMd },
+                    { extensions: [gfmTableToMarkdown({ tablePipeAlign: false })] },
+                  )
+                  appendMarkdown(exec, [resAsMarkdown])
+                } catch (e) {
+                  exec.appendOutput(new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`converting result to md got err:${e}`)]))
+                }
+                appendMarkdown(exec, [
+                  {
+                    open: false, // todo only in case of error
+                    summary: `Sequence '${seqChecker.name}': logs:${seqResult.logs.length}`,
+                    texts: seqResult.logs.map((log: string) => codeBlock(log, 'json')).flat(),
+                  },
+                ])
+              }
+            }
+          },
+          (errTxt) => {
+            console.log(`FBANBRestQueryRenderer.execRestQuery got error:`, errTxt)
+            exec.appendOutput(new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got error:${JSON.stringify(errTxt)}`)]))
+            exec.end(true)
+          },
+        )
+      }
+      exec.end(true)
+    } else {
+      exec.appendOutput(
+        new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`no sequences provided! Needs to be a non empty json array!`)]),
+      )
+      exec.end(false)
     }
   }
 

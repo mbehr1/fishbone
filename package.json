@@ -143,11 +143,14 @@
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.8.4",
-    "dlt-logs-utils": "^0.2.0",
+    "dlt-logs-utils": "^0.3.0",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "js-yaml": "^4.1.0",
     "json5": "2.2.3",
     "jsonpath": "^1.1.1",
+    "mdast-util-assert": "^5.0.0",
+    "mdast-util-gfm-table": "^2.0.0",
+    "mdast-util-to-markdown": "^2.1.2",
     "request": "^2.88.2",
     "short-unique-id": "4.4.4",
     "tslib": "2.6.2"
