@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.30.0](https://github.com/mbehr1/fishbone/compare/v1.29.2...v1.30.0) (2024-11-17)
+
+
+### Features
+
+* first sequence support ([0c7847c](https://github.com/mbehr1/fishbone/commit/0c7847c6c7f1478981247dd9e0d6c5c1a1e6de49))
+
 ## [1.29.2](https://github.com/mbehr1/fishbone/compare/v1.29.1...v1.29.2) (2024-11-09)
 
 
