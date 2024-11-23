@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.31.0](https://github.com/mbehr1/fishbone/compare/v1.30.0...v1.31.0) (2024-11-23)
+
+
+### Features
+
+* **sequence:** add context support ([3d7e81e](https://github.com/mbehr1/fishbone/commit/3d7e81ead4ccd701fece3fb45f8e19f62f4929c2))
+
 ## [1.30.0](https://github.com/mbehr1/fishbone/compare/v1.29.2...v1.30.0) (2024-11-17)
 
 
