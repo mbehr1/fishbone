@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkfishbone=self.webpackChunkfishbone||[]).push([[5163],{5597:e=>{e.exports=JSON.parse('{"authors":[{"name":"Matthias Behr","title":"Core Developer","url":"https://github.com/mbehr1","socials":{"github":"https://github.com/mbehr1"},"key":"mbehr1","page":null,"count":1}]}')}}]);

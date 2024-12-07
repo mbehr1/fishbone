@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkfishbone=self.webpackChunkfishbone||[]).push([[630],{5613:s=>{s.exports=JSON.parse('{"label":"dlt-logs","permalink":"/fishbone/blog/tags/dlt-logs","allTagsPath":"/fishbone/blog/tags","count":1}')}}]);

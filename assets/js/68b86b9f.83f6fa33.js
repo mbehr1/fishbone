@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkfishbone=self.webpackChunkfishbone||[]).push([[626],{4274:s=>{s.exports=JSON.parse('{"label":"visual studio code","permalink":"/fishbone/blog/tags/visual-studio-code","allTagsPath":"/fishbone/blog/tags","count":1}')}}]);

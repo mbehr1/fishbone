@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkfishbone=self.webpackChunkfishbone||[]).push([[9720],{9720:(e,s,c)=>{c.d(s,{createArchitectureServices:()=>h.S});var h=c(9936);c(9369)}}]);

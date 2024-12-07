@@ -14,8 +14,8 @@
             <guid>https://mbehr1.github.io/fishbone/blog/welcome</guid>
             <pubDate>Fri, 25 Dec 2020 00:00:00 GMT</pubDate>
             <description><![CDATA[I'll use this blog to announce new features or doc updates to my Visual Studio Code extension "fishbone" or to announce other related extensions.]]></description>
-            <content:encoded><![CDATA[<p>I'll use this blog to announce new features or doc updates to my Visual Studio Code extension "fishbone" or to announce other related extensions.
-If you have any questions please feel free to contact me!</p>]]></content:encoded>
+            <content:encoded><![CDATA[<p>I'll use this blog to announce new features or doc updates to my Visual Studio Code extension "fishbone" or to announce other related extensions.</p>
+<p>If you have any questions please feel free to contact me!</p>]]></content:encoded>
             <category>visual studio code</category>
             <category>dlt-logs</category>
             <category>fishbone</category>

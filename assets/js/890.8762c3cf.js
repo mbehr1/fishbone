@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkfishbone=self.webpackChunkfishbone||[]).push([[890],{890:(e,s,c)=>{c.d(s,{createInfoServices:()=>f.v});var f=c(7021);c(9369)}}]);
