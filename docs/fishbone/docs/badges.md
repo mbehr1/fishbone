@@ -75,6 +75,7 @@ The DLT-Logs rest query api supports the following commands:
 command name | description
 ------------ | -----------
 `query` | Used to apply a query for dlt messages. The expected parameter is an array of filter objects. For a filter object attributes see [filter reference](https://mbehr1.github.io/dlt-logs/docs/filterReference#filter-match-attributes). Query should be used for all badges. If multiple filters are queried the [usual rules](https://mbehr1.github.io/dlt-logs/docs/filterReference/#when-is-a-dlt-message-shown-in-a-view) apply (e.g. positive filters are `or`'d) except that for no filter no messages are returned.
+`sequences`| Used to define and execute sequence detection. The expected parameter is an array of sequence objects. For Details see [sequences](/docs/sequences).
 `disableAll`, `enableAll`| Used to disable/enable all filters of a certain type. The expected parameter is any of `view` (pos or neg), `pos` (positive filters), `neg` (neg. filters), `marker`(marker). Used only for [apply filter](/docs/interactive) button.
 `report` | Used to generate a report. The expected parameter is an array of filter objects. Used only for [apply filter](/docs/interactive) button.
 `add`| Used to add a filter. The expected parameter is a filter object. Those filters are not persisted. Hint: use e.g. an attribute like "tmpFb":1 to identify those filters easily for a later `delete`(see below). Used only for [apply filter](/docs/interactive) button.

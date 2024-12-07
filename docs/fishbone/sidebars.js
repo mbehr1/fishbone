@@ -1,22 +1,22 @@
 module.exports = {
   fishboneSideBar: {
-    'Fishbone': [
+    Fishbone: [
       {
-        "type": "category",
-        "label": "Guides",
-        "items": ['installFirstUse', 'genericSettings'],
+        type: 'category',
+        label: 'Guides',
+        items: ['installFirstUse', 'genericSettings'],
       },
       {
-        "type": "category",
-        "label": "Features",
-        "items": ['interactive', 'badges', 'nestedFishbones'],
-        "collapsed": false
+        type: 'category',
+        label: 'Features',
+        items: ['interactive', 'badges', 'nestedFishbones', 'sequences'],
+        collapsed: false,
       },
       {
-        "type": "link",
-        "label": "Changelog",
-        href: "https://github.com/mbehr1/fishbone/blob/master/CHANGELOG.md"
-      }
-    ]
+        type: 'link',
+        label: 'Changelog',
+        href: 'https://github.com/mbehr1/fishbone/blob/master/CHANGELOG.md',
+      },
+    ],
   },
-};
+}

@@ -9,6 +9,10 @@ module.exports = {
   favicon: 'img/fishbone-icon2.png',
   organizationName: 'mbehr1',
   projectName: 'fishbone',
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
   themeConfig: {
     navbar: {
       title: 'Fishbone',
