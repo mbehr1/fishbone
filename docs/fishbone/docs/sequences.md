@@ -139,7 +139,7 @@ sequenceDiagram
     participant flash
     tester->>+flash: start of flash
 
-    loop flash of a signle image
+    loop flash of a single image
       tester->>flash: start image transfer
       Note over tester, flash: transfer image data and persist
       flash->>tester: end image transfer
@@ -179,7 +179,7 @@ sequences=[
           "failures":[]
         ]
       },
-      { // step 3
+      { // step 3 (=4 in seq chart)
         "name":"end of flash",
         "filter":// filter to detect end of flash sequence
       },
