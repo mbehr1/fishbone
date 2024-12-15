@@ -1,5 +1,14 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.31.1](https://github.com/mbehr1/fishbone/compare/v1.31.0...v1.31.1) (2024-12-15)
+
+
+### Bug Fixes
+
+* **sequence:** add try/catch for notebook execution ([229f0f6](https://github.com/mbehr1/fishbone/commit/229f0f6d5d3144a1674718f8f07d4dbad3fc488c))
+* **sequence:** update to dlt-logs-utils 0.5.0 ([7e6d242](https://github.com/mbehr1/fishbone/commit/7e6d2428964395fb8aaf144c5cd90a31f6843e24))
+* **sequence:** verbose error output ([54ea10b](https://github.com/mbehr1/fishbone/commit/54ea10b303d85de0fc81c51a8246cee801e4613b))
+
 ## [1.31.0](https://github.com/mbehr1/fishbone/compare/v1.30.0...v1.31.0) (2024-11-23)
 
 
