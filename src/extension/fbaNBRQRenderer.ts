@@ -680,11 +680,26 @@ export class FBANBRestQueryRenderer {
             occurrences: [],
             logs: [],
           }
-          const seqChecker = new SeqChecker(jsonSeq, seqResult, DltFilter)
+          let seqChecker: SeqChecker<DltFilter>
+          try {
+            seqChecker = new SeqChecker(jsonSeq, seqResult, DltFilter)
+          } catch (e) {
+            exec.appendOutput(
+              new NotebookCellOutput([
+                vscode.NotebookCellOutputItem.stderr(`failed to create seqChecker for '${JSON.stringify(jsonSeq)}'`),
+              ]),
+            )
+            throw e
+          }
+
           // determine all filters to query from steps and failures:
           const allFilters = seqChecker.getAllFilters()
           if (allFilters.length === 0) {
-            console.warn(`processSequences: no filters found for sequence '${seqChecker.name}'`)
+            exec.appendOutput(
+              new NotebookCellOutput([
+                vscode.NotebookCellOutputItem.stderr(`processSequences: no filters found for sequence '${seqChecker.name}'`),
+              ]),
+            )
             seqResult.logs.push(`no filters found for sequence '${seqChecker.name}'`)
             continue
           } else {
@@ -771,13 +786,14 @@ export class FBANBRestQueryRenderer {
                       texts: seqResult.logs.map((log: string) => codeBlock(log, 'json')).flat(),
                     },
                   ])
+                } else {
+                  exec.appendOutput(new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got no data!`)]))
                 }
               }
             },
             (errTxt) => {
               console.log(`FBANBRestQueryRenderer.execRestQuery got error:`, errTxt)
               exec.appendOutput(new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got error:${JSON.stringify(errTxt)}`)]))
-              exec.end(true)
             },
           )
         }
