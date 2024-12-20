@@ -70,6 +70,7 @@ attribute | description
 --------- | -----------
 `name` | Optional: Name of this step. If not provided name of the filter or name of the contained sequence will be used.
 `card` | Optional: Cardinality of this step. Defaults to "exactly once/mandatory step" if not provided. Can be any of:<br/>`?`:zero or once, so an optional step,<br/>`*`:any number of times = 0.., so an optional step that can occur not at all or any number of times<br/>`+`:once or multiple times, so a mandatory step that can occur multiple times but at least once
+`canCreateNew`| Optional: Determines whether this step can create a new sequence occurrence. Defaults to `true`. Must not be `false`for the first step in a sequence. Set to `false` if this step shall only be checked for a created occurrence from an earlier step. So the `filter` or `sequence` will be ignored then.
 `filter` | [DLT filter](https://mbehr1.github.io/dlt-logs/docs/filterReference#details) definition. If this filter matches a msg the step is seen as "matching". Either `filter` or `sequence` must be provided.
 `sequence` | A definition of a `sub-sequence`. For this step a full sequence is used. This is useful to either break down a bigger sequence into smaller parts of if this step can be executed multiple times (e.g. with `card:*`) but consists of multiple events/steps. See [example](#example).
 
