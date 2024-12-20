@@ -5,7 +5,7 @@ import jp from 'jsonpath'
 // provide JSON5.parse for conversion functions:
 import JSON5 from 'json5'
 import * as uv0 from 'dlt-logs-utils'
-import { rqUriDecode, rqUriEncode } from 'dlt-logs-utils/dist/restQuery'
+import { rqUriDecode, rqUriEncode } from 'dlt-logs-utils/restQuery'
 
 // eslint-disable-next-line no-undef
 if (!globalThis.JSON5) {
