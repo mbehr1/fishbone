@@ -11,6 +11,10 @@ updates:
       - "/src/webview"
     schedule:
       interval: "daily"
+    groups:
+      dlt-logs-utils:
+        patterns:
+          - "dlt-logs-utils"
     commit-message:
       prefix: fix
       prefix-development: chore
