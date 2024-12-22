@@ -4259,10 +4259,10 @@ dir-glob@^3.0.1:
   dependencies:
     path-type "^4.0.0"
 
-dlt-logs-utils@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/dlt-logs-utils/-/dlt-logs-utils-0.6.0.tgz#f4104a86fb05fe3c096088c9acac258b86c99b8a"
-  integrity sha512-1LmVBxZFdp1NNorqWADcztoOdCMewJGbHLTk3LEoUhyusR2RRubPt2DG3Tdmznfv9PY2yiLfjI6v/NDdoAMZnA==
+dlt-logs-utils@0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/dlt-logs-utils/-/dlt-logs-utils-0.7.0.tgz#4b1d611f8257c88daf56e318b37616683157a8b2"
+  integrity sha512-Pu+B0CLt+9Z3rzip2TltCWZ3Hvhvb0xwuU1nPaOomSHIvuyzKh/Vnbgv7Pubhj/kiLweXJBbxiI9az7zIGnnUg==
 
 dlv@^1.1.3:
   version "1.1.3"

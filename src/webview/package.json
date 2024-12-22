@@ -13,7 +13,7 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
-    "dlt-logs-utils": "^0.6.0",
+    "dlt-logs-utils": "0.7.0",
     "dompurify": "^2.4.0",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "js-yaml": "^4.1.0",
