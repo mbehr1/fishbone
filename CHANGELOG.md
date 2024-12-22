@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.32.0](https://github.com/mbehr1/fishbone/compare/v1.31.3...v1.32.0) (2024-12-22)
+
+
+### Features
+
+* **sequences:** add alt(ernative) steps support ([ea963aa](https://github.com/mbehr1/fishbone/commit/ea963aa9690b0662061d21d915217b03c49820b0))
+
 ## [1.31.3](https://github.com/mbehr1/fishbone/compare/v1.31.2...v1.31.3) (2024-12-20)
 
 
