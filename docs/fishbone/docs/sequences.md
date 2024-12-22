@@ -70,12 +70,13 @@ attribute | description
 --------- | -----------
 `name` | Optional: Name of this step. If not provided name of the filter or name of the contained sequence will be used.
 `card` | Optional: Cardinality of this step. Defaults to "exactly once/mandatory step" if not provided. Can be any of:<br/>`?`:zero or once, so an optional step,<br/>`*`:any number of times = 0.., so an optional step that can occur not at all or any number of times<br/>`+`:once or multiple times, so a mandatory step that can occur multiple times but at least once
-`canCreateNew`| Optional: Determines whether this step can create a new sequence occurrence. Defaults to `true`. Must not be `false`for the first step in a sequence. Set to `false` if this step shall only be checked for a created occurrence from an earlier step. So the `filter` or `sequence` will be ignored then.
-`filter` | [DLT filter](https://mbehr1.github.io/dlt-logs/docs/filterReference#details) definition. If this filter matches a msg the step is seen as "matching". Either `filter` or `sequence` must be provided.
+`canCreateNew`| Optional: Determines whether this step can create a new sequence occurrence. Defaults to `true`. Must not be `false` for the first step in a sequence. Set to `false` if this step shall only be checked for a created occurrence from an earlier step. So the `filter`,`sequence` or `alt` will be ignored then.
+`filter` | [DLT filter](https://mbehr1.github.io/dlt-logs/docs/filterReference#details) definition. If this filter matches a msg the step is seen as "matching". Either `filter`,`sequence` or `alt` must be provided.
 `sequence` | A definition of a `sub-sequence`. For this step a full sequence is used. This is useful to either break down a bigger sequence into smaller parts of if this step can be executed multiple times (e.g. with `card:*`) but consists of multiple events/steps. See [example](#example).
+`alt`| A definition for a list of alternative steps. The `alt` attribute is an array/list of step definitions. Any `card` or `canCreateNew` attribute will automatically be applied to the alternative steps. For this step to be `ok` exactly one step needs to be `ok`. See [example alt](#example-alternative-steps).
 
 :::important
-A step must contain either a filter or a sub-sequence but not both!
+A step must contain either a filter or a sub-sequence or an alt-list but not more than one!
 :::
 
 :::caution
@@ -184,6 +185,54 @@ sequences=[
         "name":"end of flash",
         "filter":// filter to detect end of flash sequence
       },
+    ],
+    "failures:[ // ommitted here
+    ],
+  }
+]
+```
+
+### example alt(ernative) steps
+
+See here an example for the `alt` attribute of a step:
+
+```mermaid
+sequenceDiagram
+    autoNumber
+    actor tester
+    participant flash
+    alt
+    tester->>+flash: flash new SW if new SW is newer
+    else
+    tester->>+flash: skip flash if new SW is the same
+    else
+    tester->>+flash: reject flash if new SW is older
+    end
+```
+
+```jsonc {8,10,14,18,21}
+/get/docs/0/filters?
+sequences=[
+  {
+    "name": "SW Update",
+    "steps":[
+      { // this step is an alternative step with 3 alternatives:
+        "name":"flash",
+        "alt":[
+            { // alt step 1
+              "name":"flash new SW if new SW is newer",
+              "sequence":// e.g. sub-sequence to detect if flash was started with newer SW
+            },
+            { // alt-step 2
+              "name":"skip flash if new SW is the same",
+              "filter":// filter to detect skip of SW
+            },
+            { // alt-step 3
+              "name":"reject flash if new SW is older",
+              "filter":// filter to detect rejection...
+            }
+          ]
+      }
     ],
     "failures:[ // ommitted here
     ],
