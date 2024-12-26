@@ -805,7 +805,8 @@ export class FBANBRestQueryRenderer {
         exec.end(false)
       }
     } catch (e) {
-      exec.appendOutput(new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`got error:${JSON.stringify(e)}`)]))
+      const errMsg = typeof e === 'string' ? e : typeof e === 'object' && e !== null ? (e as any).message : JSON.stringify(e)
+      exec.appendOutput(new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`got error: ${errMsg}`)]))
       exec.end(false)
     }
   }
