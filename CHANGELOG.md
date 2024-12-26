@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.32.1](https://github.com/mbehr1/fishbone/compare/v1.32.0...v1.32.1) (2024-12-26)
+
+
+### Bug Fixes
+
+* **sequences:** alt sub-sequences reporting ([d75b679](https://github.com/mbehr1/fishbone/commit/d75b679560cda733b7c82376fcc4f5e678728b56))
+
 ## [1.32.0](https://github.com/mbehr1/fishbone/compare/v1.31.3...v1.32.0) (2024-12-22)
 
 
