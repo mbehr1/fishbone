@@ -178,7 +178,7 @@ sequences=[
               "filter":// filter to detect start of transfer
             }
           ],
-          "failures":[]
+          "failures":{}
         ]
       },
       { // step 3 (=4 in seq chart)
@@ -186,8 +186,8 @@ sequences=[
         "filter":// filter to detect end of flash sequence
       },
     ],
-    "failures:[ // ommitted here
-    ],
+    "failures:{} // ommitted here
+    ,
   }
 ]
 ```
@@ -234,8 +234,8 @@ sequences=[
           ]
       }
     ],
-    "failures:[ // ommitted here
-    ],
+    "failures:{} // ommitted here
+    },
   }
 ]
 ```
