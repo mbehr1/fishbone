@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.33.0](https://github.com/mbehr1/fishbone/compare/v1.32.1...v1.33.0) (2024-12-30)
+
+
+### Features
+
+* **sequences:** add support for par(allel) steps ([932bb84](https://github.com/mbehr1/fishbone/commit/932bb84ffa5a2888639b26c36df5890cef731310))
+
 ## [1.32.1](https://github.com/mbehr1/fishbone/compare/v1.32.0...v1.32.1) (2024-12-26)
 
 
