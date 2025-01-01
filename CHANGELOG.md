@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.34.0](https://github.com/mbehr1/fishbone/compare/v1.33.1...v1.34.0) (2025-01-01)
+
+
+### Features
+
+* **sequences:** add ignoreOutOfOrder step attribute ([bdef8ad](https://github.com/mbehr1/fishbone/commit/bdef8ad8287677a51e6ee546efa033ad46d56803))
+
 ## [1.33.1](https://github.com/mbehr1/fishbone/compare/v1.33.0...v1.33.1) (2024-12-31)
 
 
