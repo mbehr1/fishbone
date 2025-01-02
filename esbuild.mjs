@@ -13,7 +13,7 @@ async function main() {
     sourcesContent: false,
     platform: 'node',
     // outdir: 'out',
-    outfile: 'out/extension/extension.cjs',
+    outfile: 'out/extension/extension.js', // .cjs leads to errors in vsce package...
     external: ['vscode'],
     logLevel: 'silent',
     plugins: [
