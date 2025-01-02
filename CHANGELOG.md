@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.34.1](https://github.com/mbehr1/fishbone/compare/v1.34.0...v1.34.1) (2025-01-02)
+
+### Bug Fixes
+
+* **sequences:** debug output of received msgs ([b476d0d](https://github.com/mbehr1/fishbone/commit/b476d0dbb78b01d547f535eee98bb9833f8dcb4e))
+
 ## [1.34.0](https://github.com/mbehr1/fishbone/compare/v1.33.1...v1.34.0) (2025-01-01)
 
 
