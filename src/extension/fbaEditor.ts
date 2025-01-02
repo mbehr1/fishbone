@@ -553,7 +553,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     if (url.startsWith('ext:')) {
       const extName = url.slice(4, url.indexOf('/'))
       const query = url.slice(url.indexOf('/'))
-      console.log(`extName=${extName} request=${url}`)
       // did this extension offer the restQuery?
       return new Promise((resolve, reject) => {
         const rq = this._restQueryExtFunctions.get(extName)
