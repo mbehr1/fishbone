@@ -116,8 +116,8 @@
     "test": "tsc --project tsconfig_test.json && node ./out/test/test/runTest.js"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.1.2",
-    "@commitlint/config-conventional": "^17.1.0",
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/js-yaml": "^4.0.5",
