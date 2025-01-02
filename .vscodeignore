@@ -1,5 +1,5 @@
 node_modules
-esbuild.js
+esbuild.mjs
 tsconfig_test.json
 .vscode/**
 .vscode-test/**

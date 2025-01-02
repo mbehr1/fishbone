@@ -44,7 +44,7 @@
       "supported": true
     }
   },
-  "main": "./out/extension/extension.cjs",
+  "main": "./out/extension/extension.js",
   "contributes": {
     "commands": [
       {
