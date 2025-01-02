@@ -28,7 +28,7 @@ import { assert as mdassert } from 'mdast-util-assert'
 class FBANBRQCell extends vscode.NotebookCellData {
   constructor(kind: vscode.NotebookCellKind, value: string, languageId: string, metadata?: object) {
     super(kind, value, languageId)
-    super.metadata = {
+    this.metadata = {
       fbaRdr: 'FBANBRestQueryRenderer',
       ...metadata,
     }
