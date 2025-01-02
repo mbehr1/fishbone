@@ -671,6 +671,7 @@ export class FBANBRestQueryRenderer {
     cell: vscode.NotebookCell,
   ): Promise<void> {
     try {
+      const perfStart: number = performance.now()
       const sequences = JSON5.parse(cell.document.getText())
       if (Array.isArray(sequences) && sequences.length > 0) {
         // code similar to fba-cli.processSequences (todo refactor to dlt-log-utils/sequences?)
@@ -715,8 +716,15 @@ export class FBANBRestQueryRenderer {
               },
             ],
           }
+          let perfStep = performance.now()
+          let perfInterims = perfStep - perfStart
+          console.log(`executeSequences: triggering rest query after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
           await editorProvider.performRestQuery(docData, rqUriEncode(allFiltersRq)).then(
             async (resJson: any) => {
+              const perfNow = performance.now()
+              perfInterims = perfNow - perfStep
+              perfStep = perfNow
+              console.log(`executeSequences: got rest query results after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
               if ('error' in resJson) {
                 exec.appendOutput(
                   new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got error:${JSON.stringify(resJson.error)}`)]),
@@ -728,6 +736,10 @@ export class FBANBRestQueryRenderer {
                       .filter((d: any) => d.type === 'lifecycles')
                       .map((d: any) => [d.id as number, this.getLCInfoFromRQLc(d.attributes)]),
                   )
+                  let perfNow = performance.now()
+                  perfInterims = perfNow - perfStep
+                  perfStep = perfNow
+                  console.log(`executeSequences: got lifecycles after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
                   const msgs = <any[]>resJson.data
                     .filter((d: any) => d.type === 'msg')
                     .map((d: any) => {
@@ -740,16 +752,34 @@ export class FBANBRestQueryRenderer {
                       }
                     })
                   const slicedMsgs = msgs.slice(0, 50)
+                  perfNow = performance.now()
+                  perfInterims = perfNow - perfStep
+                  perfStep = perfNow
+                  console.log(`executeSequences: got slicedMsgs after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
+
+                  const msgsText = slicedMsgs.flatMap((msg) => codeBlock(JSON.stringify(msg, undefined, 2), 'json'))
+                  perfNow = performance.now()
+                  perfInterims = perfNow - perfStep
+                  perfStep = perfNow
+                  console.log(`executeSequences: got msgsText after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
                   appendMarkdown(exec, [
                     {
                       open: false,
                       summary: `received ${lifecycles.size} lifecycles and ${msgs.length} messages${
                         msgs.length > slicedMsgs.length ? `. Unfold to see first ${slicedMsgs.length}` : resJson.data.length > 0 ? ':' : ''
                       }`,
-                      texts: msgs.map((msg) => codeBlock(JSON.stringify(slicedMsgs, undefined, 2), 'json')).flat(),
+                      texts: msgsText,
                     },
                   ])
+                  perfNow = performance.now()
+                  perfInterims = perfNow - perfStep
+                  perfStep = perfNow
+                  console.log(`executeSequences: triggering processMsgs() after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
                   seqChecker.processMsgs(msgs)
+                  perfNow = performance.now()
+                  perfInterims = perfNow - perfStep
+                  perfStep = perfNow
+                  console.log(`executeSequences: finished processMsgs() after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
                   /*appendMarkdown(exec, [
                   {
                     open: false,
@@ -759,6 +789,10 @@ export class FBANBRestQueryRenderer {
                 ])*/
                   try {
                     const resAsMd = seqResultToMdAst(seqResult)
+                    perfNow = performance.now()
+                    perfInterims = perfNow - perfStep
+                    perfStep = perfNow
+                    console.log(`executeSequences: finished seqResultToMdAst() after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
                     /*appendMarkdown(exec, [
                     {
                       open: false,
@@ -773,7 +807,15 @@ export class FBANBRestQueryRenderer {
                       { type: 'root', children: resAsMd },
                       { extensions: [gfmTableToMarkdown({ tablePipeAlign: false })] },
                     )
+                    perfNow = performance.now()
+                    perfInterims = perfNow - perfStep
+                    perfStep = perfNow
+                    console.log(`executeSequences: finished toMarkdown() after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
                     appendMarkdown(exec, [resAsMarkdown])
+                    perfNow = performance.now()
+                    perfInterims = perfNow - perfStep
+                    perfStep = perfNow
+                    console.log(`executeSequences: finished appendMarkdown() after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
                   } catch (e) {
                     exec.appendOutput(
                       new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`converting result to md got err:${e}`)]),
@@ -786,6 +828,12 @@ export class FBANBRestQueryRenderer {
                       texts: seqResult.logs.map((log: string) => codeBlock(log, 'json')).flat(),
                     },
                   ])
+                  perfNow = performance.now()
+                  perfInterims = perfNow - perfStep
+                  perfStep = perfNow
+                  console.log(
+                    `executeSequences: finished appendMarkdown() for logs after ${perfInterims}ms, total:${perfStep - perfStart}ms`,
+                  )
                 } else {
                   exec.appendOutput(new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got no data!`)]))
                 }
@@ -798,6 +846,8 @@ export class FBANBRestQueryRenderer {
           )
         }
         exec.end(true)
+        const perfStep = performance.now()
+        console.log(`executeSequences: finished exec(true) for logs after total:${perfStep - perfStart}ms`)
       } else {
         exec.appendOutput(
           new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`no sequences provided! Needs to be a non empty json array!`)]),
