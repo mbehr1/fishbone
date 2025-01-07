@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.34.2](https://github.com/mbehr1/fishbone/compare/v1.34.1...v1.34.2) (2025-01-07)
+
+### Bug Fixes
+
+* **sequences:** conversion failures with par steps ([729cb2a](https://github.com/mbehr1/fishbone/commit/729cb2a9dc7c699742dd2c8f9baacbb5f63b18cb))
+* **sequences:** increase msg limit to 1mio msgs ([ff339fd](https://github.com/mbehr1/fishbone/commit/ff339fd4a4727de0c60add34e2b53d72318577aa))
+
 ## [1.34.1](https://github.com/mbehr1/fishbone/compare/v1.34.0...v1.34.1) (2025-01-02)
 
 ### Bug Fixes
