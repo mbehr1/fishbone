@@ -672,6 +672,7 @@ export class FBANBRestQueryRenderer {
   ): Promise<void> {
     try {
       const perfStart: number = performance.now()
+      const maxNrMsgs = 1_000_000
       const sequences = JSON5.parse(cell.document.getText())
       if (Array.isArray(sequences) && sequences.length > 0) {
         // code similar to fba-cli.processSequences (todo refactor to dlt-log-utils/sequences?)
@@ -706,6 +707,7 @@ export class FBANBRestQueryRenderer {
           } else {
             // we do want lifecycle infos as well
             allFilters[0].addLifecycles = true
+            allFilters[0].maxNrMsgs = maxNrMsgs + 1 // one more to detect whether we ran into the limit
           }
           const allFiltersRq: RQ = {
             path: 'ext:mbehr1.dlt-logs/get/docs/0/filters?', // todo get from cell data!
@@ -751,6 +753,10 @@ export class FBANBRestQueryRenderer {
                         receptionTimeInMs: lifecycle ? lifecycle.lifecycleStart.valueOf() + d.attributes.timeStamp / 10000 : 0,
                       }
                     })
+                  const hitMaxNrMsgsLimit = msgs.length > maxNrMsgs
+                  if (hitMaxNrMsgsLimit) {
+                    msgs.splice(maxNrMsgs)
+                  }
                   const slicedMsgs = msgs.slice(0, 50)
                   perfNow = performance.now()
                   perfInterims = perfNow - perfStep
@@ -771,6 +777,15 @@ export class FBANBRestQueryRenderer {
                       texts: msgsText,
                     },
                   ])
+                  if (hitMaxNrMsgsLimit) {
+                    exec.appendOutput(
+                      new NotebookCellOutput([
+                        vscode.NotebookCellOutputItem.stderr(
+                          `Query results were limited to ${maxNrMsgs} messages! Please adjust filters to reduce the amount of messages!`,
+                        ),
+                      ]),
+                    )
+                  }
                   perfNow = performance.now()
                   perfInterims = perfNow - perfStep
                   perfStep = perfNow
@@ -820,6 +835,33 @@ export class FBANBRestQueryRenderer {
                     exec.appendOutput(
                       new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`converting result to md got err:${e}`)]),
                     )
+                    // see which occurrence fails/throws:
+                    let foundFailingOcc = false
+                    for (const [occIdx, occ] of seqResult.occurrences.entries()) {
+                      const partSeq: FbSequenceResult = { ...seqResult, occurrences: [occ] }
+                      try {
+                        const partResAsMd = seqResultToMdAst(partSeq)
+                      } catch (e) {
+                        appendMarkdown(exec, [
+                          {
+                            open: true,
+                            summary: `Failing sequence details: '${seqChecker.name}'. Occurrence #${occIdx} partial seqResult=:`,
+                            texts: codeBlock(JSON.stringify(partSeq, undefined, 2), 'json'),
+                          },
+                        ])
+                        foundFailingOcc = true
+                        break
+                      }
+                    }
+                    if (!foundFailingOcc) {
+                      appendMarkdown(exec, [
+                        {
+                          open: true,
+                          summary: `Failing sequence details: '${seqChecker.name}'. seqResult=:`,
+                          texts: codeBlock(JSON.stringify(seqResult, undefined, 2), 'json'),
+                        },
+                      ])
+                    }
                   }
                   appendMarkdown(exec, [
                     {
