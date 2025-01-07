@@ -672,6 +672,7 @@ export class FBANBRestQueryRenderer {
   ): Promise<void> {
     try {
       const perfStart: number = performance.now()
+      const maxNrMsgs = 1_000_000
       const sequences = JSON5.parse(cell.document.getText())
       if (Array.isArray(sequences) && sequences.length > 0) {
         // code similar to fba-cli.processSequences (todo refactor to dlt-log-utils/sequences?)
@@ -706,6 +707,7 @@ export class FBANBRestQueryRenderer {
           } else {
             // we do want lifecycle infos as well
             allFilters[0].addLifecycles = true
+            allFilters[0].maxNrMsgs = maxNrMsgs + 1 // one more to detect whether we ran into the limit
           }
           const allFiltersRq: RQ = {
             path: 'ext:mbehr1.dlt-logs/get/docs/0/filters?', // todo get from cell data!
@@ -751,6 +753,10 @@ export class FBANBRestQueryRenderer {
                         receptionTimeInMs: lifecycle ? lifecycle.lifecycleStart.valueOf() + d.attributes.timeStamp / 10000 : 0,
                       }
                     })
+                  const hitMaxNrMsgsLimit = msgs.length > maxNrMsgs
+                  if (hitMaxNrMsgsLimit) {
+                    msgs.splice(maxNrMsgs)
+                  }
                   const slicedMsgs = msgs.slice(0, 50)
                   perfNow = performance.now()
                   perfInterims = perfNow - perfStep
@@ -771,6 +777,15 @@ export class FBANBRestQueryRenderer {
                       texts: msgsText,
                     },
                   ])
+                  if (hitMaxNrMsgsLimit) {
+                    exec.appendOutput(
+                      new NotebookCellOutput([
+                        vscode.NotebookCellOutputItem.stderr(
+                          `Query results were limited to ${maxNrMsgs} messages! Please adjust filters to reduce the amount of messages!`,
+                        ),
+                      ]),
+                    )
+                  }
                   perfNow = performance.now()
                   perfInterims = perfNow - perfStep
                   perfStep = perfNow
