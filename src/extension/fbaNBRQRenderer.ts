@@ -820,6 +820,33 @@ export class FBANBRestQueryRenderer {
                     exec.appendOutput(
                       new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`converting result to md got err:${e}`)]),
                     )
+                    // see which occurrence fails/throws:
+                    let foundFailingOcc = false
+                    for (const [occIdx, occ] of seqResult.occurrences.entries()) {
+                      const partSeq: FbSequenceResult = { ...seqResult, occurrences: [occ] }
+                      try {
+                        const partResAsMd = seqResultToMdAst(partSeq)
+                      } catch (e) {
+                        appendMarkdown(exec, [
+                          {
+                            open: true,
+                            summary: `Failing sequence details: '${seqChecker.name}'. Occurrence #${occIdx} partial seqResult=:`,
+                            texts: codeBlock(JSON.stringify(partSeq, undefined, 2), 'json'),
+                          },
+                        ])
+                        foundFailingOcc = true
+                        break
+                      }
+                    }
+                    if (!foundFailingOcc) {
+                      appendMarkdown(exec, [
+                        {
+                          open: true,
+                          summary: `Failing sequence details: '${seqChecker.name}'. seqResult=:`,
+                          texts: codeBlock(JSON.stringify(seqResult, undefined, 2), 'json'),
+                        },
+                      ])
+                    }
                   }
                   appendMarkdown(exec, [
                     {
