@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.34.5](https://github.com/mbehr1/fishbone/compare/v1.34.4...v1.34.5) (2025-03-02)
+
+### Bug Fixes
+
+* **sequence:** upd dlt-logs-utils to get context as html ([b8b273b](https://github.com/mbehr1/fishbone/commit/b8b273b9131e7408aea845400a15e59116da9a4d))
+
 ## [1.34.4](https://github.com/mbehr1/fishbone/compare/v1.34.3...v1.34.4) (2025-03-02)
 
 ### Bug Fixes
