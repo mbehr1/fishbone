@@ -40,6 +40,7 @@ attribute | description
 `name` | Name of the sequence. Should be well defined as all sequences share the same namespace and the DLT-logs extension shows the results in the tree view under Events/Sequences/name.
 `steps` | Array with objects defining the events aka steps. Those steps are checked for being executed in order. See [step definition](#step-definition)
 `failures` |  Object/map with filters defining a possible failure for the sequence. The object key defines the name of the failure and the key value defines the filter used to detect that. See [failures definition](#failures-definition)
+`globalFilters`| Optional array with filters that are applied first. Main intention is to use neg. filters here to filter for attributes.ecu or attributes.lifecycles.id. `{type: 1, not: true, ecu: ${attributes.ecu}}` or `{type: 1, not: true, lifecycles: ${attributes.lifecycles.id}}` This allows to apply the filters ECU/lifecycles for fishbones.
 
 An example with one failure but without step details :
 
@@ -73,7 +74,7 @@ attribute | description
 `canCreateNew` | Optional: Determines whether this step can create a new sequence occurrence. Defaults to `true`. Must not be `false` for the first step in a sequence. Set to `false` if this step shall only be checked for a created occurrence from an earlier step. So the `filter`, `sequence`, `alt` or `par` will be ignored then.
 `ignoreOutOfOrder` | Optional: if true, any matches/occurrences of this step that are out of order/sequence are ignored. Can only be used if the step before this step is mandatory. Defaults to `false`. This can be used if some messages occur often but you expect it exactly after one step and you do ignore any other occurrences.
 `filter` | [DLT filter](https://mbehr1.github.io/dlt-logs/docs/filterReference#details) definition. If this filter matches a msg the step is seen as "matching". Either `filter`, `sequence`, `alt` or `par` must be provided.
-`sequence` | A definition of a `sub-sequence`. For this step a full sequence is used. This is useful to either break down a bigger sequence into smaller parts of if this step can be executed multiple times (e.g. with `card:*`) but consists of multiple events/steps. See [example](#example).
+`sequence` | A definition of a `sub-sequence`. For this step a full sequence is used. This is useful to either break down a bigger sequence into smaller parts or if this step can be executed multiple times (e.g. with `card:*`) but consists of multiple events/steps. See [example](#example).
 `alt` | A definition for a list of alternative steps. The `alt` attribute is an array/list of step definitions. Any `card` or `canCreateNew` attribute will automatically be applied to the alternative steps. For this step to be `ok` exactly one step needs to be `ok`. See [example alt](#example-alternative-steps).
 `par` | A definition for a list of parallel steps. The `par` attribute is an array/list of step definitions. Single steps can have their own `card` or `canCreateNew` attribute and the step with `par` as well. For this step to be `ok` all mandatory steps ( `card` not `?,*` ) need to be `ok`. The order in which the parallel steps are fulfilled doesn't matter.
 

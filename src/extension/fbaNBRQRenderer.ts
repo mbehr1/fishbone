@@ -464,7 +464,7 @@ export class FBANBRestQueryRenderer {
                         },
                       ],
                     }
-                    editorProvider.performRestQuery(docData, rqUriEncode(filterRq)).then(
+                    editorProvider.performRestQuery(docData, filterRq).then(
                       function (resJson: any) {
                         if ('error' in resJson) {
                           exec.appendOutput(
@@ -721,7 +721,7 @@ export class FBANBRestQueryRenderer {
           let perfStep = performance.now()
           let perfInterims = perfStep - perfStart
           console.log(`executeSequences: triggering rest query after ${perfInterims}ms, total:${perfStep - perfStart}ms`)
-          await editorProvider.performRestQuery(docData, rqUriEncode(allFiltersRq)).then(
+          await editorProvider.performRestQuery(docData, allFiltersRq).then(
             async (resJson: any) => {
               const perfNow = performance.now()
               perfInterims = perfNow - perfStep
@@ -882,7 +882,7 @@ export class FBANBRestQueryRenderer {
               }
             },
             (errTxt) => {
-              console.log(`FBANBRestQueryRenderer.execRestQuery got error:`, errTxt)
+              console.log(`FBANBRestQueryRenderer.performRestQuery got error:`, errTxt)
               exec.appendOutput(new NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(`query got error:${JSON.stringify(errTxt)}`)]))
             },
           )
@@ -911,7 +911,7 @@ export class FBANBRestQueryRenderer {
     jsonPath: string,
     convFunction: string,
   ) {
-    editorProvider.performRestQuery(docData, rqUriEncode(rq)).then(
+    editorProvider.performRestQuery(docData, rq).then(
       function (resJson: any) {
         if ('error' in resJson) {
           exec.appendOutput(

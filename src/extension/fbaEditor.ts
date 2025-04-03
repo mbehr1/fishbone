@@ -10,12 +10,13 @@ import * as path from 'path'
 import * as fs from 'fs'
 import * as vscode from 'vscode'
 import { getNonce, performHttpRequest } from './util'
-import * as yaml from 'js-yaml'
 import TelemetryReporter from '@vscode/extension-telemetry'
 import ShortUniqueId from 'short-unique-id'
 import { FBAFSProvider } from './fbaFSProvider'
 import { FBANotebookProvider } from './fbaNotebookProvider'
 import { currentFBAFileVersion, fbaToString, fbaYamlFromText, getFBDataFromText } from './fbaFormat'
+import { RQ, rqUriEncode } from 'dlt-logs-utils/restQuery'
+import * as JSON5 from 'json5'
 
 const uid = new ShortUniqueId({ length: 8 })
 
@@ -161,7 +162,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 _postMsgOnceAlive(docData, {
                   type: 'CustomEvent',
                   eventType: 'ext:drop',
-                  detail: { mimeType: 'application/vnd.dlt-logs+json', values: JSON.parse(value) },
+                  detail: { mimeType: 'application/vnd.dlt-logs+json', values: JSON5.parse(value) },
                 })
               })
             }
@@ -235,7 +236,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                   console.log(`fishbone restQuery('/get/version')=${versResp}`)
                   {
                     // add some version checks:
-                    const versObj = JSON.parse(versResp)
+                    const versObj = JSON5.parse(versResp)
                     if ('data' in versObj && versObj['data'].type === 'version') {
                       const versAttrs = versObj['data'].attributes
                       if (versAttrs && 'name' in versAttrs) {
@@ -513,7 +514,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 {
                   // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
                   const url: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url // todo request.url should not occur any longer!
-                  this.performRestQuery(docData, url).then(
+                  this.performRestQueryUri(docData, url).then(
                     (resJson) => {
                       webviewPanel.webview.postMessage({ type: e.type, res: resJson, id: e.id })
                     },
@@ -547,12 +548,147 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     this.updateWebview(docData, document)
   }
 
-  public performRestQuery(docData: DocData, url: string): Promise<any> {
+  /**
+   * Perform a rest query.
+   * 
+   * This will replace ${attributes.<attribute>} with the value of the attribute for
+   * the commands 'query' and 'report' in the rq.commands array. But only for direct members
+   * of the filter objects in the array.
+   * 
+   * Attributes in the form ${attributes.<attribute>.<member>} or ${attributes.<attribute>} are supported.
+   * Attributes will be replaced by the value of the attribute if its a string/number or an array of strings/numbers.
+   * 
+   * Undefined attributes will be removed from the filter object. This is different to the restQuery from
+   * utils.js where the attributes are e.g. replaced with null values.
+  * @param docData 
+   * @param rq 
+   * @returns 
+   */
+  public performRestQuery(docData: DocData, rq: RQ): Promise<any> {
+
+    //console.warn(`performRestQuery: got ext query for extName='${rq.path}' #commands='${rq.commands.length}'`)
+
+    // attribute support:
+    const attrCache = new Map<string, string | number | (string | number)[] | undefined>()
+    const getAttribute = (attribute: string): string | number | (string | number)[] | undefined => {
+      // check if we already have the attribute in the cache
+      if (attrCache.has(attribute)) {
+        return attrCache.get(attribute)
+      }
+      const attrs = docData.lastPostedObj?.attributes
+      if (Array.isArray(attrs)) {
+        // iterate over all attributes and check if the attribute is in there
+        // it can be attributename.member e.g. lifecycles.id or attributename like ecu
+        // the attribute value can be a single string/value or an array with string/values
+        // for ecu usually value is just a single member (string)
+        // for lifecycles value is an array of objects with id (number), label,...
+
+        const [attrName, attrMember] = attribute.split('.')
+
+        for (const attr of attrs) {
+          if (typeof attr === 'object' && attrName in attr) {
+            // check if the attribute is in the object
+            const attrVal = attr[attrName]?.value
+            if (attrVal === undefined) {
+              attrCache.set(attribute, attrVal)
+              return undefined
+            }
+            if (attrMember) {
+              // check if the attribute is in the object/array
+              if (Array.isArray(attrVal)) {
+                // check if the attribute is in the array
+                if (attrVal.length === 0) {
+                  attrCache.set(attribute, attrVal as (string | number)[])
+                  return attrVal
+                }
+
+                const attrMemberVals = attrVal.map((e: any) => e[attrMember])
+                const toRet =
+                  attrMemberVals.length > 0
+                    ? typeof attrMemberVals[0] === 'string' || typeof attrMemberVals[0] === 'number'
+                      ? (attrMemberVals as (string | number)[])
+                      : undefined
+                    : []
+                attrCache.set(attribute, toRet)
+                return toRet
+              } else {
+                const toRet = typeof attrVal[0] === 'string' || typeof attrVal[0] === 'number' ? (attrVal as (string | number)[]) : []
+                attrCache.set(attribute, toRet)
+                return toRet
+              }
+            } else {
+              let toRet
+              if (Array.isArray(attrVal)) {
+                toRet =
+                  attrVal.length > 0
+                    ? typeof attrVal[0] === 'string' || typeof attrVal[0] === 'number'
+                      ? (attrVal as (string | number)[])
+                      : undefined
+                    : []
+              } else {
+                toRet = typeof attrVal === 'string' || typeof attrVal === 'number' ? attrVal : undefined
+              }
+              attrCache.set(attribute, toRet)
+              return toRet
+            }
+          }
+        }
+      }
+      return undefined
+    }
+
+    // search for filters and replace ${attribute.ecu} with the value of the attribute
+    for (const cmd of rq.commands) {
+      switch (cmd.cmd) {
+        case 'report':
+        case 'query':
+          {
+            const param = JSON5.parse(cmd.param)
+            if (Array.isArray(param)) {
+              let doChange = false
+              for (const filter of param) {
+                Object.keys(filter).forEach((key) => {
+                  if (typeof filter[key] === 'string' && filter[key].startsWith('${attributes.')) {
+                    // console.warn(`performRestQuery: got key: '${key}' with attribute '${filter[key]}'`)
+                    const attribute = filter[key].slice(13, -1) // remove ${attributes. and }
+                    const attrVal = getAttribute(attribute)
+                    console.info(`FBAEditorProvider.performRestQuery: got attribute '${attribute}' with value: ${JSON.stringify(attrVal)}`)
+                    if (attrVal !== undefined) {
+                      filter[key] = attrVal
+                    } else {
+                      // remove key:
+                      delete filter[key]
+                    }
+                    doChange = true
+                  }
+                })
+              }
+              if (doChange) {
+                cmd.param = JSON.stringify(param)
+              }
+            }
+          }
+          break
+      }
+    }
+    return this.performRestQueryUri(docData, rqUriEncode(rq))
+  }
+
+  /**
+   * perform rest query via an uri.
+   * 
+   * Does not perform the ${attributes.<attribute>} replacement.
+   * @param docData 
+   * @param url 
+   * @returns 
+   */
+  public performRestQueryUri(docData: DocData, url: string): Promise<any> {
     const webviewPanel = docData.webviewPanel
 
     if (url.startsWith('ext:')) {
       const extName = url.slice(4, url.indexOf('/'))
       const query = url.slice(url.indexOf('/'))
+      // console.warn(`performRestQueryUri: got ext query for extName='${extName}' query='${query}'`)
       // did this extension offer the restQuery?
       return new Promise((resolve, reject) => {
         const rq = this._restQueryExtFunctions.get(extName)
@@ -561,11 +697,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           let res: string | Thenable<string> = rq(query) // restQuery can return a string or a Promise<string>
           if (typeof res !== 'string') {
             res.then((value) => {
-              const asJson = JSON.parse(value)
+              const asJson = JSON5.parse(value)
               resolve(asJson)
             })
           } else {
-            const asJson = JSON.parse(res)
+            const asJson = JSON5.parse(res)
             resolve(asJson)
           }
         } else {
@@ -591,7 +727,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 console.warn(` body first 2000 chars='${result.body.slice(0, 2000)}'`)
               }
             }
-            const json = JSON.parse(result.body)
+            const json = JSON5.parse(result.body)
             resolve(json)
           })
           .catch((err) => {

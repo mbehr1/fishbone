@@ -332,6 +332,8 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
                 // the elem should be the restQuery
                 if (elemMember) {
                   if (FBANBRestQueryRenderer.editRestQuery(elemObj, elemMember, entry.elem.fbUid, members, newData)) {
+                    // updates elemObj[elemMember]. as this is a reference to the elem (entry.elem child) entry.elem is updated
+                    // entry.elem is a member of the lastFBA = doc.docData.lastPostedObj
                     this.updateEntry(entry, false, newData)
                     this.syncChangesToEditorProvider(entry)
                   }
@@ -410,7 +412,7 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
     content: Uint8Array,
     options: { readonly create: boolean; readonly overwrite: boolean },
   ): void | Thenable<void> {
-    console.log(`FBAFSProvider.writeFile nyi!(${uri.toString()}, content.length=${content.length}, options=${JSON.stringify(options)}})`)
+    console.log(`FBAFSProvider.writeFile(${uri.toString()}, content.length=${content.length}, options=${JSON.stringify(options)}})`)
     const entry = this.getDataForUri(uri)
     if (entry) {
       this.editEntry(entry, content)
