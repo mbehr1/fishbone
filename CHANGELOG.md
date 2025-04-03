@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.35.0](https://github.com/mbehr1/fishbone/compare/v1.34.5...v1.35.0) (2025-04-03)
+
+### Features
+
+* **notebook:** add support for attributes in sequences ([7e39b98](https://github.com/mbehr1/fishbone/commit/7e39b9822284ec7f0f0ded6664cec32f5654e9fe))
+* **seq:** update to dlt-logs-utils 0.11.0 ([eb3de8b](https://github.com/mbehr1/fishbone/commit/eb3de8b3cb37c9c1f0c82859dd573060bf297e38))
+
 ## [1.34.5](https://github.com/mbehr1/fishbone/compare/v1.34.4...v1.34.5) (2025-03-02)
 
 ### Bug Fixes
