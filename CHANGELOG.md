@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.36.0](https://github.com/mbehr1/fishbone/compare/v1.35.0...v1.36.0) (2025-04-06)
+
+### Features
+
+* **sequences:** add first kpis support ([9f2f2ec](https://github.com/mbehr1/fishbone/commit/9f2f2ec33b5c14e2a5f12228d8f50a4028226517))
+
 ## [1.35.0](https://github.com/mbehr1/fishbone/compare/v1.34.5...v1.35.0) (2025-04-03)
 
 ### Features
