@@ -41,6 +41,7 @@ attribute | description
 `steps` | Array with objects defining the events aka steps. Those steps are checked for being executed in order. See [step definition](#step-definition)
 `failures` |  Object/map with filters defining a possible failure for the sequence. The object key defines the name of the failure and the key value defines the filter used to detect that. See [failures definition](#failures-definition)
 `globalFilters`| Optional array with filters that are applied first. Main intention is to use neg. filters here to filter for attributes.ecu or attributes.lifecycles.id. `{type: 1, not: true, ecu: ${attributes.ecu}}` or `{type: 1, not: true, lifecycles: ${attributes.lifecycles.id}}` This allows to apply the filters ECU/lifecycles for fishbones.
+`kpis`| Optional array with KPI definitions that are evaluated per occurrence. See [KPI definition](#kpi-definition) for details.
 
 An example with one failure but without step details :
 
@@ -132,6 +133,60 @@ the sequence `SW Update` will fail with error `crash` if a log message from `SYS
 :::note
 Only a started sequence gets aborted with any of the defined failures. If the failures occur without a started sequence they are ignored.
 :::
+
+### `kpi` definition
+
+A `kpi` has the following attributes:
+
+attribute | description
+--------- | -----------
+`name` | Name of this `kpi`.
+`duration`| Optional object for `duration` KPIs. Those KPIs measure a time distance/duration.
+
+Later on other kpi types than `duration` will be defined. That's why `duration` is optional. Currently it's the only supported type so it needs to be defined.
+
+A `duration` has the following attributes:
+
+attribute | description
+--------- | -----------
+`start`| Optional start marker. If not provided the timestamp from the `end` marker is used.
+`end`| string expression to use as the `end` of the duration. 
+
+`start` and `end` can be specified with the following syntax: 
+
+`start(s#<stepnr>)`: defines the start event time of the sequence step with the specified nr.
+`end(s#<stepnr>)`: defines the end event time of the sequence step with the specified nr.
+
+E.g. the following definition defines a KPI named `flash duration` that measures the duration from start of step #1 to end of step#3.
+
+```jsonc {5,6,7,8,9,10,11,12,13}
+/get/docs/0/filters?
+sequences=[
+  {
+    "name": "SW Update",
+    "kpis":[
+      {
+        "name": "flash duration",
+        "duration": {
+          "start": "start(s#1)",
+          "end": "end(s#3)"
+        }
+      }
+    ],
+    "steps":[ // one object per step...
+    ],
+    "failures":{
+    }
+  }
+]
+```
+
+:::note
+`end(s#...)` is for `filter` based steps the same as `start(s#...)`. But if the step is e.g. a sub-sequence or a parallel step the end is the last event/msg for that step.
+
+So it's good practice to use `end(...)` instead of `start(...)` for the `duration.end`.
+:::
+
 
 ### example
 
