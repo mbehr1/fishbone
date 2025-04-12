@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.36.1](https://github.com/mbehr1/fishbone/compare/v1.36.0...v1.36.1) (2025-04-12)
+
+### Bug Fixes
+
+* **deps:** bump the dlt-logs-utils group across 2 directories with 1 update ([37c5352](https://github.com/mbehr1/fishbone/commit/37c53525fc5a90efdd3b5eedee0f2b51a62f1ed3))
+
 ## [1.36.0](https://github.com/mbehr1/fishbone/compare/v1.35.0...v1.36.0) (2025-04-06)
 
 ### Features
