@@ -134,6 +134,41 @@ the sequence `SW Update` will fail with error `crash` if a log message from `SYS
 Only a started sequence gets aborted with any of the defined failures. If the failures occur without a started sequence they are ignored.
 :::
 
+#### failure capturing data
+
+Failure filters can capture data similar to [context](#context):
+
+E.g. for
+```jsonc {7,8,12}
+/get/docs/0/filters?
+sequences=[
+  {
+    "name": "SW Update",
+    "steps":[ // one object per step...
+    ],
+    "failures":{
+      "crash":{ // a dlt filter definition like:
+        "type":3, // event
+        "apid":"SYS",
+        "ctid":"JOUR",
+        "payloadRegex":"^process '(?<crash_process>.*?)' crashed with signal (?<crash_signal>.*)"
+      }
+    }
+  }
+]
+```
+
+A message like
+```
+SYS JOUR process 'foo' crashed with signal 6
+```
+
+will lead to a failure
+
+`crash: "crash_process":"foo", "crash_signal": "6"`
+
+and `crash_process` and `crash_signal` are added to the [context](#context) as well.
+
 ### `kpi` definition
 
 A `kpi` has the following attributes:
