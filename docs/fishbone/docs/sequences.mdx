@@ -4,6 +4,8 @@ title: Sequences (DLT logs based)
 sidebar_label: Sequences
 ---
 
+import TOCInline from '@theme/TOCInline'
+
 # Sequence detection (DLT logs based)
 
 ## Introduction
@@ -388,3 +390,73 @@ TODO: ... more details, links, examples
 It's easiest to test the definition of the sequence and the execution by opening it in the fishbone/edit badges/notebooks. There you can execute it in real time.
 
 TODO ... add example picture.
+
+## FAQs
+
+<TOCInline
+  toc={toc.filter((node) => node.level === 4 && node.id.startsWith('q-'))}
+  minHeadingLevel={4}
+  maxHeadingLevel={4}
+/>
+
+#### Q: What does `ERROR: Step out of order` mean?
+
+A: It indicates that a next/later step occurs before current/next step.
+
+E.g. in a sequence with 3 steps: s1, s2, s3\
+and message matching: s1, s3, s2, s3
+
+The sequence occurrence started with s1, s3 will throw that error on processing s2 as step 2 came in after step 3.
+
+This can be resolved in multiple ways:
+ 
+ - "ignoreOutOfOrder": true
+ 
+   If you define s3 with `ignoreOutOfOrder:true` and occurrences of this step that are not in order are ignored. E.g. the sequence s1, s3, s2, s3 is matched as: s1, (s3 ignored), s2, s3 (now in order).
+
+- usage of a parallel step
+
+  E.g. if step 2 and step 3 are not logically sorted / can happen in any order you can use a parallel step with those:
+  ```jsonc
+  {
+    name: "e.g. step 2 and step 3 in any order",
+    par:[
+      { // step 2 definition
+      },
+      {
+        // step 3 definition
+      }
+    ]
+  }
+  ```
+
+#### Q: How to ensure that a step does not create a new sequence occurrence?
+
+A: By default every step within a sequence can create a new occurrence.
+
+E.g. in a sequence with 3 steps: s1, s2 and s3\
+and messages matching: s2 and s3
+
+Step 2 will create a new occurrence of the sequence (that can never become 'ok' as the first step is missing).
+This is on purpose as there are often logs that miss the start of the sequence.
+
+If you want to avoid that you can use  `"canCreateNew":false` in the step definition for all steps except the first one.
+
+#### Q: How to escape chars in regex?
+
+A: Whenever you do use strings in a json definition like the `payloadRegex` you do need to escape all json special characters `", \, /`.
+
+E.g. `\d` needs to be written as `\\d`.
+
+For more complex examples or if in doubt e.g. the [online json escape](https://www.lambdatest.com/free-online-tools/json-escape) helps.
+
+#### Q: What does `step#x exceeded max cardinality 1` mean?
+
+A: By default each step within a sequence has a "cardinality" of 1. This means it needs to be exactly once within an occurrence of the sequence.
+
+E.g. in a sequence with 3 steps: s1, s2 and s3\
+and messages matching: s1, s2, s2 and s3
+
+you will get that error for step 2 as it occurs twice but is expected exactly once.
+
+By setting `card` for step 2 to e.g. `"card":"+"` (>=1 times) or `"card":"*"` (>=0 times) the step can be allowed to occur multiple times at that position (after step 1 and before step 3).
