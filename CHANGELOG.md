@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.36.2](https://github.com/mbehr1/fishbone/compare/v1.36.1...v1.36.2) (2025-04-13)
+
+### Bug Fixes
+
+* **sequence:** failures support captures ([4b429d0](https://github.com/mbehr1/fishbone/commit/4b429d01b6801e4b6969a8b8ef653cb035447791))
+
 ## [1.36.1](https://github.com/mbehr1/fishbone/compare/v1.36.0...v1.36.1) (2025-04-12)
 
 ### Bug Fixes
