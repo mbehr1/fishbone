@@ -106,7 +106,11 @@ export default function FishboneChart(props) {
               if (rootCause.elementName) {
                 fragment = (
                   <div key={`root_causes_${index}`}>
-                    {React.createElement(rootCause.elementName, { fbUid: rootCause.fbUid, ...rootCause.props }, null)}
+                    {React.createElement(
+                      rootCause.elementName,
+                      { fbaFsAuthority: props.fbaFsAuthority, fbUid: rootCause.fbUid, ...rootCause.props },
+                      null,
+                    )}
                   </div>
                 )
               } else {

@@ -94,6 +94,11 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
     }
   }
 
+  private static decodeBase16(digits: string): string {
+    const b = Buffer.from(digits, 'hex')
+    return b.toString('utf8')
+  }
+
   /**
    * get data for uri from the known documents from provider
    *
@@ -140,6 +145,20 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
 
       // do we find a document?
       const treeItems = this.editorProvider._treeRootNodes
+
+      // search via authority:
+      const authDoc = treeItems.find((doc) => doc.docData?.fbaFsAuthority === uri.authority)
+      if (authDoc) {
+        const toRet = getElemFromDoc(uri, authDoc)
+        if (toRet) {
+          this.openEntries.set(uri.toString(), toRet)
+          return toRet
+        }
+      }
+      // decode authority from base32:
+      const decodedAuth = FBAFSProvider.decodeBase16(uri.authority)
+      console.warn(`FBAFSProvider.getDataForUri no doc found for authority:'${uri.authority}', decodedAuth:'${decodedAuth}'`)
+
       // search in all docs:
       for (const doc of treeItems) {
         const toRet = getElemFromDoc(uri, doc)
@@ -184,7 +203,7 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
       }
     }
 
-    const retEffects = getElemFromEffects(fba.fishbone)
+    const retEffects = fba.fishbone ? getElemFromEffects(fba.fishbone) : undefined
     if (retEffects) {
       return retEffects
     }

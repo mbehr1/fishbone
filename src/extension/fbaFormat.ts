@@ -73,7 +73,7 @@ export interface FBBadge {
   conv?: string // length | index:idx | func: fn(result)...
 }
 
-const uid = new ShortUniqueId({ length: 8 })
+const uid = new ShortUniqueId.default({ length: 8 })
 
 export function getFBDataFromText(text: string): Fishbone {
   // here we do return the data that we pass as data=... to the Fishbone
@@ -94,11 +94,11 @@ export function getFBDataFromText(text: string): Fishbone {
       title: '<no title>',
       fishbone: [
         {
-          fbUid: uid(),
+          fbUid: uid.randomUUID(),
           name: '<enter effect to analyse>',
           categories: [
             {
-              fbUid: uid(),
+              fbUid: uid.randomUUID(),
               name: 'category 1',
               rootCauses: [],
             },
@@ -411,13 +411,13 @@ export function getFBDataFromText(text: string): Fishbone {
           return
         }
         if (!('fbUid' in elem)) {
-          elem.fbUid = uid()
+          elem.fbUid = uid.randomUUID()
         }
       })
       if (Array.isArray(yamlObj.attributes) && yamlObj.attributes.length > 0) {
         for (const attr of yamlObj.attributes) {
           if (typeof attr === 'object' && !('fbUid' in attr)) {
-            attr.fbUid = uid()
+            attr.fbUid = uid.randomUUID()
           }
         }
       }

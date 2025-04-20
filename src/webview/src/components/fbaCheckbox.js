@@ -482,6 +482,7 @@ export default function FBACheckbox(props) {
             upper left badge
           </Button>
           <DataProviderEditDialog
+            fbaFsAuthority={props.fbaFsAuthority}
             fbUid={props.fbUid}
             fbUidMember='badge'
             data={values.badge || {}}
@@ -495,6 +496,7 @@ export default function FBACheckbox(props) {
             lower right badge
           </Button>
           <DataProviderEditDialog
+            fbaFsAuthority={props.fbaFsAuthority}
             fbUid={props.fbUid}
             fbUidMember='badge2'
             data={values.badge2 || {}}
@@ -508,6 +510,7 @@ export default function FBACheckbox(props) {
             apply filter
           </Button>
           <DataProviderEditDialog
+            fbaFsAuthority={props.fbaFsAuthority}
             fbUid={props.fbUid}
             fbUidMember='filter'
             applyMode={true}
