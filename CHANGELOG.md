@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.36.3](https://github.com/mbehr1/fishbone/compare/v1.36.2...v1.36.3) (2025-04-21)
+
+### Bug Fixes
+
+* support save as / copy file use-case ([e97380a](https://github.com/mbehr1/fishbone/commit/e97380af18f1d16f6461d622326680bb696d2ca2))
+
 ## [1.36.2](https://github.com/mbehr1/fishbone/compare/v1.36.1...v1.36.2) (2025-04-13)
 
 ### Bug Fixes
