@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.36.4](https://github.com/mbehr1/fishbone/compare/v1.36.3...v1.36.4) (2025-04-21)
+
+### Bug Fixes
+
+* "Edit in notebook" button availability ([ec84824](https://github.com/mbehr1/fishbone/commit/ec84824bdc801c569a99755cc0c326d3890a5aee))
+
 ## [1.36.3](https://github.com/mbehr1/fishbone/compare/v1.36.2...v1.36.3) (2025-04-21)
 
 ### Bug Fixes
