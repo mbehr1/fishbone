@@ -186,6 +186,98 @@ export default function DataProviderEditDialog(props) {
     }
   }
 
+  // provide templates/starting examples for sequence, report and query
+  const newDltQuery = (type) => {
+    switch (type) {
+      case 'sequence':
+        const filters = []
+        const hasLC = attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
+        const hasEcu = attributes.findIndex((attr) => attr.hasOwnProperty('ecu')) >= 0
+        if (hasLC) {
+          // eslint-disable-next-line no-template-curly-in-string
+          filters.push({ lifecycles: '${attributes.lifecycles.id}', name: 'selected lifecycles', not: true, type: 1 })
+        }
+        if (hasEcu) {
+          filters.push(
+            // eslint-disable-next-line no-template-curly-in-string
+            { ecu: '${attributes.ecu}', name: 'selected ecu', not: true, type: 1 },
+          )
+        }
+        const sequences = [
+          {
+            name: 'sequence name',
+            globalFilters: filters,
+            steps: [
+              {
+                name: 'step 1',
+                filter: {
+                  apid: 'APID',
+                  ctid: 'CTID',
+                  payloadRegex: '^ fill here with proper capture regex and adjust apid/ctid',
+                },
+              },
+            ],
+          },
+        ]
+
+        setDataSource(`ext:mbehr1.dlt-logs/get/docs/0/filters?sequences=${encodeURIComponent(JSON.stringify(sequences, undefined, 2))}`)
+        setDataJsonPath('$.data[*]')
+        setDataConv(
+          // eslint-disable-next-line no-template-curly-in-string
+          "func:const summaries=result.filter((t)=>t.type==='seqSummary').map((d)=>d.attributes);return ''+summaries.map((s)=>`${s.name}:${s.summary}`).join(',')",
+        )
+        break
+      case 'report':
+        {
+          const filters = [
+            {
+              type: 3,
+              name: 'example dataset 1 name',
+              apid: 'APID',
+              ctid: 'CTID',
+              payloadRegex: '^(?<dataset1>.*?) ms <fill here with proper capture regex and adjust apid/ctid',
+              reportOptions: {},
+            },
+          ]
+          setDataSource(`ext:mbehr1.dlt-logs/get/docs/0/filters?report=${encodeURIComponent(JSON.stringify(filters, undefined, 2))}`)
+        }
+        break
+      case 'query':
+        {
+          const filters = []
+          const hasLC = attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
+          const hasEcu = attributes.findIndex((attr) => attr.hasOwnProperty('ecu')) >= 0
+          if (hasLC) {
+            // eslint-disable-next-line no-template-curly-in-string
+            filters.push({ lifecycles: '${attributes.lifecycles.id}', name: 'selected lifecycles', not: true, type: 1 })
+          }
+          if (hasEcu) {
+            filters.push(
+              // eslint-disable-next-line no-template-curly-in-string
+              { ecu: '${attributes.ecu}', name: 'selected ecu', not: true, type: 1 },
+            )
+          }
+          filters.push({
+            type: 3,
+            apid: 'APID',
+            ctid: 'CTID',
+            payloadRegex: '^',
+          })
+          setDataSource(
+            // eslint-disable-next-line no-template-curly-in-string
+            `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(JSON.stringify(filters, undefined, 2))}`,
+          )
+        }
+
+        setDataJsonPath('$.data[*]')
+        break
+      default:
+        console.warn(`DataProviderEditDialog.newDltQuery() unknown type ${type}`)
+        return
+    }
+    setPreviewBadgeStatus(props.applyMode ? 3 : 0)
+  }
+
   const handleSave = () => {
     /*console.log(`DataProviderEditDialog handleSave()`)
     console.log(` dataType=${dataType}`)
@@ -258,9 +350,25 @@ export default function DataProviderEditDialog(props) {
                 >
                   Edit manually...
                 </Button>
-                {props.fbUid && props.data?.source?.startsWith('ext:mbehr1.dlt-logs') && (
+                {props.applyMode && !(dataSource?.length >= 20) && (
+                  <Button variant='outlined' size='small' style={{ 'margin-left': '5px' }} onClick={() => newDltQuery('report')}>
+                    New report
+                  </Button>
+                )}
+                {!props.applyMode && !(dataSource?.length >= 20) && (
+                  <Button variant='outlined' size='small' style={{ 'margin-left': '5px' }} onClick={() => newDltQuery('query')}>
+                    New query
+                  </Button>
+                )}
+                {!props.applyMode &&
+                  !(dataSource?.length >= 20) && ( //ext:mbehr1.dlt-logs
+                    <Button variant='outlined' size='small' style={{ 'margin-left': '5px' }} onClick={() => newDltQuery('sequence')}>
+                      New sequence
+                    </Button>
+                  )}
+                {props.fbUid && dataSource?.startsWith('ext:mbehr1.dlt-logs/') && (
                   <Button
-                    onClick={() => persistValueChanges()}
+                    onClick={() => handleSave()}
                     variant='outlined'
                     size='small'
                     style={{ 'margin-left': '5px' }}
