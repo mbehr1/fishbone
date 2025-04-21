@@ -38,7 +38,7 @@ import * as yaml from 'js-yaml'
 import ShortUniqueId from 'short-unique-id'
 var stableStringify = require('json-stable-stringify')
 
-const uid = new ShortUniqueId({ length: 8 })
+const uid = new ShortUniqueId.default({ length: 8 })
 
 export const AttributesContext = createContext()
 
@@ -73,7 +73,7 @@ function deepCopyRootCause(rootCause) {
               if (typeof value === 'function') {
                 return undefined
               }
-              if (key === 'fbUid') return uid()
+              if (key === 'fbUid') return uid.randomUUID()
               return value
             }),
           )
@@ -103,7 +103,7 @@ function deepCopyCategory(category) {
           if (typeof value === 'function') {
             return undefined
           }
-          if (key === 'fbUid') return uid()
+          if (key === 'fbUid') return uid.randomUUID()
           return value
         }),
       )
@@ -259,12 +259,19 @@ export default class App extends Component {
         case 'update':
           // do we need to update the fbPath?
           // check whether the current path is still valid, if not use the first matching parts:
-          console.log(`App.message.update state.fbPath=${JSON.stringify(this.state.fbPath)}`)
+          const fbaFsAuthority = msg.fbaFsAuthority
+          //console.log(`App.message.update state.fbPath=${JSON.stringify(this.state.fbPath)} for fbaFsAuthority=${fbaFsAuthority}`)
           const newFbPath = this.matchingFbPath(this.state.fbPath, msg.data, msg.title)
-          console.log(`App.message.update  newPath=${JSON.stringify(newFbPath)}`)
+          //console.log(`App.message.update  newPath=${JSON.stringify(newFbPath)}`)
 
           // we store the non-modified data in vscode.state (e.g. with react:MyCheckbox as string)
-          this.props.vscode.setState({ data: msg.data, title: msg.title, attributes: msg.attributes, fbPath: newFbPath }) // todo shall we store any other data?
+          this.props.vscode.setState({
+            fbaFsAuthority,
+            data: msg.data,
+            title: msg.title,
+            attributes: msg.attributes,
+            fbPath: newFbPath,
+          }) // todo shall we store any other data?
 
           // distribute new attributes only if they change to prevent requeries:
           {
@@ -277,6 +284,7 @@ export default class App extends Component {
             }
           }
           this.setState({
+            fbaFsAuthority,
             data: msg.data,
             title: msg.title,
             fbPath: newFbPath,
@@ -352,6 +360,7 @@ export default class App extends Component {
         this.setState({ fbPath: curPath }) // todo use setAllStates with new params "noDocUpdate?"
       }
       this.props.vscode.setState({
+        fbaFsAuthority: this.state.fbaFsAuthority,
         data: this.state.data,
         title: this.state.title,
         attributes: this.state.attributes,
@@ -368,7 +377,13 @@ export default class App extends Component {
       const curPath = this.state.fbPath //
       curPath[this.state.fbPath.length - 1].effectIndex = fbState.effectIndex || 0
       this.setState({ fbPath: curPath })
-      this.props.vscode.setState({ data: this.state.data, title: this.state.title, attributes: this.state.attributes, fbPath: curPath }) // todo shall we store any other data?
+      this.props.vscode.setState({
+        fbaFsAuthority: this.state.fbaFsAuthority,
+        data: this.state.data,
+        title: this.state.title,
+        attributes: this.state.attributes,
+        fbPath: curPath,
+      }) // todo shall we store any other data?
     }
   }
 
@@ -494,7 +509,13 @@ export default class App extends Component {
     this.setState(newFragObj, () => {
       const state = this.state
       //console.log(`setAllStates cb state=`, state);
-      this.props.vscode.setState({ data: state.data, title: state.title, attributes: state.attributes, fbPath: state.fbPath }) // todo shall we store any other data?
+      this.props.vscode.setState({
+        fbaFsAuthority: state.fbaFsAuthority,
+        data: state.data,
+        title: state.title,
+        attributes: state.attributes,
+        fbPath: state.fbPath,
+      }) // todo shall we store any other data?
       // we parse and unparse to get rid of the elementName modifications... (functions)
       // storing all but the fbPath... (todo: why not?)
       this.props.vscode.postMessage({
@@ -603,7 +624,7 @@ export default class App extends Component {
     const newAttrs = [...this.state.attributes]
     newAttrs.push({
       ecu: {
-        fbUid: uid(),
+        fbUid: uid.randomUUID(),
         label: 'ECU identifier',
         dataProvider: {
           source: 'ext:mbehr1.dlt-logs/get/docs/0',
@@ -615,7 +636,7 @@ export default class App extends Component {
 
     newAttrs.push({
       sw: {
-        fbUid: uid(),
+        fbUid: uid.randomUUID(),
         label: 'SW name',
         dataProvider: {
           // eslint-disable-next-line no-template-curly-in-string
@@ -628,7 +649,7 @@ export default class App extends Component {
 
     newAttrs.push({
       lifecycles: {
-        fbUid: uid(),
+        fbUid: uid.randomUUID(),
         label: 'Lifecycles',
         multiple: true,
         dataProvider: {
@@ -659,7 +680,7 @@ export default class App extends Component {
     switch (type) {
       case 'FBACheckbox':
         newRootCause = {
-          fbUid: uid(),
+          fbUid: uid.randomUUID(),
           type: 'react',
           element: 'FBACheckbox',
           props: {
@@ -671,14 +692,14 @@ export default class App extends Component {
         break
       case 'nested':
         newRootCause = {
-          fbUid: uid(),
+          fbUid: uid.randomUUID(),
           type: 'nested',
           title: `nested fb ${rootCauses.length + 1}`,
           data: [
             {
-              fbUid: uid(),
+              fbUid: uid.randomUUID(),
               name: 'effect 1',
-              categories: [{ fbUid: uid(), name: 'category 1', rootCauses: [] }],
+              categories: [{ fbUid: uid.randomUUID(), name: 'category 1', rootCauses: [] }],
             },
           ],
         }
@@ -726,7 +747,7 @@ export default class App extends Component {
       }
     }
     data[effectIndex].categories.splice(insertIndex, 0, {
-      fbUid: uid(),
+      fbUid: uid.randomUUID(),
       name: `category ${data[effectIndex].categories.length + 1}`,
       rootCauses: [],
     })
@@ -736,9 +757,9 @@ export default class App extends Component {
   onAddEffect(data, effectIndex) {
     console.log(`onAddEffect called. effectIndex = ${effectIndex} data=`, data)
     data.splice(effectIndex + 1, 0, {
-      fbUid: uid(),
+      fbUid: uid.randomUUID(),
       name: `effect ${effectIndex + 2}`,
-      categories: [{ fbUid: uid(), name: `category 1`, rootCauses: [] }],
+      categories: [{ fbUid: uid.randomUUID(), name: `category 1`, rootCauses: [] }],
     }) // todo add one root cause?
 
     // we do select the new one
@@ -1219,6 +1240,7 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
                   }
                   const newFbPath = this.matchingFbPath(this.state.fbPath, yamlObj.fishbone, yamlObj.title)
                   this.setState({
+                    // no fbaFsAuthority here?
                     data: yamlObj.fishbone,
                     title: yamlObj.title,
                     attributes: yamlObj.attributes,
@@ -1330,6 +1352,7 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
                       </Grid>
                     </div>
                     <FishboneChart
+                      fbaFsAuthority={this.state.fbaFsAuthority}
                       onStateChange={(fbData) => this.handleFBStateChange(fbData)}
                       reactInlineElementsAdder={this.addInlineElements}
                       onChange={this.handleInputChange.bind(this)}

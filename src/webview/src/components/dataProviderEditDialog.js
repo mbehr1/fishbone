@@ -274,7 +274,7 @@ export default function DataProviderEditDialog(props) {
                             `/props.${props.fbUidMember}${props.applyMode ? '.source' : ''}/restquery/${
                               props.applyMode ? 'apply filter' : 'badge'
                             }.fba-nb`,
-                          authority: 'fbaFs',
+                          authority: props.fbaFsAuthority || 'fbaFs',
                         },
                       ]),
                     )}`}

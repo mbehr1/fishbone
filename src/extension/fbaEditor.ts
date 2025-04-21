@@ -18,7 +18,7 @@ import { currentFBAFileVersion, fbaToString, fbaYamlFromText, getFBDataFromText 
 import { RQ, rqUriEncode } from 'dlt-logs-utils/restQuery'
 import * as JSON5 from 'json5'
 
-const uid = new ShortUniqueId({ length: 8 })
+const uid = new ShortUniqueId.default({ length: 8 })
 
 interface AssetManifest {
   files: {
@@ -41,6 +41,7 @@ export interface DocData {
     toChangeObj: any // the object with the changes to apply. can be just a few fields
   }[]
   treeItem?: FishboneTreeItem
+  fbaFsAuthority?: string
 }
 
 export interface FishboneTreeItem extends vscode.TreeItem {
@@ -320,9 +321,31 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         `FBAEditorProvider updateWebview posting to webview(visible=${docData.webviewPanel.visible}, active=${docData.webviewPanel.active}): lastPostedDocVersion=${docData.lastPostedDocVersion}, new docVersion=${document.version}`,
       )
       const docObj: any = FBAEditorProvider.getFBDataFromDoc(docData, document)
+      // we use the fba-fs authority to reference this document uri
+      // as the fbUids are only unique within one document. But as the documents
+      // can be easily copied and then changed there will be duplicate fbUids.
+
+      // The authority component is preceded by a double slash ("//") and is
+      // terminated by the next slash ("/"), question mark ("?"), or number
+      // sign ("#") character, or by the end of the URI.
+      // could use a compressed version: zlib.deflateSync(text).toString('base64')
+      // but would need caching
+      // and authority seems to be lower case only...
+      // so we cannot use base64 but base16 (hex) (base32 or 36 might work as well)
+
+      // use-cases to support: (with an open document)
+      // [x] - save as -> change name
+      // [] - rename file (not tested yet)
+
+      const fbaFsAuthority = docData.fbaFsAuthority
+        ? docData.fbaFsAuthority
+        : (docData.fbaFsAuthority = Buffer.from(document.uri.toString()).toString(
+            'hex',
+          )) /*BigInt(`0x${Buffer.from(document.uri.toString()).toString('hex')}`).toString(32))*/
 
       this.postMsgOnceAlive(docData, {
         type: 'update',
+        fbaFsAuthority,
         data: docObj.fishbone,
         title: docObj.title,
         attributes: docObj.attributes,
@@ -401,8 +424,44 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         if (docData.treeItem) {
           this._fsProvider.onFbaDocChanges(docData.treeItem)
         }
+      } else if (e.document === document) {
+        console.warn(
+          `FBAEditorProvider onDidChangeTextDocument: document.uri changed: ${document.uri.toString()} -> e.document=${e.document.uri.toString()}`,
+        )
       }
     })
+
+    /*
+    const didSaveDocumentSubscription = vscode.workspace.onDidSaveTextDocument((eventDoc) => {
+      console.log(`FBAEditorProvider onDidSaveTextDocument: ${document.uri.toString()} ${eventDoc.uri.toString()}`)
+      // we use it only to see whether we have been saved with a new name.
+      if (eventDoc.uri.toString() === document.uri.toString()) {
+        return
+      }
+
+      // sadly we cannot compare the document objects... weird...
+      for (const openDoc of vscode.workspace.textDocuments) {
+        if (openDoc.uri.toString() === document.uri.toString()) {
+          // still exists... break
+          console.log(`FBAEditorProvider onDidSaveTextDocument: found ours openDoc=${openDoc.uri.toString()} isClosed=${openDoc.isClosed}`)
+          return
+        }
+      }
+      // doesn't seem to work as on "save as..." we get
+      // didSaveTextDocument with the new document.uri but the document object is different
+      // the old/prev. text document does still exist and is reported as open/!isClosed
+      // the onDidClose is called a long time (>~30s) after the onDidSaveTextDocument
+      // but the webviewPanel.onDispose is called directly after
+
+      // if we end here we seem to have been saved with a new name.
+      console.warn(`FBAEditorProvider onDidSaveTextDocument: document was saved with a new name: ${eventDoc.uri.toString()}`)
+    })
+
+    const didCloseDocumentSubscription = vscode.workspace.onDidCloseTextDocument((eventDoc) => {
+      //if (eventDoc === document) {
+      console.log(`FBAEditorProvider onDidCloseTextDocument: ${document.uri.toString()} ${eventDoc.uri.toString()}`)
+      // }
+    }) */
 
     const lastActiveRestQueryDoc: { ext: string; uri?: string } = {
       ext: '',
@@ -451,7 +510,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       }
     }, this)
 
-    const changeThemeSubsription = vscode.window.onDidChangeActiveColorTheme((event) => {
+    const changeThemeSubscription = vscode.window.onDidChangeActiveColorTheme((event) => {
       this.postMsgOnceAlive(docData, {
         type: 'onDidChangeActiveColorTheme',
         kind: event.kind, // 1 = light, 2 = dark, 3 = high contrast
@@ -460,15 +519,25 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
     // Make sure we get rid of the listener when our editor is closed.
     webviewPanel.onDidDispose(() => {
+      // console.log(`FBAEditorProvider webview(${document.uri.toString()}) onDidDispose()...`)
       changeViewStateSubsription.dispose()
       changeDocumentSubscription.dispose()
-      changeThemeSubsription.dispose()
+      // didSaveDocumentSubscription.dispose()
+      // didCloseDocumentSubscription.dispose()
+      changeThemeSubscription.dispose()
       changeActiveDltDocSubscription.dispose()
 
       let itemIdx = this._treeRootNodes.findIndex((item) => item.docData?.webviewPanel === webviewPanel)
       if (itemIdx >= 0) {
-        this._treeRootNodes.splice(itemIdx, 1)
+        const removed = this._treeRootNodes.splice(itemIdx, 1)
         this._onDidChangeTreeData.fire(null)
+        removed.forEach((item) => {
+          // we change the lastPostedObj to an empty obj to indicate that it's not existing now
+          if (item.docData) {
+            item.docData.lastPostedObj = {}
+          }
+          this._fsProvider.onFbaDocChanges(item)
+        })
       }
     })
 
@@ -550,22 +619,21 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
   /**
    * Perform a rest query.
-   * 
+   *
    * This will replace ${attributes.<attribute>} with the value of the attribute for
    * the commands 'query' and 'report' in the rq.commands array. But only for direct members
    * of the filter objects in the array.
-   * 
+   *
    * Attributes in the form ${attributes.<attribute>.<member>} or ${attributes.<attribute>} are supported.
    * Attributes will be replaced by the value of the attribute if its a string/number or an array of strings/numbers.
-   * 
+   *
    * Undefined attributes will be removed from the filter object. This is different to the restQuery from
    * utils.js where the attributes are e.g. replaced with null values.
-  * @param docData 
-   * @param rq 
-   * @returns 
+   * @param docData
+   * @param rq
+   * @returns
    */
   public performRestQuery(docData: DocData, rq: RQ): Promise<any> {
-
     //console.warn(`performRestQuery: got ext query for extName='${rq.path}' #commands='${rq.commands.length}'`)
 
     // attribute support:
@@ -676,11 +744,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 
   /**
    * perform rest query via an uri.
-   * 
+   *
    * Does not perform the ${attributes.<attribute>} replacement.
-   * @param docData 
-   * @param url 
-   * @returns 
+   * @param docData
+   * @param url
+   * @returns
    */
   public performRestQueryUri(docData: DocData, url: string): Promise<any> {
     const webviewPanel = docData.webviewPanel
@@ -940,7 +1008,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 // merge attributes (we might consider adding the new ones to the nested only and show only on entering that nested one?)
                 FBAEditorProvider.mergeAttributes(yamlObj.attributes, importYamlObj.attributes)
                 return {
-                  fbUid: uid(),
+                  fbUid: uid.randomUUID(),
                   type: 'nested',
                   relPath: relPath,
                   title: importYamlObj.title,
@@ -983,7 +1051,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 })
                 console.log(` reimport of '${rc.relPath}' done.`)
                 return {
-                  fbUid: uid(),
+                  fbUid: uid.randomUUID(),
                   type: 'nested',
                   relPath: rc.relPath,
                   title: importYamlObj.title, // todo shall we keep the prev title? or append with 'was:...'?

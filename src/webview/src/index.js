@@ -7,7 +7,7 @@ import ShortUniqueId from 'short-unique-id'
 
 console.log(`index.js started... initialData=${JSON.stringify(window.initialData)}`)
 
-const uid = new ShortUniqueId({ length: 8 })
+const uid = new ShortUniqueId.default({ length: 8 })
 const vscode = getVsCode()
 vscode.postMessage({ type: 'log', message: 'in webview/src/index.js' })
 
@@ -19,11 +19,11 @@ ReactDOM.render(
         vscode.isStandaloneApi
           ? [
               {
-                fbUid: uid(),
+                fbUid: uid.randomUUID(),
                 name: '<enter effect to analyse>',
                 categories: [
                   {
-                    fbUid: uid(),
+                    fbUid: uid.randomUUID(),
                     name: 'category 1',
                     rootCauses: [],
                   },
