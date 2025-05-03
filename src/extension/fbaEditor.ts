@@ -533,7 +533,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         removed.forEach((item) => {
           // we change the lastPostedObj to an empty obj to indicate that it's not existing now
           if (item.docData) {
-            item.docData.lastPostedObj = {} as Fishbone
+            item.docData.lastPostedObj = {
+              title: '',
+              attributes: [],
+              fishbone: [],
+            }
           }
           this._fsProvider.onFbaDocChanges(item)
         })
