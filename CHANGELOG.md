@@ -1,5 +1,15 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.37.0](https://github.com/mbehr1/fishbone/compare/v1.36.4...v1.37.0) (2025-05-03)
+
+### Features
+
+* **ai:** first version with fishbone.ai / copilot chat support ([40a6a64](https://github.com/mbehr1/fishbone/commit/40a6a64ad94353ab380ecb0d14a9a0fb316f4357))
+
+### Bug Fixes
+
+* review comments regarding invalid Fishbone ([98b3b72](https://github.com/mbehr1/fishbone/commit/98b3b7236156128edf573d1bf541b06418c772f4))
+
 ## [1.36.4](https://github.com/mbehr1/fishbone/compare/v1.36.3...v1.36.4) (2025-04-21)
 
 ### Bug Fixes
