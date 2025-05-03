@@ -118,7 +118,7 @@ export class FBAFSProvider implements vscode.FileSystemProvider {
       const getElemFromDoc = (uri: vscode.Uri, doc: FishboneTreeItem): OpenedFileData | undefined => {
         const lastFBA = doc.docData!.lastPostedObj
         // now search for the fbUid
-        const elem = FBAFSProvider.getElemFromFBA(lastFBA, uriParameters)
+        const elem = lastFBA !== undefined ? FBAFSProvider.getElemFromFBA(lastFBA, uriParameters) : undefined
         console.log(`FBAFSProvider.getDataForUri found elem`, elem)
         if (elem) {
           const entry = {

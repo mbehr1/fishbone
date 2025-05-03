@@ -14,9 +14,10 @@ import TelemetryReporter from '@vscode/extension-telemetry'
 import ShortUniqueId from 'short-unique-id'
 import { FBAFSProvider } from './fbaFSProvider'
 import { FBANotebookProvider } from './fbaNotebookProvider'
-import { currentFBAFileVersion, fbaToString, fbaYamlFromText, getFBDataFromText } from './fbaFormat'
-import { RQ, rqUriEncode } from 'dlt-logs-utils/restQuery'
+import { currentFBAFileVersion, fbaToString, fbaYamlFromText, Fishbone, getFBDataFromText } from './fbaFormat'
+import { getAttributeFromFba, RQ, rqUriEncode } from 'dlt-logs-utils/restQuery'
 import * as JSON5 from 'json5'
+import { FBAIProvider } from './fbAIProvider'
 
 const uid = new ShortUniqueId.default({ length: 8 })
 
@@ -34,7 +35,7 @@ export interface DocData {
   gotAliveFromPanel: boolean
   msgsToPost: any[]
   lastPostedDocVersion: number
-  lastPostedObj?: any
+  lastPostedObj?: Fishbone // any
   editsPending: {
     document: vscode.TextDocument // the document to update
     docVersion: number // the document version at the time the update was queued
@@ -50,7 +51,7 @@ export interface FishboneTreeItem extends vscode.TreeItem {
   tooltip?: string | vscode.MarkdownString
   description?: string | boolean
   contextValue?: string
-  iconPath?: string | vscode.Uri | vscode.ThemeIcon | { dark: string | vscode.Uri; light: string | vscode.Uri }
+  iconPath?: string | vscode.IconPath
 
   parent?: FishboneTreeItem
   children: FishboneTreeItem[]
@@ -75,6 +76,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider(FBAEditorProvider.fsSchema, provider._fsProvider))
     context.subscriptions.push(new FBANotebookProvider(context, provider, provider._fsProvider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
+    context.subscriptions.push(new FBAIProvider(context, provider, reporter))
   }
 
   private static readonly viewType = 'fishbone.fba' // has to match the package.json
@@ -93,6 +95,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   private _extensionSubscriptions: vscode.Disposable[] = []
   private _checkExtensionsTimer?: NodeJS.Timeout = undefined
   private _checkExtensionsLastActive = 0
+  // last active rest query document
+  public _lastActiveRestQueryDoc: { ext: string; uri?: string } = { ext: '' }
 
   private _fsProvider: FBAFSProvider
 
@@ -463,11 +467,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       // }
     }) */
 
-    const lastActiveRestQueryDoc: { ext: string; uri?: string } = {
-      ext: '',
-      uri: '',
-    }
-
     const changeActiveDltDocSubscription = this.onDidChangeActiveRestQueryDoc((event) => {
       if (docData.webviewPanel.visible) {
         this.postMsgOnceAlive(docData, {
@@ -475,12 +474,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           ext: event.ext,
           uri: event.uri?.toString(),
         })
-        lastActiveRestQueryDoc.ext = '' // marker to not send it if it becomes visible
+        this._lastActiveRestQueryDoc.ext = '' // marker to not send it if it becomes visible
       } else {
         // we store the last one and send it if the webview becomes visible
-        lastActiveRestQueryDoc.ext = event.ext
-        lastActiveRestQueryDoc.uri = event.uri?.toString()
+        this._lastActiveRestQueryDoc.ext = event.ext
       }
+      this._lastActiveRestQueryDoc.uri = event.uri?.toString()
     })
 
     const changeViewStateSubsription = webviewPanel.onDidChangeViewState((e) => {
@@ -491,7 +490,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           })...`,
         )*/
         if (e.webviewPanel.active && e.webviewPanel.visible) {
-          if (lastActiveRestQueryDoc.ext.length > 0) {
+          if (this._lastActiveRestQueryDoc.ext.length > 0) {
             /*console.log(
               `FBAEditorProvider webview(${document.uri.toString()}) delayed onDidChangeActiveRestQueryDoc(ext='${
                 lastActiveRestQueryDoc.ext
@@ -499,10 +498,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             )*/
             this.postMsgOnceAlive(docData, {
               type: 'onDidChangeActiveRestQueryDoc',
-              ext: lastActiveRestQueryDoc.ext,
-              uri: lastActiveRestQueryDoc.uri,
+              ext: this._lastActiveRestQueryDoc.ext,
+              uri: this._lastActiveRestQueryDoc.uri,
             })
-            lastActiveRestQueryDoc.ext = ''
+            this._lastActiveRestQueryDoc.ext = ''
           }
         }
       } catch (e) {
@@ -534,7 +533,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         removed.forEach((item) => {
           // we change the lastPostedObj to an empty obj to indicate that it's not existing now
           if (item.docData) {
-            item.docData.lastPostedObj = {}
+            item.docData.lastPostedObj = {} as Fishbone
           }
           this._fsProvider.onFbaDocChanges(item)
         })
@@ -583,7 +582,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 {
                   // {"type":"restQuery","request":"ext:dlt-logs/get/sw-versions"}
                   const url: string = typeof e.req.request === 'string' ? e.req.request : e.req.request.url // todo request.url should not occur any longer!
-                  this.performRestQueryUri(docData, url).then(
+                  this.performRestQueryUri(url).then(
                     (resJson) => {
                       webviewPanel.webview.postMessage({ type: e.type, res: resJson, id: e.id })
                     },
@@ -636,75 +635,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   public performRestQuery(docData: DocData, rq: RQ): Promise<any> {
     //console.warn(`performRestQuery: got ext query for extName='${rq.path}' #commands='${rq.commands.length}'`)
 
-    // attribute support:
-    const attrCache = new Map<string, string | number | (string | number)[] | undefined>()
-    const getAttribute = (attribute: string): string | number | (string | number)[] | undefined => {
-      // check if we already have the attribute in the cache
-      if (attrCache.has(attribute)) {
-        return attrCache.get(attribute)
-      }
-      const attrs = docData.lastPostedObj?.attributes
-      if (Array.isArray(attrs)) {
-        // iterate over all attributes and check if the attribute is in there
-        // it can be attributename.member e.g. lifecycles.id or attributename like ecu
-        // the attribute value can be a single string/value or an array with string/values
-        // for ecu usually value is just a single member (string)
-        // for lifecycles value is an array of objects with id (number), label,...
-
-        const [attrName, attrMember] = attribute.split('.')
-
-        for (const attr of attrs) {
-          if (typeof attr === 'object' && attrName in attr) {
-            // check if the attribute is in the object
-            const attrVal = attr[attrName]?.value
-            if (attrVal === undefined) {
-              attrCache.set(attribute, attrVal)
-              return undefined
-            }
-            if (attrMember) {
-              // check if the attribute is in the object/array
-              if (Array.isArray(attrVal)) {
-                // check if the attribute is in the array
-                if (attrVal.length === 0) {
-                  attrCache.set(attribute, attrVal as (string | number)[])
-                  return attrVal
-                }
-
-                const attrMemberVals = attrVal.map((e: any) => e[attrMember])
-                const toRet =
-                  attrMemberVals.length > 0
-                    ? typeof attrMemberVals[0] === 'string' || typeof attrMemberVals[0] === 'number'
-                      ? (attrMemberVals as (string | number)[])
-                      : undefined
-                    : []
-                attrCache.set(attribute, toRet)
-                return toRet
-              } else {
-                const toRet = typeof attrVal[0] === 'string' || typeof attrVal[0] === 'number' ? (attrVal as (string | number)[]) : []
-                attrCache.set(attribute, toRet)
-                return toRet
-              }
-            } else {
-              let toRet
-              if (Array.isArray(attrVal)) {
-                toRet =
-                  attrVal.length > 0
-                    ? typeof attrVal[0] === 'string' || typeof attrVal[0] === 'number'
-                      ? (attrVal as (string | number)[])
-                      : undefined
-                    : []
-              } else {
-                toRet = typeof attrVal === 'string' || typeof attrVal === 'number' ? attrVal : undefined
-              }
-              attrCache.set(attribute, toRet)
-              return toRet
-            }
-          }
-        }
-      }
-      return undefined
-    }
-
     // search for filters and replace ${attribute.ecu} with the value of the attribute
     for (const cmd of rq.commands) {
       switch (cmd.cmd) {
@@ -712,34 +642,56 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         case 'query':
           {
             const param = JSON5.parse(cmd.param)
-            if (Array.isArray(param)) {
-              let doChange = false
-              for (const filter of param) {
-                Object.keys(filter).forEach((key) => {
-                  if (typeof filter[key] === 'string' && filter[key].startsWith('${attributes.')) {
-                    // console.warn(`performRestQuery: got key: '${key}' with attribute '${filter[key]}'`)
-                    const attribute = filter[key].slice(13, -1) // remove ${attributes. and }
-                    const attrVal = getAttribute(attribute)
-                    console.info(`FBAEditorProvider.performRestQuery: got attribute '${attribute}' with value: ${JSON.stringify(attrVal)}`)
-                    if (attrVal !== undefined) {
-                      filter[key] = attrVal
-                    } else {
-                      // remove key:
-                      delete filter[key]
-                    }
-                    doChange = true
-                  }
-                })
-              }
-              if (doChange) {
-                cmd.param = JSON.stringify(param)
-              }
+            if (this.substFilterAttributes(docData, param)) {
+              cmd.param = JSON.stringify(param)
             }
           }
           break
       }
     }
-    return this.performRestQueryUri(docData, rqUriEncode(rq))
+    return this.performRestQueryUri(rqUriEncode(rq))
+  }
+
+  /**
+   * substitute/replace attributes of filters in place
+   * @param filters array of filterFrags i.e. object with filter attributes
+   * @returns true if any attribute was replaced
+   */
+  public substFilterAttributes(docData: DocData, filters: any[]) {
+    // attribute support:
+    const attrCache = new Map<string, string | number | (string | number)[] | undefined>()
+    const getAttribute = (attribute: string): string | number | (string | number)[] | undefined => {
+      // check if we already have the attribute in the cache
+      if (attrCache.has(attribute)) {
+        return attrCache.get(attribute)
+      }
+      // console.log(`getAttribute(${attribute})...`)
+      return docData.lastPostedObj && docData.lastPostedObj.attributes
+        ? getAttributeFromFba(docData.lastPostedObj.attributes, attribute)
+        : undefined
+    }
+
+    if (Array.isArray(filters)) {
+      let didChange = false
+      for (const filter of filters) {
+        Object.keys(filter).forEach((key) => {
+          if (typeof filter[key] === 'string' && filter[key].startsWith('${attributes.')) {
+            // console.warn(`performRestQuery: got key: '${key}' with attribute '${filter[key]}'`)
+            const attribute = filter[key].slice(13, -1) // remove ${attributes. and }
+            const attrVal = getAttribute(attribute)
+            console.info(`FBAEditorProvider.substFilterAttributes: got attribute '${attribute}' with value: ${JSON.stringify(attrVal)}`)
+            if (attrVal !== undefined) {
+              filter[key] = attrVal
+            } else {
+              // remove key:
+              delete filter[key]
+            }
+            didChange = true
+          }
+        })
+      }
+      return didChange
+    }
   }
 
   /**
@@ -750,9 +702,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
    * @param url
    * @returns
    */
-  public performRestQueryUri(docData: DocData, url: string): Promise<any> {
-    const webviewPanel = docData.webviewPanel
-
+  public performRestQueryUri(url: string): Promise<any> {
     if (url.startsWith('ext:')) {
       const extName = url.slice(4, url.indexOf('/'))
       const query = url.slice(url.indexOf('/'))

@@ -7,7 +7,10 @@
     "lib": ["es2021"],
     "sourceMap": true,
     "rootDir": "src",
-    "strict": true
+    "strict": true,
+    "jsx": "react",
+    "jsxFactory": "vscpp",
+    "jsxFragmentFactory": "vscppf"
   },
   "exclude": ["node_modules", ".vscode-test", "src/webview", "src/extension"]
 }
