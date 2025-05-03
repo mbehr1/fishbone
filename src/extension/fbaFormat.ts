@@ -39,6 +39,7 @@ export interface FBAttribute {
 }
 export interface FBEffect {
   fbUid: string
+  name: string
   categories: FBCategory[]
 }
 
@@ -64,6 +65,7 @@ export interface FBRootCause {
 
 export interface FBCategory {
   fbUid: string
+  name: string
   rootCauses: FBRootCause[]
 }
 

@@ -22,7 +22,7 @@
   },
   "homepage": "https://mbehr1.github.io/fishbone/",
   "engines": {
-    "vscode": "^1.80.0"
+    "vscode": "^1.99.1"
   },
   "categories": [
     "Visualization",
@@ -46,6 +46,106 @@
   },
   "main": "./out/extension/extension.js",
   "contributes": {
+    "chatParticipants": [
+      {
+        "id": "fishbone.ai",
+        "name": "fai",
+        "fullName": "Fishbone Analyst",
+        "description": "Which analysis shall I help you with?",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "teach",
+            "description": "Provide help on how to use a fishbone"
+          },
+          {
+            "name": "analyse",
+            "description": "Perform fishbone analysis on a trace file"
+          },
+          {
+            "name": "list",
+            "description": "List all registered tools"
+          }
+        ],
+        "disambiguation": [
+          {
+            "category": "analysis",
+            "description": "The user wants to analyse logs or traces",
+            "examples": [
+              "Explain to me the scenarios in the trace",
+              "Perform a fishbone analysis on the dlt log"
+            ]
+          }
+        ]
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "fishbone_rootcauseDetails",
+        "tags": [
+          "fishbone"
+        ],
+        "toolReferenceName": "rootcauseDetails",
+        "displayName": "Fishbone Root Cause Details",
+        "modelDescription": "Details of a root cause in a fishbone.",
+        "userDescription": "Provide details for a root cause in a fishbone",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(files)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "fbUid": {
+              "type": "string",
+              "description": "The uid of the root cause to provide details for. It needs to be exactly the fbUid without any additional characters pre- or appended."
+            }
+          }
+        }
+      },
+      {
+        "name": "fishbone_queryLogs",
+        "tags": [
+          "fishbone"
+        ],
+        "toolReferenceName": "queryLogs",
+        "displayName": "Query logs with filters",
+        "modelDescription": "Query matching dlt-logs with a set of filters. Returns all logs matching the provided filters.",
+        "userDescription": "Provide logs matching a set of filters",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(list-filter)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "number",
+                    "description": "The type of the filter (0 = pos, 1 = negative)."
+                  },
+                  "apid": {
+                    "type": "string",
+                    "description": "Optional apid (application id) to filter for."
+                  },
+                  "ctid": {
+                    "type": "string",
+                    "description": "Optional ctid (context id) to filter for."
+                  },
+                  "payloadRegex": {
+                    "type": "string",
+                    "description": "Optional regular expression to filter the payload of the log for."
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "command": "fishbone.addNewFile",
@@ -79,7 +179,8 @@
         {
           "type": "tree",
           "id": "fishbone_tree.fba",
-          "name": "Fishbone"
+          "name": "Fishbone",
+          "icon": "fishbone-icon2.png"
         }
       ]
     },
@@ -126,7 +227,7 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "^20.17.11",
     "@types/request": "^2.48.8",
-    "@types/vscode": "^1.80.0",
+    "@types/vscode": "^1.99.1",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
     "esbuild": "^0.24.0",
@@ -147,6 +248,7 @@
   },
   "dependencies": {
     "@vscode/extension-telemetry": "^0.9.8",
+    "@vscode/prompt-tsx": "^0.3.0-alpha.24",
     "dlt-logs-utils": "0.13.3",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "js-yaml": "^4.1.0",
@@ -156,6 +258,7 @@
     "mdast-util-gfm-table": "^2.0.0",
     "mdast-util-to-markdown": "^2.1.2",
     "request": "^2.88.2",
+    "safe-stable-stringify": "^2.5.0",
     "short-unique-id": "4.4.4",
     "tslib": "2.6.2"
   },
