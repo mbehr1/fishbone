@@ -59,7 +59,15 @@ export function isTsxToolUserMetadata(obj: unknown): obj is TsxToolUserMetadata 
   )
 }
 
+// if registration of our own tools is not possible, we can call them directly
+export interface IOwnTools {
+  tool: vscode.LanguageModelTool<any>
+  info: vscode.LanguageModelToolInformation
+}
+
 export class FBAIProvider implements vscode.Disposable {
+  ownToolInfos: IOwnTools[] = []
+
   constructor(
     private readonly context: vscode.ExtensionContext,
     private editorProvider: FBAEditorProvider,
@@ -82,6 +90,49 @@ export class FBAIProvider implements vscode.Disposable {
       context.subscriptions.push(fai)
       context.subscriptions.push(vscode.lm.registerTool('fishbone_rootcauseDetails', new RootcauseDetailsTool(this)))
       context.subscriptions.push(vscode.lm.registerTool('fishbone_queryLogs', new QueryLogsTool(this)))
+      // lets see whether we can use our own tool (or whether access is eg. restricted):
+      const fbTools = vscode.lm.tools.filter((tool) => tool.tags.includes('fishbone'))
+      if (fbTools.length > 0) {
+        console.log(`FBAIProvider() found ${fbTools.length} fishbone tools:`, fbTools)
+      } else {
+        try {
+          const ownLmToolsInfo = context.extension.packageJSON.contributes?.languageModelTools
+          console.warn(`FBAIProvider() no fishbone tools found but found ${ownLmToolsInfo?.length} own tools in package.json`)
+          const ownLmToolsMapped: vscode.LanguageModelToolInformation[] =
+            ownLmToolsInfo && Array.isArray(ownLmToolsInfo)
+              ? ownLmToolsInfo.map((tool: any) => {
+                  return {
+                    name: tool.name,
+                    tags: tool.tags,
+                    description: tool.modelDescription,
+                    inputSchema: tool.inputSchema,
+                  }
+                })
+              : []
+          for (const toolInfo of ownLmToolsMapped) {
+            switch (toolInfo.name) {
+              case 'fishbone_rootcauseDetails':
+                this.ownToolInfos.push({
+                  tool: new RootcauseDetailsTool(this),
+                  info: toolInfo,
+                })
+                break
+              case 'fishbone_queryLogs':
+                this.ownToolInfos.push({
+                  tool: new QueryLogsTool(this),
+                  info: toolInfo,
+                })
+                break
+              default:
+                console.warn(`FBAIProvider() unknown tool name '${toolInfo.name}' in package.json`)
+                break
+            }
+          }
+        } catch (e) {
+          console.warn(`FBAIProvider() error while reading own tools from package.json: ${e}`)
+        }
+        console.log(`FBAIProvider() providing ${this.ownToolInfos.length} own tools`)
+      }
       console.log('FBAIProvider() done.')
     } catch (e) {
       console.error('FBAIProvider constructor error:', e)
@@ -106,6 +157,13 @@ export class FBAIProvider implements vscode.Disposable {
 
     if (request.command === 'list') {
       stream.markdown(`Available tools: ${vscode.lm.tools.map((tool) => tool.name).join(', ')}\n\n`)
+      // own tools:
+      stream.markdown(
+        `Own tools:\n\n\`\`\`json\n\n${[...vscode.lm.tools, ...this.ownToolInfos.map((t) => t.info)]
+          .filter((tool) => tool.tags.includes('fishbone'))
+          .map((tool) => JSON.stringify(tool, undefined, 2))
+          .join(',\n')}\n\`\`\`\n\n`,
+      )
       return {
         metadata: { command: request.command, toolCallsMetadata: { toolCallRounds: [], toolCallResults: {} } },
       }
@@ -113,6 +171,7 @@ export class FBAIProvider implements vscode.Disposable {
       // TODO: how to detect a follow up chat vs. a new chat (e.g. with new logs/fbs)?
 
       const tools = vscode.lm.tools.filter((tool) => tool.tags.includes('fishbone'))
+      tools.push(...this.ownToolInfos.map((t) => t.info))
       const fbs: IFBsToInclude[] = this.editorProvider._treeRootNodes
         .map((node) => {
           return node.docData?.lastPostedObj !== undefined ? ({ fb: node.docData.lastPostedObj } as IFBsToInclude) : undefined
@@ -126,6 +185,7 @@ export class FBAIProvider implements vscode.Disposable {
           {
             userQuery: request.prompt,
             history: context.history,
+            ownTools: this.ownToolInfos,
             provider: this,
             activeDocUri: this.editorProvider._lastActiveRestQueryDoc.uri,
             fbs,
@@ -166,7 +226,7 @@ export class FBAIProvider implements vscode.Disposable {
           const requestedTool = toolReferences.shift()
           if (requestedTool) {
             options.toolMode = vscode.LanguageModelChatToolMode.Required
-            options.tools = vscode.lm.tools.filter((tool) => tool.name === requestedTool.name)
+            options.tools = [...vscode.lm.tools, ...this.ownToolInfos.map((t) => t.info)].filter((tool) => tool.name === requestedTool.name)
           } else {
             options.toolMode = undefined
             options.tools = [...tools]
@@ -203,6 +263,7 @@ export class FBAIProvider implements vscode.Disposable {
               FBAIPrompt, // ctor
               {
                 userQuery: request.prompt,
+                ownTools: this.ownToolInfos,
                 history: context.history,
                 provider: this,
                 activeDocUri: this.editorProvider._lastActiveRestQueryDoc.uri,
