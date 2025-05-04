@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.37.1](https://github.com/mbehr1/fishbone/compare/v1.37.0...v1.37.1) (2025-05-04)
+
+### Bug Fixes
+
+* **fAi:** wrong icon used ([7891f18](https://github.com/mbehr1/fishbone/commit/7891f181db6df6fdea6d2a9b09ba0399f63d17c7))
+
 ## [1.37.0](https://github.com/mbehr1/fishbone/compare/v1.36.4...v1.37.0) (2025-05-03)
 
 ### Features
