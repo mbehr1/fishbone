@@ -65,22 +65,27 @@ export class FBAIProvider implements vscode.Disposable {
     private editorProvider: FBAEditorProvider,
     private readonly reporter?: TelemetryReporter,
   ) {
-    console.log('FBAIProvider()...')
-
-    const fai = vscode.chat.createChatParticipant('fishbone.ai', this.handleChatRequest.bind(this))
-    fai.iconPath = vscode.Uri.joinPath(context.extensionUri, 'fishbone-icon2.png')
-    fai.followupProvider = {
-      provideFollowups(
-        result: IFaiChatResult,
-        context: vscode.ChatContext,
-        token: vscode.CancellationToken,
-      ): vscode.ProviderResult<vscode.ChatFollowup[]> {
-        return this.provideFollowups(result, context, token)
-      },
+    try {
+      console.log('FBAIProvider()...')
+      const fai = vscode.chat.createChatParticipant('fishbone.ai', this.handleChatRequest.bind(this))
+      fai.iconPath = vscode.Uri.joinPath(context.extensionUri, 'fishbone-icon2.png')
+      const providerFollowup = this.provideFollowups.bind(this)
+      fai.followupProvider = {
+        provideFollowups(
+          result: IFaiChatResult,
+          context: vscode.ChatContext,
+          token: vscode.CancellationToken,
+        ): vscode.ProviderResult<vscode.ChatFollowup[]> {
+          return providerFollowup(result, context, token)
+        },
+      }
+      context.subscriptions.push(fai)
+      context.subscriptions.push(vscode.lm.registerTool('fishbone_rootcauseDetails', new RootcauseDetailsTool(this)))
+      context.subscriptions.push(vscode.lm.registerTool('fishbone_queryLogs', new QueryLogsTool(this)))
+      console.log('FBAIProvider() done.')
+    } catch (e) {
+      console.error('FBAIProvider constructor error:', e)
     }
-    context.subscriptions.push(fai)
-    context.subscriptions.push(vscode.lm.registerTool('fishbone_rootcauseDetails', new RootcauseDetailsTool(this)))
-    context.subscriptions.push(vscode.lm.registerTool('fishbone_queryLogs', new QueryLogsTool(this)))
   }
   dispose() {
     console.log('FBAIProvider disposed')
