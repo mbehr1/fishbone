@@ -1,6 +1,6 @@
 /**
  * copyright (c) 2025, Matthias Behr
- * 
+ *
  * template copied from https://github.com/microsoft/vscode-prompt-tsx/blob/main/examples/history.tsx, MIT license
  */
 
@@ -31,7 +31,7 @@ import {
   LanguageModelToolTokenizationOptions,
   lm,
 } from 'vscode'
-import { FBAIProvider, isTsxToolUserMetadata } from './fbAIProvider'
+import { FBAIProvider, IOwnTools, isTsxToolUserMetadata } from './fbAIProvider'
 import { DltDocContext } from './fbAiDltDocContext'
 import { IFBsToInclude, FishboneContext } from './fbAiFishboneContext'
 
@@ -45,6 +45,7 @@ interface IFBAIPromptProps extends BasePromptElementProps {
   userQuery: string
   provider: FBAIProvider
   activeDocUri: string | undefined
+  ownTools: IOwnTools[]
   fbs: IFBsToInclude[]
   toolInvocationToken: ChatParticipantToolToken // or full request
   toolCallRounds: ToolCallRound[]
@@ -94,8 +95,16 @@ export class FBAIPrompt extends PromptElement<IFBAIPromptProps> {
           root causes that you think are potentially relevant if any.
         </UserMessage>
         <DltDocContext priority={90} provider={this.props.provider} activeDocUri={this.props.activeDocUri} />
-        <FishboneContext priority={80} flexGrow={1} fbs={this.props.fbs}/>
-        <History history={this.props.history} passPriority older={0} newer={80} flexGrow={2} flexReserve='/5' />
+        <FishboneContext priority={80} flexGrow={1} fbs={this.props.fbs} />
+        <History
+          ownTools={this.props.ownTools}
+          history={this.props.history}
+          passPriority
+          older={0}
+          newer={80}
+          flexGrow={2}
+          flexReserve='/5'
+        />
         {/* todo later ad references <PromptReferences
 					references={this.props.request.references}
 					priority={20}
@@ -109,6 +118,7 @@ export class FBAIPrompt extends PromptElement<IFBAIPromptProps> {
 					or files here...
 				</UserMessage>*/}
         <ToolCalls
+          ownTools={this.props.ownTools}
           fbs={this.props.fbs}
           toolCallRounds={this.props.toolCallRounds}
           toolInvocationToken={this.props.toolInvocationToken}
@@ -123,6 +133,7 @@ export class FBAIPrompt extends PromptElement<IFBAIPromptProps> {
 
 interface IHistoryProps extends BasePromptElementProps {
   history: ChatContext['history']
+  ownTools: IOwnTools[]
   newer: number // last 2 message priority values
   older: number // previous message priority values
   passPriority: true // require this prop be set!
@@ -149,8 +160,8 @@ export class History extends PromptElement<IHistoryProps> {
   render(): PromptPiece {
     return (
       <>
-        <HistoryMessages history={this.props.history.slice(0, -2)} priority={this.props.older} />
-        <HistoryMessages history={this.props.history.slice(-2)} priority={this.props.newer} />
+        <HistoryMessages ownTools={this.props.ownTools} history={this.props.history.slice(0, -2)} priority={this.props.older} />
+        <HistoryMessages ownTools={this.props.ownTools} history={this.props.history.slice(-2)} priority={this.props.newer} />
       </>
     )
   }
@@ -158,6 +169,7 @@ export class History extends PromptElement<IHistoryProps> {
 
 interface IHistoryMessagesProps extends BasePromptElementProps {
   history: ChatContext['history']
+  ownTools: IOwnTools[]
 }
 
 /**
@@ -178,6 +190,7 @@ export class HistoryMessages extends PromptElement<IHistoryMessagesProps> {
           // console.log('FBAI HistoryMessage ToolCalls found in history:', metadata.toolCallsMetadata)
           history.push(
             <ToolCalls
+              ownTools={this.props.ownTools}
               fbs={[]}
               toolCallResults={metadata.toolCallsMetadata.toolCallResults}
               toolCallRounds={metadata.toolCallsMetadata.toolCallRounds}
@@ -210,6 +223,7 @@ const chatResponseToMarkdown = (response: ChatResponseTurn) => {
 
 // #region ToolCalls
 interface ToolCallsProps extends BasePromptElementProps {
+  ownTools: IOwnTools[]
   fbs: IFBsToInclude[]
   toolCallRounds: ToolCallRound[]
   toolCallResults: Record<string, LanguageModelToolResult>
@@ -250,6 +264,7 @@ class ToolCalls extends PromptElement<ToolCallsProps, void> {
         <AssistantMessage toolCalls={assistantToolCalls}>{round.response}</AssistantMessage>
         {round.toolCalls.map((toolCall) => (
           <ToolResultElement
+            ownTools={this.props.ownTools}
             toolCall={toolCall}
             toolInvocationToken={this.props.toolInvocationToken}
             toolCallResult={this.props.toolCallResults[toolCall.callId]}
@@ -261,6 +276,7 @@ class ToolCalls extends PromptElement<ToolCallsProps, void> {
 }
 
 interface ToolResultElementProps extends BasePromptElementProps {
+  ownTools: IOwnTools[]
   toolCall: LanguageModelToolCallPart
   toolInvocationToken: ChatParticipantToolToken | undefined
   toolCallResult: LanguageModelToolResult | undefined
@@ -272,7 +288,8 @@ interface ToolResultElementProps extends BasePromptElementProps {
 class ToolResultElement extends PromptElement<ToolResultElementProps, void> {
   async render(state: void, sizing: PromptSizing): Promise<PromptPiece | undefined> {
     const tool = lm.tools.find((t) => t.name === this.props.toolCall.name)
-    if (!tool) {
+
+    if (!tool && !this.props.ownTools.find((t) => t.info.name === this.props.toolCall.name)) {
       console.error(`Tool not found: ${this.props.toolCall.name}`)
       return <ToolMessage toolCallId={this.props.toolCall.callId}>Tool not found</ToolMessage>
     }
@@ -284,13 +301,30 @@ class ToolResultElement extends PromptElement<ToolResultElementProps, void> {
 
     //console.log(`FBAI ToolResult ${this.props.toolCallResult ? 'using from cache' : 'invoking tool'}`)
 
-    const toolResult =
+    const ownToolCall = async (toolName: string): Promise<LanguageModelToolResult> => {
+      console.log(`FBAI ToolResult ownToolCall for toolName: ${toolName}`)
+      const r = await this.props.ownTools
+        .find((t) => t.info.name === this.props.toolCall.name)!
+        .tool.invoke(
+          { input: this.props.toolCall.input, toolInvocationToken: this.props.toolInvocationToken, tokenizationOptions },
+          dummyCancellationToken,
+        )
+      if (r) {
+        return r
+      } else {
+        return new LanguageModelToolResult([])
+      }
+    }
+
+    const toolResult: LanguageModelToolResult =
       this.props.toolCallResult ??
-      (await lm.invokeTool(
-        this.props.toolCall.name,
-        { input: this.props.toolCall.input, toolInvocationToken: this.props.toolInvocationToken, tokenizationOptions },
-        dummyCancellationToken,
-      ))
+      (tool
+        ? await lm.invokeTool(
+            this.props.toolCall.name,
+            { input: this.props.toolCall.input, toolInvocationToken: this.props.toolInvocationToken, tokenizationOptions },
+            dummyCancellationToken,
+          )
+        : await ownToolCall(this.props.toolCall.name))
     //console.log(`FBAI ToolResult toolResult:`, toolResult)
 
     return (
