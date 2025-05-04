@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.37.4](https://github.com/mbehr1/fishbone/compare/v1.37.3...v1.37.4) (2025-05-04)
+
+### Bug Fixes
+
+* **fAi:** cleanup of tools registration workaround ([c5a4be9](https://github.com/mbehr1/fishbone/commit/c5a4be9808459a3942e4e5ed2f172af6fd9fb82e))
+
 ## [1.37.3](https://github.com/mbehr1/fishbone/compare/v1.37.2...v1.37.3) (2025-05-04)
 
 ### Bug Fixes
