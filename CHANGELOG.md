@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.37.2](https://github.com/mbehr1/fishbone/compare/v1.37.1...v1.37.2) (2025-05-04)
+
+### Bug Fixes
+
+* **fAi:** provideFollowup recursive calls ([a070f83](https://github.com/mbehr1/fishbone/commit/a070f83b4c22264e9641cf6823d471a5230106dc))
+
 ## [1.37.1](https://github.com/mbehr1/fishbone/compare/v1.37.0...v1.37.1) (2025-05-04)
 
 ### Bug Fixes
