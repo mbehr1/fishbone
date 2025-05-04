@@ -92,47 +92,46 @@ export class FBAIProvider implements vscode.Disposable {
       context.subscriptions.push(vscode.lm.registerTool('fishbone_queryLogs', new QueryLogsTool(this)))
       // lets see whether we can use our own tool (or whether access is eg. restricted):
       const fbTools = vscode.lm.tools.filter((tool) => tool.tags.includes('fishbone'))
-      if (fbTools.length > 0) {
-        console.log(`FBAIProvider() found ${fbTools.length} fishbone tools:`, fbTools)
-      } else {
-        try {
-          const ownLmToolsInfo = context.extension.packageJSON.contributes?.languageModelTools
-          console.warn(`FBAIProvider() no fishbone tools found but found ${ownLmToolsInfo?.length} own tools in package.json`)
-          const ownLmToolsMapped: vscode.LanguageModelToolInformation[] =
-            ownLmToolsInfo && Array.isArray(ownLmToolsInfo)
-              ? ownLmToolsInfo.map((tool: any) => {
-                  return {
-                    name: tool.name,
-                    tags: tool.tags,
-                    description: tool.modelDescription,
-                    inputSchema: tool.inputSchema,
-                  }
-                })
-              : []
-          for (const toolInfo of ownLmToolsMapped) {
-            switch (toolInfo.name) {
-              case 'fishbone_rootcauseDetails':
-                this.ownToolInfos.push({
-                  tool: new RootcauseDetailsTool(this),
-                  info: toolInfo,
-                })
-                break
-              case 'fishbone_queryLogs':
-                this.ownToolInfos.push({
-                  tool: new QueryLogsTool(this),
-                  info: toolInfo,
-                })
-                break
-              default:
-                console.warn(`FBAIProvider() unknown tool name '${toolInfo.name}' in package.json`)
-                break
-            }
+      console.log(`FBAIProvider() found ${fbTools.length} fishbone tools:`, fbTools)
+
+      try {
+        const ownLmToolsInfo = context.extension.packageJSON.contributes?.languageModelTools
+        console.warn(`FBAIProvider() found ${ownLmToolsInfo?.length} own tools in package.json`)
+        const ownLmToolsMapped: vscode.LanguageModelToolInformation[] =
+          ownLmToolsInfo && Array.isArray(ownLmToolsInfo)
+            ? ownLmToolsInfo.map((tool: any) => {
+                return {
+                  name: tool.name,
+                  tags: tool.tags,
+                  description: tool.modelDescription,
+                  inputSchema: tool.inputSchema,
+                }
+              })
+            : []
+        for (const toolInfo of ownLmToolsMapped) {
+          switch (toolInfo.name) {
+            case 'fishbone_rootcauseDetails':
+              this.ownToolInfos.push({
+                tool: new RootcauseDetailsTool(this),
+                info: toolInfo,
+              })
+              break
+            case 'fishbone_queryLogs':
+              this.ownToolInfos.push({
+                tool: new QueryLogsTool(this),
+                info: toolInfo,
+              })
+              break
+            default:
+              console.warn(`FBAIProvider() unknown tool name '${toolInfo.name}' in package.json`)
+              break
           }
-        } catch (e) {
-          console.warn(`FBAIProvider() error while reading own tools from package.json: ${e}`)
         }
-        console.log(`FBAIProvider() providing ${this.ownToolInfos.length} own tools`)
+      } catch (e) {
+        console.warn(`FBAIProvider() error while reading own tools from package.json: ${e}`)
       }
+      console.log(`FBAIProvider() providing ${this.ownToolInfos.length} own tools`)
+
       console.log('FBAIProvider() done.')
     } catch (e) {
       console.error('FBAIProvider constructor error:', e)
@@ -154,15 +153,21 @@ export class FBAIProvider implements vscode.Disposable {
       }') req.model=${JSON.stringify(request.model)}...`,
     )
     // todo how to check whether the model supports tools?
+    const allTools = [...vscode.lm.tools]
+    // check whether own tools are part of allTools:
+    for (const ownTool of this.ownToolInfos) {
+      if (!allTools.some((tool) => tool.name === ownTool.info.name)) {
+        allTools.push(ownTool.info)
+      }
+    }
+
+    const fbTools = allTools.filter((tool) => tool.tags.includes('fishbone'))
 
     if (request.command === 'list') {
       stream.markdown(`Available tools: ${vscode.lm.tools.map((tool) => tool.name).join(', ')}\n\n`)
       // own tools:
       stream.markdown(
-        `Own tools:\n\n\`\`\`json\n\n${[...vscode.lm.tools, ...this.ownToolInfos.map((t) => t.info)]
-          .filter((tool) => tool.tags.includes('fishbone'))
-          .map((tool) => JSON.stringify(tool, undefined, 2))
-          .join(',\n')}\n\`\`\`\n\n`,
+        `Fishbone tagged tools:\n\n\`\`\`json\n\n${fbTools.map((tool) => JSON.stringify(tool, undefined, 2)).join(',\n')}\n\`\`\`\n\n`,
       )
       return {
         metadata: { command: request.command, toolCallsMetadata: { toolCallRounds: [], toolCallResults: {} } },
@@ -170,15 +175,13 @@ export class FBAIProvider implements vscode.Disposable {
     } else if (request.command === undefined || request.command === 'analyse') {
       // TODO: how to detect a follow up chat vs. a new chat (e.g. with new logs/fbs)?
 
-      const tools = vscode.lm.tools.filter((tool) => tool.tags.includes('fishbone'))
-      tools.push(...this.ownToolInfos.map((t) => t.info))
       const fbs: IFBsToInclude[] = this.editorProvider._treeRootNodes
         .map((node) => {
           return node.docData?.lastPostedObj !== undefined ? ({ fb: node.docData.lastPostedObj } as IFBsToInclude) : undefined
         })
         .filter((node) => node !== undefined)
 
-      stream.progress(`Analysing using ${fbs.length} fishbones using ${tools.length} tools...`)
+      stream.progress(`Analysing using ${fbs.length} fishbones using ${fbTools.length} tools...`)
       try {
         const prompt = await renderPrompt(
           FBAIPrompt, // ctor
@@ -226,10 +229,10 @@ export class FBAIProvider implements vscode.Disposable {
           const requestedTool = toolReferences.shift()
           if (requestedTool) {
             options.toolMode = vscode.LanguageModelChatToolMode.Required
-            options.tools = [...vscode.lm.tools, ...this.ownToolInfos.map((t) => t.info)].filter((tool) => tool.name === requestedTool.name)
+            options.tools = allTools.filter((tool) => tool.name === requestedTool.name)
           } else {
             options.toolMode = undefined
-            options.tools = [...tools]
+            options.tools = [...fbTools]
           }
           let realNrTokens = 0
           for (const m of messages) {
