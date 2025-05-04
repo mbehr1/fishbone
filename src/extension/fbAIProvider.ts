@@ -15,7 +15,7 @@
  * [ ] - new attribute to restrict timerange?
  * [ ] - support a user/workspace specific knowledge base? (e.g. ecu a = ECU1+ECU2 in logs)
  * [ ] - split ToolResults by priority (e.g. ok sequences -> summary only if at token limit)
- * [ ] - add tool to appy filter frags
+ * [ ] - add tool to apply filter frags
  * [ ] - add tool to export a log based on e.g. lc, time range, ecu, filter,...
  * [ ] - support change of active restquerydoc...
  * [ ] - add help related features (help on creating a report, on filtering, ...)
@@ -68,7 +68,7 @@ export class FBAIProvider implements vscode.Disposable {
     console.log('FBAIProvider()...')
 
     const fai = vscode.chat.createChatParticipant('fishbone.ai', this.handleChatRequest.bind(this))
-    fai.iconPath = vscode.Uri.joinPath(context.extensionUri, 'fishbone-icon.png')
+    fai.iconPath = vscode.Uri.joinPath(context.extensionUri, 'fishbone-icon2.png')
     fai.followupProvider = {
       provideFollowups(
         result: IFaiChatResult,
