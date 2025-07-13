@@ -20,6 +20,7 @@ export class FBANotebookProvider implements Disposable {
   private selectedNotebooks: vscode.NotebookDocument[] = []
 
   constructor(
+    private log: vscode.LogOutputChannel,
     context: vscode.ExtensionContext,
     private editorProvider: FBAEditorProvider,
     private fsProvider: FBAFSProvider,
@@ -34,7 +35,7 @@ export class FBANotebookProvider implements Disposable {
     this.nbController.executeHandler = this._executeAll.bind(this)
     this.nbController.onDidChangeSelectedNotebooks(
       (event) => {
-        console.log(
+        log.debug(
           `FBANotebookProvider.onDidChangeSelectedNotebooks(event.selected=${event.selected})...`,
           event.notebook.uri,
           event.notebook.version,
@@ -84,7 +85,7 @@ export class FBANotebookProvider implements Disposable {
         },
         {
           async provideHover(document, position) {
-            console.log(`FBANotebookProvider.provideHover`)
+            log.debug(`FBANotebookProvider.provideHover`)
             const wordRange = document.getWordRangeAtPosition(position)
             if (wordRange) {
               const word = document.getText(wordRange)
@@ -132,8 +133,9 @@ export class FBANotebookProvider implements Disposable {
    * @param args array of args. First entry has to include 'cmd' and 'doc'. Other args will be passed on to the handler for the cmd.
    */
   public onCommand(args: any[]): void {
+    const log = this.log
     try {
-      console.log(`FBANotebookProvider.onCommand args=${JSON.stringify(args)}`)
+      log.info(`FBANotebookProvider.onCommand args=${JSON.stringify(args)}`)
       // try to find the doc:
       const cmd = <string | undefined>args[0]?.cmd
       const docUri = args[0]?.doc ? vscode.Uri.parse(args[0].doc) : undefined
@@ -149,7 +151,7 @@ export class FBANotebookProvider implements Disposable {
         }
         if (docCell === undefined) {
           // fallback to search in all notebooks
-          console.log(
+          log.info(
             `FBANotebookProvider.onCommand cell not found in ${this.selectedNotebooks.length} selected notebooks. Fallback to search in a all.`,
           )
           for (const nb of vscode.workspace.notebookDocuments) {
@@ -164,20 +166,21 @@ export class FBANotebookProvider implements Disposable {
         if (docCell && docCell.metadata?.fbaRdr === 'FBANBRestQueryRenderer') {
           FBANBRestQueryRenderer.onCellCmd(docCell, cmd, args.slice(1))
         } else {
-          console.warn(`FBANotebookProvider.onCommand docCell not found or wrong metadata:`, docCell)
+          log.warn(`FBANotebookProvider.onCommand docCell not found or wrong metadata:`, docCell)
         }
       } else {
-        console.warn(`FBANotebookProvider.onCommand no doc! args=${JSON.stringify(args)}`)
+        log.warn(`FBANotebookProvider.onCommand no doc! args=${JSON.stringify(args)}`)
       }
     } catch (e) {
-      console.warn(`FBANotebookProvider.onCommand got error=${e}`)
+      log.warn(`FBANotebookProvider.onCommand got error=${e}`)
     }
   }
 
   private _executeAll(cells: vscode.NotebookCell[], notebook: vscode.NotebookDocument): void {
-    console.log(`FBANotebookProvider._executeAll(#cells=${cells.length})...`)
+    const log = this.log
+    log.debug(`FBANotebookProvider._executeAll(#cells=${cells.length})...`)
     for (const cell of cells) {
-      console.log(`FBANotebookProvider._executeAll cell#${cell.index}.metadata=${JSON.stringify(cell.metadata)}`)
+      log.debug(`FBANotebookProvider._executeAll cell#${cell.index}.metadata=${JSON.stringify(cell.metadata)}`)
       // poc for conversionFunction:
       if (cell.metadata?.fbaRdr === 'FBANBRestQueryRenderer') {
         const docData = this.getDocDataForNotebook(notebook)
@@ -189,7 +192,7 @@ export class FBANotebookProvider implements Disposable {
   }
 
   dispose() {
-    console.log(`FBANotebookProvider.dispose()...`)
+    this.log.info(`FBANotebookProvider.dispose()...`)
     this.subscriptions.forEach((s) => s.dispose())
     this.subscriptions.length = 0
   }

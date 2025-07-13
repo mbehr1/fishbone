@@ -75,7 +75,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       }),
     )
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider(FBAEditorProvider.fsSchema, provider._fsProvider))
-    context.subscriptions.push(new FBANotebookProvider(context, provider, provider._fsProvider))
+    context.subscriptions.push(new FBANotebookProvider(log, context, provider, provider._fsProvider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
     context.subscriptions.push(new FBAIProvider(log, context, provider, reporter))
   }
