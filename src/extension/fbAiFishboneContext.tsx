@@ -14,7 +14,7 @@ export function hashForFishbone(fb: Fishbone): number {
 export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[], fbaHash?: number } & BasePromptElementProps> {
   renderFishbone(fb: IFBsToInclude): PromptPiece {
     const fba = fb.fb
-    const fbaHash = hashForFishbone(fba)
+    const fbaHash = this.props.fbaHash || hashForFishbone(fba) // we keep the hash for the fishbne as it needs to be the outer one for nested fishbones
 
     return (
       <>
@@ -36,7 +36,7 @@ export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[], fbaHa
                         attributes: fba.attributes,
                         fishbone: r.data,
                       }
-                      return <FishboneContext fbs={[{ fb }]} fbaHash={fbaHash} />
+                      return <FishboneContext fbs={[{ fb }]} fbaHash={fbaHash} /> // todo or here just a info that the nested fishbone with name is included and add the nested ones after this one?
                     } else {
                       return (
                         <UserMessage priority={70}>

@@ -18,13 +18,14 @@
  * [ ] - add tool to apply filter frags
  * [ ] - add tool to export a log based on e.g. lc, time range, ecu, filter,...
  * [ ] - support change of active restquerydoc...
- * [ ] - add help related features (help on creating a report, on filtering, ...)
+ * [ ] - add teach command / help related features (help on creating a report, on filtering, ...)
  * [ ] - add support for report filters (image capturing... uploading...)?
  */
 
 import * as vscode from 'vscode'
 import * as jp from 'jsonpath/jsonpath.min.js'
 import * as JSON5 from 'json5'
+import matter from 'gray-matter'
 import TelemetryReporter from '@vscode/extension-telemetry'
 import { renderPrompt } from '@vscode/prompt-tsx'
 import { FBAIPrompt, ToolCallRound, ToolResultMetadata } from './fbAiHistory'
@@ -35,6 +36,8 @@ import { RQ, RQCmd, rqUriDecode } from 'dlt-logs-utils/restQuery'
 import { DltFilter, FbSequenceResult, SeqChecker } from 'dlt-logs-utils/sequence'
 import { FBANBRestQueryRenderer } from './fbaNBRQRenderer'
 import { IFBsToInclude } from './fbAiFishboneContext'
+import path from 'path'
+import { readdirSync, readFileSync } from 'fs'
 
 interface IFaiChatResult extends vscode.ChatResult {
   metadata: TsxToolUserMetadata
@@ -69,12 +72,13 @@ export class FBAIProvider implements vscode.Disposable {
   ownToolInfos: IOwnTools[] = []
 
   constructor(
+    private log: vscode.LogOutputChannel,
     private readonly context: vscode.ExtensionContext,
     private editorProvider: FBAEditorProvider,
     private readonly reporter?: TelemetryReporter,
   ) {
     try {
-      console.log('FBAIProvider()...')
+      log.debug('FBAIProvider()...')
       const fai = vscode.chat.createChatParticipant('fishbone.ai', this.handleChatRequest.bind(this))
       fai.iconPath = vscode.Uri.joinPath(context.extensionUri, 'fishbone-icon2.png')
       const providerFollowup = this.provideFollowups.bind(this)
@@ -87,16 +91,22 @@ export class FBAIProvider implements vscode.Disposable {
           return providerFollowup(result, context, token)
         },
       }
+      fai.onDidReceiveFeedback((feedback) => {
+        log.info(
+          `FBAIProvider() feedback received: ${feedback.kind === vscode.ChatResultFeedbackKind.Helpful ? 'helpful' : 'unhelpful'}`,
+          feedback,
+        )
+      })
       context.subscriptions.push(fai)
       context.subscriptions.push(vscode.lm.registerTool('fishbone_rootcauseDetails', new RootcauseDetailsTool(this)))
       context.subscriptions.push(vscode.lm.registerTool('fishbone_queryLogs', new QueryLogsTool(this)))
       // lets see whether we can use our own tool (or whether access is eg. restricted):
       const fbTools = vscode.lm.tools.filter((tool) => tool.tags.includes('fishbone'))
-      console.log(`FBAIProvider() found ${fbTools.length} fishbone tools:`, fbTools)
+      log.info(`FBAIProvider() found ${fbTools.length} fishbone tools:`, fbTools)
 
       try {
         const ownLmToolsInfo = context.extension.packageJSON.contributes?.languageModelTools
-        console.warn(`FBAIProvider() found ${ownLmToolsInfo?.length} own tools in package.json`)
+        log.info(`FBAIProvider() found ${ownLmToolsInfo?.length} own tools in package.json`)
         const ownLmToolsMapped: vscode.LanguageModelToolInformation[] =
           ownLmToolsInfo && Array.isArray(ownLmToolsInfo)
             ? ownLmToolsInfo.map((tool: any) => {
@@ -123,22 +133,20 @@ export class FBAIProvider implements vscode.Disposable {
               })
               break
             default:
-              console.warn(`FBAIProvider() unknown tool name '${toolInfo.name}' in package.json`)
+              log.warn(`FBAIProvider() unknown tool name '${toolInfo.name}' in package.json`)
               break
           }
         }
       } catch (e) {
-        console.warn(`FBAIProvider() error while reading own tools from package.json: ${e}`)
+        log.warn(`FBAIProvider() error while reading own tools from package.json: ${e}`)
       }
-      console.log(`FBAIProvider() providing ${this.ownToolInfos.length} own tools`)
-
-      console.log('FBAIProvider() done.')
+      log.info(`FBAIProvider() providing ${this.ownToolInfos.length} own tools`)
     } catch (e) {
-      console.error('FBAIProvider constructor error:', e)
+      log.error('FBAIProvider constructor error:', e)
     }
   }
   dispose() {
-    console.log('FBAIProvider disposed')
+    this.log.info('FBAIProvider disposed')
   }
 
   async handleChatRequest(
@@ -147,12 +155,15 @@ export class FBAIProvider implements vscode.Disposable {
     stream: vscode.ChatResponseStream,
     token: vscode.CancellationToken,
   ): Promise<IFaiChatResult> {
-    console.log(
+    const log = this.log
+    log.info(
       `FBAIProvider.handleChatRequest(req.command='${request.command}' req.prompt='${request.prompt}' req.model.id='${
         request.model.id
       }') req.model=${JSON.stringify(request.model)}...`,
     )
     // todo how to check whether the model supports tools?
+    const supportsToolCalling = (request.model as any).capabilities?.supportsToolCalling
+    log.info(`FBAIProvider.handleChatRequest() model supportsToolCalling=${supportsToolCalling}`)
     const allTools = [...vscode.lm.tools]
     // check whether own tools are part of allTools:
     for (const ownTool of this.ownToolInfos) {
@@ -163,8 +174,16 @@ export class FBAIProvider implements vscode.Disposable {
 
     const fbTools = allTools.filter((tool) => tool.tags.includes('fishbone'))
 
+    // we dynamically create commands from .prompt.md files in the same folders as the fishbone files
+    // if those are used via /<cmd> they get called as "undefined" command with propmpt "/<cmd> ..."
+    const promptFiles = this.getPromptFiles()
+
     if (request.command === 'list') {
       stream.markdown(`Available tools: ${vscode.lm.tools.map((tool) => tool.name).join(', ')}\n\n`)
+
+      // list all custom prompts:
+      stream.markdown(`Available own prompts: ${promptFiles.map((f) => f.name).join('\n')}\n\n`)
+
       // own tools:
       stream.markdown(
         `Fishbone tagged tools:\n\n\`\`\`json\n\n${fbTools.map((tool) => JSON.stringify(tool, undefined, 2)).join(',\n')}\n\`\`\`\n\n`,
@@ -174,6 +193,15 @@ export class FBAIProvider implements vscode.Disposable {
       }
     } else if (request.command === undefined || request.command === 'analyse') {
       // TODO: how to detect a follow up chat vs. a new chat (e.g. with new logs/fbs)?
+      const userCmd = request.command || (request.prompt.startsWith('/') ? request.prompt.slice(1).split(' ')[0] : undefined)
+      const userPrompt = userCmd ? promptFiles.find((p) => p.name === userCmd) : undefined
+      const cmdPrompt = userPrompt?.content || this.getDefaultPrompt(request.command)
+
+      const promptWithoutUserCmd = userCmd && request.command === undefined ? request.prompt.slice(userCmd.length + 2) : request.prompt
+
+      log.info(
+        `FBAIProvider.handleChatRequest() userCmd='${userCmd}' promptWithoutUserCmd='${promptWithoutUserCmd}' cmdPrompt='${cmdPrompt}'`,
+      )
 
       const fbs: IFBsToInclude[] = this.editorProvider._treeRootNodes
         .map((node) => {
@@ -186,7 +214,8 @@ export class FBAIProvider implements vscode.Disposable {
         const prompt = await renderPrompt(
           FBAIPrompt, // ctor
           {
-            userQuery: request.prompt,
+            cmdPrompt,
+            userQuery: promptWithoutUserCmd,
             history: context.history,
             ownTools: this.ownToolInfos,
             provider: this,
@@ -204,8 +233,8 @@ export class FBAIProvider implements vscode.Disposable {
         )
         let messages = prompt.messages
 
-        console.log(
-          `FBAIProvider.handleChatRequest(req.command='${request.command}' req.prompt='${request.prompt}' req.model.id='${request.model.id}') rendered prompt: #messages=${messages.length} with ${prompt.tokenCount} tokens`,
+        log.info(
+          `FBAIProvider.handleChatRequest(req.command='${request.command}' req.prompt='${promptWithoutUserCmd}' req.model.id='${request.model.id}') rendered prompt: #messages=${messages.length} with ${prompt.tokenCount} tokens`,
         )
 
         prompt.references.forEach((ref) => {
@@ -214,9 +243,11 @@ export class FBAIProvider implements vscode.Disposable {
           }
         })
         // log the messages:
-        /*for (const m of messages) {
-          console.log(`FBAIProvider.handleChatRequest() message: ${JSON.stringify(m)}`)
-        }*/
+        if (log.logLevel >= vscode.LogLevel.Debug) {
+          for (const m of messages) {
+            log.debug(`FBAIProvider.handleChatRequest() message: ${JSON.stringify(m)}`)
+          }
+        }
 
         const toolReferences = [...request.toolReferences]
         const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> = {}
@@ -238,10 +269,10 @@ export class FBAIProvider implements vscode.Disposable {
           for (const m of messages) {
             realNrTokens += await request.model.countTokens(m)
           }
-          console.log(`FBAIProvider realNrTokens = ${realNrTokens}`)
+          log.info(`FBAIProvider realNrTokens = ${realNrTokens}`)
           const chatResponse = await request.model.sendRequest(messages, options, token)
-          console.log(
-            `FBAIProvider.handleChatRequest(req.command='${request.command}' req.prompt='${request.prompt}' req.model.id='${request.model.id}') request sent`,
+          log.info(
+            `FBAIProvider.handleChatRequest(req.command='${request.command}' req.prompt='${promptWithoutUserCmd}' req.model.id='${request.model.id}') request sent`,
           )
           let nrFragements = 0
           const toolCalls: vscode.LanguageModelToolCallPart[] = []
@@ -251,10 +282,14 @@ export class FBAIProvider implements vscode.Disposable {
               stream.markdown(part.value)
               responseStr += part.value
             } else if (part instanceof vscode.LanguageModelToolCallPart) {
+              log.debug(`FBAIProvider.handleChatRequest() got tool call part: ${JSON.stringify(part)}`)
               toolCalls.push(part)
             }
             nrFragements++
           }
+          log.debug(
+            `FBAIProvider.handleChatRequest() got ${nrFragements} fragments with ${toolCalls.length} tool calls and responseStr: '${responseStr}'`,
+          )
           if (toolCalls.length) {
             // If the model called any tools, then we do another round- render the prompt with those tool calls (rendering the PromptElements will invoke the tools)
             // and include the tool results in the prompt for the next request.
@@ -265,7 +300,8 @@ export class FBAIProvider implements vscode.Disposable {
             const result = await renderPrompt(
               FBAIPrompt, // ctor
               {
-                userQuery: request.prompt,
+                cmdPrompt,
+                userQuery: promptWithoutUserCmd,
                 ownTools: this.ownToolInfos,
                 history: context.history,
                 provider: this,
@@ -278,13 +314,15 @@ export class FBAIProvider implements vscode.Disposable {
               { modelMaxPromptTokens: request.model.maxInputTokens }, // endpoint
               request.model, // tokenizerMetadata
             )
-            console.log(
+            log.info(
               `FBAIProvider.handleChatRequest() rendered prompt with tool calls: #messages=${result.messages.length} with ${result.tokenCount} tokens`,
             )
             messages = result.messages
-            /*for (const m of messages) {
-              console.log(`FBAI messages after tool renderPrompt:`,m)
-            }*/
+            if (log.logLevel >= vscode.LogLevel.Debug) {
+              for (const m of messages) {
+                log.debug(`FBAIProvider messages after tool renderPrompt: ${JSON.stringify(m)}`)
+              }
+            }
             const toolResultMetadata = result.metadata.getAll(ToolResultMetadata)
             // console.log(`FBAI handleChatRequest got ${toolResultMetadata.length} toolResultMetadata`, toolResultMetadata)
             if (toolResultMetadata?.length) {
@@ -309,7 +347,7 @@ export class FBAIProvider implements vscode.Disposable {
           } satisfies TsxToolUserMetadata,
         }
       } catch (err) {
-        console.error('Error in FBAIProvider.handleChatRequest:', err)
+        log.error('Error in FBAIProvider.handleChatRequest:', err)
         stream.progress(`oops. got an error: ${err}`)
         //handleError(logger, err, stream);
       }
@@ -323,12 +361,97 @@ export class FBAIProvider implements vscode.Disposable {
     } as IFaiChatResult
   }
 
+  private getPromptFiles() {
+    const log = this.log
+    const dirsToScan = this.editorProvider._treeRootNodes.reduce((acc, node) => {
+      const fsPath = node._document?.uri.fsPath
+      const dir = fsPath ? path.dirname(fsPath) : undefined
+      if (dir && !acc.has(dir)) {
+        acc.add(dir)
+      }
+      return acc // <-- this ensures acc is passed along and remains a Set
+    }, new Set<string>())
+    // scan dirs for .prompt.md files:
+    const promptFiles = Array.from(dirsToScan).reduce((acc, dir) => {
+      // are there any .prompt.md files in the dir (using readDirSync)
+      const files = readdirSync(dir)
+      for (const file of files) {
+        if (file.endsWith('.prompt.md')) {
+          acc.push(path.join(dir, file))
+        }
+      }
+      return acc
+    }, [] as string[])
+
+    // try to read the prompt files and parse the frontmatter and the prompt:
+    const prompts = promptFiles.reduce(
+      (acc, filePath) => {
+        try {
+          const fileContent = readFileSync(filePath, 'utf8')
+          const parsed = matter(fileContent)
+          if (parsed.data && parsed.content) {
+            acc.push({ ...parsed, name: path.basename(filePath, '.prompt.md') })
+          } else {
+            log.warn(`FBAIProvider.getPromptFiles() no valid frontmatter in ${filePath}`)
+          }
+        } catch (e) {
+          log.error(`FBAIProvider.getPromptFiles() error reading or parsing file ${filePath}:`, e)
+        }
+
+        return acc
+      },
+      [] as { name: string; content: string; data: any }[],
+    )
+
+    return prompts
+  }
+
+  private getDefaultPrompt(_command?: string): string {
+    // this should be markdown format:
+    return `
+    Your task is to analyse logs systematically via the help of fishbone files. The logs are typically in the form of dlt log files.
+    The fishbones to be used are part of opened fishbone fba files. You should start by trying to understand the problem description
+    first. Then you can use the fishbone files to help you understand the logs and systematically exclude possible causes or identify
+    possible root causes. Each fishbone can provide info on how to analyse multiple problems called 'effects'.
+    <br />
+    An effect called 'overview' usually provides root causes that provide informations from the logs. Those informations usually help
+    to understand use-cases that occured in the logs or to understand generic issues that might affect or cause multiple problems.
+    Each effect can contain various categories that cluster a set of possible root causes.
+    <br />
+    Each fishbone root cause can contain additional information like background and instructions and 'apply filter' filter details to
+    query logs related to that root cause. Additionally a fishbone root cause can contain an upper and a lower badge that are the
+    results of filtering the logs and appyling some checks on the returned messages. The upper badge usually indicates whether that
+    potential root cause should be more carefully considered. The lower badge usually extracts some data from the logs that can help
+    in understanding root cause related aspects of the logs. The filter details returned for 'apply filter' can be provided to the
+    queryLogs tool as filters. Take care to provide exactly the filters returned. If the instructions of a root cause reference
+    another root cause, you should check that root cause as well.
+    <br />
+    To analyse a problem systematically do the following steps:
+    <br />
+    1. try to understand the problem description. It should match any of the effects covered by the fishbone. If not ask the user
+    which effect would match to the problem description.
+    <br />
+    2. evaluate all the potential root causes of the effect and its categories. Evaluate means that you should check the details for
+    the root cause i.e. consider the background info for each root cause and follow the instructions if the root cause might be
+    relevant. Follow the instructions carefully especially including checking logs or using tools to check the instructions. Use the
+    info from the badges from each root cause as well.
+    <br />
+    3. List all potential root causes to the user that you think are relevant for the problem description. If no root cause could be
+    identified, give that info to the user and ask him to extend the fishbone with the missing potential root causes.
+    <br />
+    4. Once you're done always provide the user with a short summary including: - the identified problem description - the effects
+    that matches the problem description - the root causes that you checked - the root causes that you think are potentially relevant
+    if any. Do not provide the fbUid from the root causes as part of your summary.
+    <br /> Dont give up too quickly. You might evaluate plenty of root causes before you find the right one.
+    `
+  }
+
   provideFollowups(
     result: IFaiChatResult,
     context: vscode.ChatContext,
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.ChatFollowup[]> {
-    console.log(`FBAIProvider.provideFollowups(r.m.cmd=${result.metadata.command})...`)
+    this.log.info(`FBAIProvider.provideFollowups(r.m.cmd=${result.metadata.command})...`)
     return []
   }
 
@@ -382,6 +505,7 @@ export class FBAIProvider implements vscode.Disposable {
   }
 
   public async evaluateRestQuery(docData: DocData, badge: FBBadge) {
+    const log = this.log
     if (badge.conv && badge.source && typeof badge.source === 'string' && badge.source.startsWith('ext:mbehr1.dlt-logs/')) {
       try {
         const rq = rqUriDecode(badge.source)
@@ -466,16 +590,17 @@ export class FBAIProvider implements vscode.Disposable {
               return r
             } // else ignore
           } else {
-            console.log(`rq.cmd=${cmd} ignored!`)
+            log.info(`rq.cmd=${cmd} ignored!`)
           }
         }
       } catch (e) {
-        console.warn(`evaluateRestQuery got error:${e}`)
+        log.warn(`evaluateRestQuery got error:${e}`)
       }
     }
   }
 
   private async evaluateSequence(docData: DocData, rq: RQ, cmd: RQCmd) {
+    const log = this.log
     try {
       const maxNrMsgs = 1_000_000
       const sequences = JSON5.parse(cmd.param)
@@ -538,7 +663,7 @@ export class FBAIProvider implements vscode.Disposable {
               },
               (failureReason) => {
                 const str = `sequence '${seqChecker.name}' evaluation failed with: ${failureReason}`
-                console.warn('FBAI evaluateSequence: ' + str)
+                log.warn('FBAI evaluateSequence: ' + str)
                 return str
               },
             ),
@@ -548,10 +673,10 @@ export class FBAIProvider implements vscode.Disposable {
         const r2: (string | FbSequenceResult)[] = r.map((setRes) => (setRes.status === 'fulfilled' ? setRes.value : setRes.reason))
         return new SequencesResult(r2)
       } else {
-        console.warn(`rq.cmd=${cmd} ignored as no sequences provided!`)
+        log.warn(`rq.cmd=${cmd} ignored as no sequences provided!`)
       }
     } catch (e) {
-      console.warn(`evaluateSequence got error:${e}`)
+      log.warn(`evaluateSequence got error:${e}`)
     }
   }
 }

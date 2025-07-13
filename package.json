@@ -250,6 +250,7 @@
     "@vscode/extension-telemetry": "^0.9.8",
     "@vscode/prompt-tsx": "^0.3.0-alpha.24",
     "dlt-logs-utils": "0.13.3",
+    "gray-matter": "^4.0.3",
     "jju": "github:mbehr1/jju#3aa4169df926e99083fdd511d7c20b5bd9ba789f",
     "js-yaml": "^4.1.0",
     "json5": "2.2.3",
