@@ -11,9 +11,9 @@ import { FBAEditorProvider } from './fbaEditor'
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  const log = vscode.window.createOutputChannel('Fishbone', { log: true })
+
   let reporter: TelemetryReporter | undefined = undefined
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
   const extension = vscode.extensions.getExtension(extensionId)
 
   const prevVersion = context.globalState.get<string>(GlobalState.Version)
@@ -28,17 +28,17 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(reporter)
     reporter?.sendTelemetryEvent('activate')
   } else {
-    console.error(`${extensionId}: not found as extension!`)
+    log.error(`${extensionId}: not found as extension!`)
   }
-  console.log(
+  log.info(
     `extension ${extensionId} v${extensionVersion} ${prevVersion !== extensionVersion ? `prevVersion: ${prevVersion} ` : ''}is now active!`,
   )
 
-  FBAEditorProvider.register(context, reporter)
+  FBAEditorProvider.register(log, context, reporter)
 
   context.subscriptions.push(
     vscode.commands.registerCommand('fishbone.addNewFile', async () => {
-      console.log(`fishbone.addNewFile...`)
+      log.debug(`fishbone.addNewFile...`)
       vscode.window
         .showSaveDialog({
           filters: {
@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
         })
         .then(async (uri) => {
           if (uri) {
-            console.log(`got uri scheme='${uri.scheme}' fspath=${uri.fsPath} path=${uri.path}`)
+            log.debug(`got uri scheme='${uri.scheme}' fspath=${uri.fsPath} path=${uri.path}`)
             // if file exists, open directly: (the overwrite warning was there already)
             if (fs.existsSync(uri.fsPath)) {
               fs.unlinkSync(uri.fsPath)

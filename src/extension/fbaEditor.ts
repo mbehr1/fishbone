@@ -31,6 +31,7 @@ interface AssetManifest {
 }
 
 export interface DocData {
+  log: vscode.LogOutputChannel
   webviewPanel: vscode.WebviewPanel
   gotAliveFromPanel: boolean
   msgsToPost: any[]
@@ -66,8 +67,8 @@ export interface FishboneTreeItem extends vscode.TreeItem {
  *
  */
 export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscode.Disposable {
-  public static register(context: vscode.ExtensionContext, reporter?: TelemetryReporter): void {
-    const provider = new FBAEditorProvider(context, reporter)
+  public static register(log: vscode.LogOutputChannel, context: vscode.ExtensionContext, reporter?: TelemetryReporter): void {
+    const provider = new FBAEditorProvider(log, context, reporter)
     context.subscriptions.push(
       vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider, {
         webviewOptions: { retainContextWhenHidden: true },
@@ -76,7 +77,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider(FBAEditorProvider.fsSchema, provider._fsProvider))
     context.subscriptions.push(new FBANotebookProvider(context, provider, provider._fsProvider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
-    context.subscriptions.push(new FBAIProvider(context, provider, reporter))
+    context.subscriptions.push(new FBAIProvider(log, context, provider, reporter))
   }
 
   private static readonly viewType = 'fishbone.fba' // has to match the package.json
@@ -101,10 +102,11 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   private _fsProvider: FBAFSProvider
 
   constructor(
+    private log: vscode.LogOutputChannel,
     private readonly context: vscode.ExtensionContext,
     private readonly reporter?: TelemetryReporter,
   ) {
-    console.log(`FBAEditorProvider constructor() called...`)
+    log.debug(`FBAEditorProvider constructor() called...`)
 
     this._fsProvider = new FBAFSProvider(this)
 
@@ -112,7 +114,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     this._subscriptions.push(
       vscode.extensions.onDidChange(() => {
         setTimeout(() => {
-          console.log(`fishbone.extensions.onDidChange #ext=${vscode.extensions.all.length}`)
+          log.debug(`fishbone.extensions.onDidChange #ext=${vscode.extensions.all.length}`)
           this.checkActiveExtensions()
         }, 1500)
       }),
@@ -157,13 +159,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           sources.forEach((item, mimeType) => valuePromises.push(item.asString()))
           let values = await Promise.all(valuePromises)
           sources.forEach((item, mimeType) => srcs.push(mimeType))
-          console.log(`FBAEditorProvider.handleDrop on target:'${target?.label}'`)
+          log.info(`FBAEditorProvider.handleDrop on target:'${target?.label}'`)
           if (target && target.docData) {
             let item = sources.get('application/vnd.dlt-logs+json')
             if (item !== undefined) {
               const docData = target.docData
               item.asString().then((value) => {
-                console.log(`FBAEditorProvider.handleDrop sending value:'${value}'`)
+                log.info(`FBAEditorProvider.handleDrop sending value:'${value}'`)
                 _postMsgOnceAlive(docData, {
                   type: 'CustomEvent',
                   eventType: 'ext:drop',
@@ -188,7 +190,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   }
 
   dispose() {
-    console.log(`FBAEditorProvider dispose() called...`)
+    this.log.debug(`FBAEditorProvider dispose() called...`)
 
     if (this._checkExtensionsTimer) {
       clearInterval(this._checkExtensionsTimer)
@@ -209,6 +211,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     } */
 
   async checkActiveExtensions() {
+    const log = this.log
     // we debounce and react only if the number of active extensions changes:
     let nrActiveExt = vscode.extensions.all.reduce((acc, cur) => acc + (cur.isActive ? 1 : 0), 0)
     if (nrActiveExt !== this._checkExtensionsLastActive) {
@@ -231,14 +234,14 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
               if (importedApi !== undefined) {
                 let subscr = importedApi.restQuery
                 if (subscr !== undefined) {
-                  console.log(`fishbone.got restQuery api from ${value.id}`)
+                  log.debug(`fishbone.got restQuery api from ${value.id}`)
                   // testing it:
                   let versResp = subscr('/get/version')
                   // string | Thenable<string> = rq(query); // restQuery can return a string or a Promise<string>
                   if (versResp !== undefined && typeof versResp !== 'string') {
                     versResp = (await versResp) as string
                   }
-                  console.log(`fishbone restQuery('/get/version')=${versResp}`)
+                  log.debug(`fishbone restQuery('/get/version')=${versResp}`)
                   {
                     // add some version checks:
                     const versObj = JSON5.parse(versResp)
@@ -285,15 +288,15 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 }
               }
             } catch (error: any) {
-              console.log(`fishbone: extension ${value.id} throws: ${error.name}:${error.message}`)
+              log.debug(`extension ${value.id} throws: ${error.name}:${error.message}`)
             }
           }
         }),
       )
       this._restQueryExtFunctions = newRQs
       this._extensionSubscriptions = newSubs
-      console.log(
-        `fishbone.checkActiveExtensions: got ${this._restQueryExtFunctions.size} rest query functions and ${this._extensionSubscriptions.length} subscriptions.`,
+      log.debug(
+        `checkActiveExtensions: got ${this._restQueryExtFunctions.size} rest query functions and ${this._extensionSubscriptions.length} subscriptions.`,
       )
     } else {
       // console.log(`fishbone.checkActiveExtensions: nrActiveExt = ${nrActiveExt}`);
@@ -301,27 +304,31 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   }
 
   private postMsgOnceAlive(docData: DocData, msg: any) {
+    const log = this.log
     if (docData.gotAliveFromPanel) {
       // send instantly
       const msgCmd = msg.command
+      /* eslint-disable semi */
       docData.webviewPanel.webview.postMessage(msg).then(
-        (fullFilled) => {
+        (fullFilled: boolean) => {
           if (!fullFilled) {
-            console.warn(`FBAEditorProvider.postMessage(...) direct not fullFilled ${fullFilled}`)
+            log.warn(`FBAEditorProvider.postMessage(...) direct not fullFilled ${fullFilled}`)
           }
         },
-        (rejectReason) => {
-          console.warn(`FBAEditorProvider.postMessage(...) direct rejected with ${rejectReason}`)
+        (rejectReason: any) => {
+          log.warn(`FBAEditorProvider.postMessage(...) direct rejected with ${rejectReason}`)
         },
       )
+      /* eslint-enable semi */
     } else {
       docData.msgsToPost.push(msg)
     }
   }
 
   private updateWebview(docData: DocData, document: vscode.TextDocument) {
+    const log = this.log
     if (docData.lastPostedDocVersion !== document.version) {
-      console.log(
+      log.debug(
         `FBAEditorProvider updateWebview posting to webview(visible=${docData.webviewPanel.visible}, active=${docData.webviewPanel.active}): lastPostedDocVersion=${docData.lastPostedDocVersion}, new docVersion=${document.version}`,
       )
       const docObj: any = FBAEditorProvider.getFBDataFromDoc(docData, document)
@@ -362,7 +369,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         this._onDidChangeTreeData.fire(docData.treeItem)
       }
     } else {
-      console.log(`FBAEditorProvider updateWebview skipped as version already posted.(lastPostedDocVersion=${docData.lastPostedDocVersion}`)
+      log.debug(`FBAEditorProvider updateWebview skipped as version already posted.(lastPostedDocVersion=${docData.lastPostedDocVersion}`)
     }
   }
 
@@ -374,6 +381,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     webviewPanel: vscode.WebviewPanel,
     _token: vscode.CancellationToken,
   ): Promise<void> {
+    const log = this.log
     // console.log(`FBAEditorProvider.resolveCustomTextEditor(document.uri=${document.uri}})`)
     this.reporter?.sendTelemetryEvent('resolveCustomTextEditor', undefined, { lineCount: document.lineCount })
 
@@ -389,6 +397,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     // then we'll send our data:
 
     let docData: DocData = {
+      log,
       webviewPanel: webviewPanel,
       gotAliveFromPanel: false,
       msgsToPost: [],
@@ -418,7 +427,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       if (e.document.uri.toString() === document.uri.toString()) {
         // this is called when either the text changes due to edits
         // but as well when e.g. the dirty flag changes.
-        console.log(
+        log.debug(
           `FBAEditorProvider onDidChangeTextDocument isDirty=${e.document.isDirty} isClosed=${e.document.isClosed} version=${e.document.version}/${document.version}  doc.lineCount=${e.document.lineCount} e.contentChanges.length=${e.contentChanges.length}`,
           e.contentChanges.map((e) => JSON.stringify({ rl: e.rangeLength, tl: e.text.length })).join(','),
         )
@@ -429,7 +438,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           this._fsProvider.onFbaDocChanges(docData.treeItem)
         }
       } else if (e.document === document) {
-        console.warn(
+        log.warn(
           `FBAEditorProvider onDidChangeTextDocument: document.uri changed: ${document.uri.toString()} -> e.document=${e.document.uri.toString()}`,
         )
       }
@@ -505,7 +514,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           }
         }
       } catch (e) {
-        console.error(`FBAEditorProvider webview.onDidChangeViewState got e=${e}`)
+        log.error(`FBAEditorProvider webview.onDidChangeViewState got e=${e}`)
       }
     }, this)
 
@@ -569,7 +578,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             // setTimeout(() =>
             //    FBAEditorProvider.updateTextDocument(docData, document, { fishbone: e.data, title: e.title, attributes: e.attributes }), 1);
           } catch (e: any) {
-            console.error(
+            log.error(
               `Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error= ${e.name}:${e.message}.`,
             )
             vscode.window.showErrorMessage(
@@ -601,17 +610,17 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 }
                 break
               default:
-                console.warn(`fbaEditor got unknown sAr type '${e.req.type}'`)
+                log.warn(`fbaEditor got unknown sAr type '${e.req.type}'`)
                 webviewPanel.webview.postMessage({ type: e.type, res: { errors: [`unknown sAr type '${e.req.type}'`] }, id: e.id })
                 break
             }
           }
           break
         case 'log':
-          console.log(e.message)
+          log.info(e.message)
           return
         default:
-          console.warn(`FBAEditorProvider.onDidReceiveMessage unexpected message (e.type=${e.type}): e=${JSON.stringify(e)}`)
+          log.warn(`FBAEditorProvider.onDidReceiveMessage unexpected message (e.type=${e.type}): e=${JSON.stringify(e)}`)
           break
       }
     })
@@ -662,6 +671,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
    * @returns true if any attribute was replaced
    */
   public substFilterAttributes(docData: DocData, filters: any[]) {
+    const log = this.log
+
     // attribute support:
     const attrCache = new Map<string, string | number | (string | number)[] | undefined>()
     const getAttribute = (attribute: string): string | number | (string | number)[] | undefined => {
@@ -683,7 +694,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             // console.warn(`performRestQuery: got key: '${key}' with attribute '${filter[key]}'`)
             const attribute = filter[key].slice(13, -1) // remove ${attributes. and }
             const attrVal = getAttribute(attribute)
-            console.info(`FBAEditorProvider.substFilterAttributes: got attribute '${attribute}' with value: ${JSON.stringify(attrVal)}`)
+            log.info(`FBAEditorProvider.substFilterAttributes: got attribute '${attribute}' with value: ${JSON.stringify(attrVal)}`)
             if (attrVal !== undefined) {
               filter[key] = attrVal
             } else {
@@ -707,6 +718,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
    * @returns
    */
   public performRestQueryUri(url: string): Promise<any> {
+    const log = this.log
     if (url.startsWith('ext:')) {
       const extName = url.slice(4, url.indexOf('/'))
       const query = url.slice(url.indexOf('/'))
@@ -737,7 +749,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         performHttpRequest(this.context.globalState, url, { Accept: 'application/json' })
           .then((result: any) => {
             if (true /* result.res.statusCode !== 200 */) {
-              console.log(`request ${JSON.stringify(url)} got statusCode=${result.res.statusCode}`)
+              log.debug(`request ${JSON.stringify(url)} got statusCode=${result.res.statusCode}`)
             }
             if ('headers' in result.res && 'content-type' in result.res.headers) {
               const contentType = result.res.headers['content-type']
@@ -745,8 +757,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
               // "content-type": "application/json; charset=utf-8",
               //console.log(`request statusCode=${result.res.statusCode} content-type='${contentType}'`);
               if (typeof contentType === 'string' && !contentType.includes('pplication/json')) {
-                console.warn(`triggerRestQuery '${JSON.stringify(url)}' returned wrong content-type : '${contentType}'`)
-                console.warn(` body first 2000 chars='${result.body.slice(0, 2000)}'`)
+                log.warn(`triggerRestQuery '${JSON.stringify(url)}' returned wrong content-type : '${contentType}'`)
+                log.warn(` body first 2000 chars='${result.body.slice(0, 2000)}'`)
               }
             }
             const json = JSON5.parse(result.body)
@@ -827,7 +839,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     // if we had already pending edits, we just queue this edit as well:
     docData.editsPending.push({ document: document, docVersion: document.version, toChangeObj: docObj })
     if (docData.editsPending.length > 1) {
-      console.warn(
+      docData.log.warn(
         `FBAEditorProvider.updateTextDocument will queue edit/update. editsPending.length=${docData.editsPending.length} version=${document.version}`,
       )
       return true // we treat this ok
@@ -846,8 +858,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     const editToProcess = docData.editsPending[0]
     const document = editToProcess.document
     const docObj = editToProcess.toChangeObj
+    const log = docData.log
 
-    console.log(`processEditsPendingQueue called with json.keys=${Object.keys(docObj)}`)
+    log.debug(`processEditsPendingQueue called with json.keys=${Object.keys(docObj)}`)
 
     const edit = new vscode.WorkspaceEdit()
 
@@ -857,14 +870,14 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     try {
       yamlObj = fbaYamlFromText(prevDocText)
       if (typeof yamlObj !== 'object') {
-        console.error('Could not get document as yaml. Content is not valid yamlObj ' + JSON.stringify(yamlObj))
+        log.error('Could not get document as yaml. Content is not valid yamlObj ' + JSON.stringify(yamlObj))
         yamlObj = {}
       } else {
         // as we dont store on data file format migration (e.g. v0.3 -> v0.4) instantly
         // (to avoid a misleading "dirty file directly after opening" and non-working 'undo')
         // we notice the version mismatch here again, migrate again and use that data:
         if (yamlObj.version && yamlObj.version !== currentFBAFileVersion) {
-          console.warn(`processEditsPendingQueue migrating again from ${yamlObj.version} to ${currentFBAFileVersion}:`)
+          log.warn(`processEditsPendingQueue migrating again from ${yamlObj.version} to ${currentFBAFileVersion}:`)
           const migYamlObj = getFBDataFromText(prevDocText)
           yamlObj.version = currentFBAFileVersion
           yamlObj.attributes = migYamlObj.attributes
@@ -874,7 +887,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         }
       }
     } catch (e: any) {
-      console.error(`Could not get document as json. Content is not valid yaml e=${e.name}:${e.message}`)
+      log.error(`Could not get document as json. Content is not valid yaml e=${e.name}:${e.message}`)
     }
 
     // only 'title', 'attributes' and 'fishbone' are updated for now. keep the rest:
@@ -942,7 +955,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       await deepRootCausesForEach(docObj.fishbone, [], async (rc, parents) => {
         // parents use [] or [docObj] or [docObj.fishbone]for first one?
         if (rc?.type === 'import') {
-          console.log(`got 'import' rc:`, rc)
+          log.debug(`got 'import' rc:`, rc)
           // show open file dialog:
           const uri = await vscode.window.showOpenDialog({
             canSelectMany: false,
@@ -951,10 +964,10 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
             title: 'select fishbone to import',
           })
           if (uri && uri.length === 1) {
-            console.log(` shall import '${uri[0].toString()}'`)
+            log.debug(` shall import '${uri[0].toString()}'`)
             // determine relative path and store for later update
             const relPath = path.relative(document.uri.fsPath, uri[0].fsPath)
-            console.log(` got relPath='${relPath}' from '${document.uri.fsPath}' and '${uri[0].fsPath}'`)
+            log.debug(` got relPath='${relPath}' from '${document.uri.fsPath}' and '${uri[0].fsPath}'`)
             try {
               const fileText = fs.readFileSync(uri[0].fsPath, { encoding: 'utf8' })
               const importYamlObj = getFBDataFromText(fileText)
@@ -970,7 +983,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 }
               }
             } catch (e: any) {
-              console.error(`opening file failed with err:'${e.name}:${e.message}'`)
+              log.error(`opening file failed with err:'${e.name}:${e.message}'`)
             }
           }
           return null // delete the import rc
@@ -978,18 +991,18 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         // reimport?
         if (rc?.type === 'nested' && rc?.reimport) {
           if (rc.relPath) {
-            console.log(`shall 'reimport' rc.relpath=${rc?.relPath}`, rc)
+            log.debug(`shall 'reimport' rc.relpath=${rc?.relPath}`, rc)
             // need to get the full rel path as it's relative to the parent one which is relative to the parent one...
             const parentRelPaths = parents.map((parent) => (parent.relPath ? parent.relPath : undefined))
             let relPath = document.uri.fsPath
             for (let parentRelPath of parentRelPaths) {
               if (parentRelPath) {
                 relPath = path.resolve(relPath, parentRelPath)
-                console.log(` -> relPath='${relPath}'`)
+                log.debug(` -> relPath='${relPath}'`)
               }
             }
             relPath = path.resolve(relPath, rc.relPath)
-            console.log(` trying to reimport absPath='${relPath}'`)
+            log.debug(` trying to reimport absPath='${relPath}'`)
             // now reimport that absPath file:
             try {
               const fileText = fs.readFileSync(relPath, { encoding: 'utf8' })
@@ -1003,7 +1016,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                     rc['reimport'] = true
                   }
                 })
-                console.log(` reimport of '${rc.relPath}' done.`)
+                log.debug(` reimport of '${rc.relPath}' done.`)
                 return {
                   fbUid: uid.randomUUID(),
                   type: 'nested',
@@ -1013,12 +1026,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 }
               }
             } catch (e: any) {
-              console.warn(`re-importing file '${rc.relPath}' failed due to:'${e.name}:${e.message}'`)
+              log.warn(`re-importing file '${rc.relPath}' failed due to:'${e.name}:${e.message}'`)
               vscode.window.showWarningMessage(`re-importing file '${rc.relPath} failed due to:'${e.name}:${e.message}'`)
             }
-            console.log('reimport done/failed')
+            log.debug('reimport done/failed')
           } else {
-            console.error(`shall 'reimport' rc without relPath!`, rc)
+            log.error(`shall 'reimport' rc without relPath!`, rc)
           }
           delete rc.reimport // mark as done by deleting object property
           return rc // we always have to return the modified obj even if reimport failed
@@ -1034,7 +1047,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       const yamlStr = fbaToString(yamlObj)
 
       if (yamlStr === prevDocText) {
-        console.warn(`FBAEditorProvider.processEditsPendingQueue text unchanged! Skipping replace.`)
+        log.warn(`FBAEditorProvider.processEditsPendingQueue text unchanged! Skipping replace.`)
         // need to remove this one from the queue
         docData.editsPending.shift()
         // if there is another one in the queue: apply that one
@@ -1055,7 +1068,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     } catch (e: any) {
       // need to remove this one from the queue
       docData.editsPending.shift()
-      console.error(`storing as YAML failed. Error=${e.name}:${e.message}`)
+      log.error(`storing as YAML failed. Error=${e.name}:${e.message}`)
       vscode.window.showErrorMessage(
         `Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Storing as YAML failed. Error=${e.name}:${e.message}`,
       )
@@ -1072,12 +1085,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
       const fulFilledEdit = docData.editsPending.shift()
 
       if (fulfilled) {
-        console.log(
+        log.debug(
           `FBAEditorProvider.processEditsPendingQueue fulfilled (${fulFilledEdit?.docVersion}) editsPending.length=${docData.editsPending.length}`,
         )
       } else {
         // todo we could reapply here? (but avoid endless retrying...)
-        console.error(`processEditsPendingQueue fulfilled=${fulfilled}`)
+        log.error(`processEditsPendingQueue fulfilled=${fulfilled}`)
         vscode.window.showErrorMessage(
           `Fishbone: Could not update document. Changes are lost. Please consider closing and reopening the doc. Error=applyWorkspace !fulfilled.`,
         )
@@ -1122,7 +1135,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
    * @param newAttrs
    */
   static mergeAttributes(mainAttrs: any[], newAttrs: any[] | undefined) {
-    console.warn(`FBAEditorProvider.mergeAttributes mainAttrs=${JSON.stringify(mainAttrs)} newAttrs=${JSON.stringify(newAttrs)}`)
+    //console.warn(`FBAEditorProvider.mergeAttributes mainAttrs=${JSON.stringify(mainAttrs)} newAttrs=${JSON.stringify(newAttrs)}`)
     // attributes are arrays of objects with a single key (the name) (and the fbUid as 2nd key)
     if (newAttrs === undefined) {
       return
@@ -1141,9 +1154,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   }
 
   provideFileDecoration(uri: vscode.Uri, token: vscode.CancellationToken): vscode.FileDecoration | undefined {
-    console.warn(`FBAEditorProvider.provideFileDecoration(uri=${uri.toString()})...`)
+    //console.warn(`FBAEditorProvider.provideFileDecoration(uri=${uri.toString()})...`)
     if (uri.toString().endsWith('.fba')) {
-      console.warn(` FBAEditorProvider.provideFileDecoration returning a test FileDecoration`)
+      //console.warn(` FBAEditorProvider.provideFileDecoration returning a test FileDecoration`)
       return {
         badge: '42', // max 2 digits
         tooltip: 'fba contains 42 errors',

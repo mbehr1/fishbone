@@ -216,8 +216,8 @@ export class RootcauseDetailsTool implements vscode.LanguageModelTool<IRootcause
             rc.props?.instructions !== undefined
               ? new vscode.LanguageModelTextPart(`instructions:'${textOfStringOrMD(rc.props.instructions)}'`)
               : undefined,
-            upperBadge !== undefined ? new vscode.LanguageModelTextPart(`upper badge:'${upperBadge}'`) : undefined,
-            lowerBadge !== undefined ? new vscode.LanguageModelTextPart(`lower badge:'${lowerBadge}'`) : undefined,
+            upperBadge !== undefined ? new vscode.LanguageModelTextPart(`upper badge:'${upperBadge}'\n`) : undefined,
+            lowerBadge !== undefined ? new vscode.LanguageModelTextPart(`lower badge:'${lowerBadge}'\n`) : undefined,
             filterFrags !== undefined && filterFrags.length > 0
               ? new vscode.LanguageModelTextPart(`filters from 'apply filter'` + '```json\n' + JSON.stringify(filterFrags) + '```\n')
               : undefined,

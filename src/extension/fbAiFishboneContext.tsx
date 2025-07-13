@@ -36,7 +36,7 @@ export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[], fbaHa
                         attributes: fba.attributes,
                         fishbone: r.data,
                       }
-                      return <FishboneContext fbs={[{ fb }]} fbaHash={fbaHash} />
+                      return <FishboneContext fbs={[{ fb }]} fbaHash={fbaHash} /> // todo or here just a info that the nested fishbone with name is included and add the nested ones after this one?
                     } else {
                       return (
                         <UserMessage priority={70}>

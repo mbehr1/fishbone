@@ -41,6 +41,7 @@ export interface ToolCallRound {
 }
 
 interface IFBAIPromptProps extends BasePromptElementProps {
+  cmdPrompt: string
   history: ChatContext['history'] // or full context
   userQuery: string
   provider: FBAIProvider
@@ -74,25 +75,7 @@ export class FBAIPrompt extends PromptElement<IFBAIPromptProps> {
     const r = (
       <>
         <UserMessage priority={100}>
-          Your task is to analyse logs systematically via the help of fishbone files. The logs are typically in the form of dlt log files.
-          The fishbones to be used are part of opened fishbone fba files. You should start by trying to understand the problem description
-          first. Then you can use the fishbone files to help you understand the logs and systematically exclude possible causes or identify
-          possible root causes. Each fishbone can provide info on how to analyse multiple problems called 'effects'. Each effect can contain
-          various categories that cluster a set of possible root causes. Each fishbone root cause can contain additional information like
-          background and instructions and 'apply filter' filter details to query logs related to that root cause. Additionally a fishbone
-          root cause can contain an upper and a lower badge that are the results of filtering the logs and appyling some checks on the
-          returned messages. The upper badge usually indicates whether that potential root cause should be more carefully considered. The
-          lower badge usually extracts some data from the logs that can help in understanding root cause related aspects of the logs. The
-          filter details returned for 'apply filter' can be provided to the queryLogs tool as filters. Take care to provide exactly the
-          filters returned. To analyse a problem systematically do the following steps: 1. try to understand the problem description. It
-          should match any of the effects covered by the fishbone. If not ask the user which effect would match to the problem description.
-          2. evaluate all the potential root causes of the effect and its categories. Evaluate means that you should check the details for
-          the root cause i.e. consider the background info for each root cause and follow the instructions if the root cause might be
-          relevant. Use the info from the badges from each root cause as well. 3. List all potential root causes to the user that you think
-          are relevant for the problem description. If no root cause could be identified, give that info to the user and ask him to extend
-          the fishbone with the missing potential root causes. 4. Once you're done always provide the user with a short summary including: -
-          the identified problem description - the effects that matches the problem description - the root causes that you checked - the
-          root causes that you think are potentially relevant if any.
+          {this.props.cmdPrompt}
         </UserMessage>
         <DltDocContext priority={90} provider={this.props.provider} activeDocUri={this.props.activeDocUri} />
         <FishboneContext priority={80} flexGrow={1} fbs={this.props.fbs} />
