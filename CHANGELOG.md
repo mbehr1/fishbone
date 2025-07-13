@@ -1,5 +1,15 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.38.0](https://github.com/mbehr1/fishbone/compare/v1.37.4...v1.38.0) (2025-07-13)
+
+### Features
+
+* **fai:** prompt files and log to output channel ([649f74e](https://github.com/mbehr1/fishbone/commit/649f74efad8e642e0def8e3e11cac334dd9b3d16))
+
+### Bug Fixes
+
+* **fai:** rcdt tool for nested fishbones ([9392a28](https://github.com/mbehr1/fishbone/commit/9392a282fe7b6d980797cbb0c2e4d68e18ed4f90))
+
 ## [1.37.4](https://github.com/mbehr1/fishbone/compare/v1.37.3...v1.37.4) (2025-05-04)
 
 ### Bug Fixes
