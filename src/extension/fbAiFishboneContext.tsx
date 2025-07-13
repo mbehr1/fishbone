@@ -14,7 +14,7 @@ export function hashForFishbone(fb: Fishbone): number {
 export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[], fbaHash?: number } & BasePromptElementProps> {
   renderFishbone(fb: IFBsToInclude): PromptPiece {
     const fba = fb.fb
-    const fbaHash = hashForFishbone(fba)
+    const fbaHash = this.props.fbaHash || hashForFishbone(fba) // we keep the hash for the fishbne as it needs to be the outer one for nested fishbones
 
     return (
       <>

@@ -18,7 +18,7 @@
  * [ ] - add tool to apply filter frags
  * [ ] - add tool to export a log based on e.g. lc, time range, ecu, filter,...
  * [ ] - support change of active restquerydoc...
- * [ ] - add help related features (help on creating a report, on filtering, ...)
+ * [ ] - add teach command / help related features (help on creating a report, on filtering, ...)
  * [ ] - add support for report filters (image capturing... uploading...)?
  */
 
@@ -87,6 +87,12 @@ export class FBAIProvider implements vscode.Disposable {
           return providerFollowup(result, context, token)
         },
       }
+      fai.onDidReceiveFeedback((feedback) => {
+        console.log(
+          `FBAIProvider() feedback received: ${feedback.kind === vscode.ChatResultFeedbackKind.Helpful ? 'helpful' : 'unhelpful'}`,
+          feedback,
+        )
+      })
       context.subscriptions.push(fai)
       context.subscriptions.push(vscode.lm.registerTool('fishbone_rootcauseDetails', new RootcauseDetailsTool(this)))
       context.subscriptions.push(vscode.lm.registerTool('fishbone_queryLogs', new QueryLogsTool(this)))
@@ -153,6 +159,8 @@ export class FBAIProvider implements vscode.Disposable {
       }') req.model=${JSON.stringify(request.model)}...`,
     )
     // todo how to check whether the model supports tools?
+    const supportsToolCalling = (request.model as any).capabilities?.supportsToolCalling
+    console.log(`FBAIProvider.handleChatRequest() supportsToolCalling=${supportsToolCalling}`)
     const allTools = [...vscode.lm.tools]
     // check whether own tools are part of allTools:
     for (const ownTool of this.ownToolInfos) {
