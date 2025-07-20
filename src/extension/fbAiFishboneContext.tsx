@@ -1,8 +1,10 @@
+import * as vscode from 'vscode'
 import { BasePromptElementProps, PromptElement, PromptPiece, PromptSizing, UserMessage } from '@vscode/prompt-tsx'
 import { stringify } from 'safe-stable-stringify'
 import { Fishbone } from './fbaFormat'
 
 export interface IFBsToInclude {
+  uri: vscode.Uri | undefined
   fb: Fishbone
   // line: number
 }
@@ -11,9 +13,10 @@ export function hashForFishbone(fb: Fishbone): number {
   return cyrb53(safeStableStringify(fb)) // TODO could remove backups here
 }
 
-export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[], fbaHash?: number } & BasePromptElementProps> {
+export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[]; fbaHash?: number } & BasePromptElementProps> {
   renderFishbone(fb: IFBsToInclude): PromptPiece {
     const fba = fb.fb
+    const uri = fb.uri
     const fbaHash = this.props.fbaHash || hashForFishbone(fba) // we keep the hash for the fishbne as it needs to be the outer one for nested fishbones
 
     return (
@@ -36,7 +39,7 @@ export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[], fbaHa
                         attributes: fba.attributes,
                         fishbone: r.data,
                       }
-                      return <FishboneContext fbs={[{ fb }]} fbaHash={fbaHash} /> // todo or here just a info that the nested fishbone with name is included and add the nested ones after this one?
+                      return <FishboneContext fbs={[{ fb, uri }]} fbaHash={fbaHash} /> // todo or here just a info that the nested fishbone with name is included and add the nested ones after this one?
                     } else {
                       return (
                         <UserMessage priority={70}>
@@ -82,16 +85,17 @@ function safeStableStringify(obj: any): string {
 // Largely inspired by MurmurHash2/3, but with a focus on speed/simplicity.
 // See https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript/52171480#52171480
 // https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js
-const cyrb53 = (str:string, seed = 0) => {
-  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed
-  for(let i = 0, ch; i < str.length; i++) {
+const cyrb53 = (str: string, seed = 0) => {
+  let h1 = 0xdeadbeef ^ seed,
+    h2 = 0x41c6ce57 ^ seed
+  for (let i = 0, ch; i < str.length; i++) {
     ch = str.charCodeAt(i)
     h1 = Math.imul(h1 ^ ch, 2654435761)
     h2 = Math.imul(h2 ^ ch, 1597334677)
   }
-  h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507)
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507)
   h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909)
-  h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507)
   h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909)
   // For a single 53-bit numeric return value we could return
   // 4294967296 * (2097151 & h2) + (h1 >>> 0);

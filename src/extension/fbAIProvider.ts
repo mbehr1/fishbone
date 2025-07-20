@@ -192,24 +192,70 @@ export class FBAIProvider implements vscode.Disposable {
         metadata: { command: request.command, toolCallsMetadata: { toolCallRounds: [], toolCallResults: {} } },
       }
     } else if (request.command === undefined || request.command === 'analyse') {
-      // TODO: how to detect a follow up chat vs. a new chat (e.g. with new logs/fbs)?
-      const userCmd = request.command || (request.prompt.startsWith('/') ? request.prompt.slice(1).split(' ')[0] : undefined)
+      // TODO: delete parts of history if new command is different to prev one?
+      // as the command changes the prompt (and old prompt is then not provided to llm)
+
+      const getCmdAndReq = (request: { prompt: string; command?: string | undefined }): [string | undefined, string] => {
+        if (request.command) {
+          return [request.command, request.prompt]
+        }
+        if (request.prompt.startsWith('/')) {
+          const reqParts = request.prompt.slice(1).split(' ')
+          return [reqParts[0], reqParts[1] || '']
+        }
+        return [undefined, request.prompt]
+      }
+
+      let [userCmd, promptWithoutUserCmd] = getCmdAndReq(request)
+      // if the userCmd is undefined scan the history for the last command and use that
+      if (userCmd === undefined) {
+        for (let i = context.history.length - 1; i >= 0; i--) {
+          const item = context.history[i]
+          if (item instanceof vscode.ChatRequestTurn) {
+            const [rUserCmd, _rPromptWithoutUserCmd] = getCmdAndReq(item)
+            if (rUserCmd !== undefined) {
+              userCmd = rUserCmd
+              // we dont wont the old prompt! promptWithoutUserCmd = rPromptWithoutUserCmd
+              break
+            }
+          }
+        }
+        if (userCmd !== undefined) {
+          log.info(`FBAIProvider.handleChatRequest() no userCmd found, using cmd from history: '${userCmd}'`)
+        }
+      }
+
       const userPrompt = userCmd ? promptFiles.find((p) => p.name === userCmd) : undefined
-      const cmdPrompt = userPrompt?.content || this.getDefaultPrompt(request.command)
+      if (userCmd && userPrompt === undefined && userCmd !== 'analyse') {
+        stream.markdown(
+          `> **⚠️ Warning**\n> User command '${userCmd}' not found in prompt files.\n\nKnown user prompts: ${promptFiles
+            .map((f) => `\n - '${f.name}'`)
+            .join('\n')}\n\nUsing default prompt (from /analyse command)!`,
+        )
+      }
+      const cmdPrompt = userPrompt?.content || this.getDefaultPrompt(userCmd)
 
-      const promptWithoutUserCmd = userCmd && request.command === undefined ? request.prompt.slice(userCmd.length + 2) : request.prompt
-
-      log.info(
-        `FBAIProvider.handleChatRequest() userCmd='${userCmd}' promptWithoutUserCmd='${promptWithoutUserCmd}' cmdPrompt='${cmdPrompt}'`,
-      )
+      log.info(`FBAIProvider.handleChatRequest() userCmd='${userCmd}' promptWithoutUserCmd='${promptWithoutUserCmd}'`)
 
       const fbs: IFBsToInclude[] = this.editorProvider._treeRootNodes
         .map((node) => {
-          return node.docData?.lastPostedObj !== undefined ? ({ fb: node.docData.lastPostedObj } as IFBsToInclude) : undefined
+          return node.docData?.lastPostedObj !== undefined
+            ? ({ fb: node.docData.lastPostedObj, uri: node._document?.uri } as IFBsToInclude)
+            : undefined
         })
         .filter((node) => node !== undefined)
 
-      stream.progress(`Analysing using ${fbs.length} fishbones using ${fbTools.length} tools...`)
+      if (this.editorProvider._lastActiveRestQueryDoc.uri) {
+        stream.progress(`Analysing using ${fbs.length} fishbones using ${fbTools.length} tools...`)
+        stream.reference(vscode.Uri.parse(this.editorProvider._lastActiveRestQueryDoc.uri))
+        fbs.forEach((fb) => {
+          if (fb.uri !== undefined) {
+            stream.reference(fb.uri)
+          }
+        })
+      } else {
+        stream.progress(`Analysing without DLT log opened using ${fbs.length} fishbones using ${fbTools.length} tools...`)
+      }
       try {
         const prompt = await renderPrompt(
           FBAIPrompt, // ctor

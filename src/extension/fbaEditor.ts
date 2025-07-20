@@ -280,6 +280,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 if (fnOnDidChangeActiveRestQueryDoc !== undefined) {
                   let extId = value.id
                   let subOnDidChange = fnOnDidChangeActiveRestQueryDoc(async (uri: vscode.Uri | undefined) => {
+                    log.info(`extension ${extId} onDidChangeActiveRestQueryDoc: uri=${uri?.toString()}`)
                     this._onDidChangeActiveRestQueryDoc.fire({ ext: extId, uri: uri })
                   })
                   if (subOnDidChange !== undefined) {
@@ -483,8 +484,19 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           ext: event.ext,
           uri: event.uri?.toString(),
         })
+        log.info(
+          `FBAEditorProvider onDidChangeActiveRestQueryDoc: webviewPanel visible, posting last active rest query doc: ext=${
+            event.ext
+          } uri=${event.uri?.toString()}`,
+        )
+
         this._lastActiveRestQueryDoc.ext = '' // marker to not send it if it becomes visible
       } else {
+        log.info(
+          `FBAEditorProvider onDidChangeActiveRestQueryDoc: webviewPanel not visible, storing last active rest query doc: ext=${
+            event.ext
+          } uri=${event.uri?.toString()}`,
+        )
         // we store the last one and send it if the webview becomes visible
         this._lastActiveRestQueryDoc.ext = event.ext
       }
