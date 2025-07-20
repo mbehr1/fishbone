@@ -11,11 +11,11 @@ export class DltDocContext extends PromptElement<{ provider: FBAIProvider; activ
 
       return (
         <>
-          <UserMessage priority={this.props.priority}>`The active DLT document has the uri:'${this.props.activeDocUri}'.`</UserMessage>
+          <UserMessage priority={this.props.priority}>The active DLT document has the uri:'{this.props.activeDocUri}'.</UserMessage>
           {typeof docInfo === 'object' /* provide general stats like nr. of messages */ && (
             <UserMessage priority={this.props.priority}>
-              `The document contains {docInfo.length} {docInfo.length > 1 ? 'ECUs' : 'ECU'} named:
-              {docInfo.map((ecu) => `'${ecu.attributes.name}`).join(', ')}.`
+              The document contains {docInfo.length} {docInfo.length > 1 ? 'ECUs' : 'ECU'} named:
+              {docInfo.map((ecu) => `'${ecu.attributes.name}'`).join(', ')}.
             </UserMessage>
           )}
           {
@@ -26,7 +26,7 @@ export class DltDocContext extends PromptElement<{ provider: FBAIProvider; activ
                     return (
                       (ecu.attributes.sws.length > 0
                         ? `The ECU '${ecu.attributes.name}' has SW versions: ${ecu.attributes.sws.join(', ')}.\n`
-                        : `The SW versions for ECU '${ecu.attributes.name}' are not identified.`) +
+                        : `The SW versions for ECU '${ecu.attributes.name}' are not identified.\n`) +
                       `It has ${ecu.attributes.lifecycles.length} lifecycles identified:\n` +
                       ecu.attributes.lifecycles
                         .map(
