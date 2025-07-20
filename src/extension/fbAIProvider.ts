@@ -232,12 +232,20 @@ export class FBAIProvider implements vscode.Disposable {
 
       const fbs: IFBsToInclude[] = this.editorProvider._treeRootNodes
         .map((node) => {
-          return node.docData?.lastPostedObj !== undefined ? ({ fb: node.docData.lastPostedObj } as IFBsToInclude) : undefined
+          return node.docData?.lastPostedObj !== undefined
+            ? ({ fb: node.docData.lastPostedObj, uri: node._document?.uri } as IFBsToInclude)
+            : undefined
         })
         .filter((node) => node !== undefined)
 
       if (this.editorProvider._lastActiveRestQueryDoc.uri) {
         stream.progress(`Analysing using ${fbs.length} fishbones using ${fbTools.length} tools...`)
+        stream.reference(vscode.Uri.parse(this.editorProvider._lastActiveRestQueryDoc.uri))
+        fbs.forEach((fb) => {
+          if (fb.uri !== undefined) {
+            stream.reference(fb.uri)
+          }
+        })
       } else {
         stream.progress(`Analysing without DLT log opened using ${fbs.length} fishbones using ${fbTools.length} tools...`)
       }
