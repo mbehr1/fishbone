@@ -1,5 +1,13 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.38.2](https://github.com/mbehr1/fishbone/compare/v1.38.1...v1.38.2) (2025-07-20)
+
+### Bug Fixes
+
+* **fai:** show the dlt and fishbones used as references ([6b8e658](https://github.com/mbehr1/fishbone/commit/6b8e6586c19c53a714541c9be074facf9057e000))
+* **fai:** show warning is user command is not known ([a2b9114](https://github.com/mbehr1/fishbone/commit/a2b9114e10bd7bf14845c9423567e953861d110b))
+* **fai:** use prev command and associated prompt if no command provided ([9aa0139](https://github.com/mbehr1/fishbone/commit/9aa0139854871e0d41974ef744f4eedf4b706045))
+
 ## [1.38.1](https://github.com/mbehr1/fishbone/compare/v1.38.0...v1.38.1) (2025-07-14)
 
 ### Bug Fixes
