@@ -225,7 +225,14 @@ export class FBAIProvider implements vscode.Disposable {
         }
       }
 
-      const userPrompt = userCmd ? promptFiles.find((p) => p.name === userCmd) : undefined // TODO error here!
+      const userPrompt = userCmd ? promptFiles.find((p) => p.name === userCmd) : undefined
+      if (userCmd && userPrompt === undefined && userCmd !== 'analyse') {
+        stream.markdown(
+          `> **⚠️ Warning**\n> User command '${userCmd}' not found in prompt files.\n\nKnown user prompts: ${promptFiles
+            .map((f) => `\n - '${f.name}'`)
+            .join('\n')}\n\nUsing default prompt (from /analyse command)!`,
+        )
+      }
       const cmdPrompt = userPrompt?.content || this.getDefaultPrompt(userCmd)
 
       log.info(`FBAIProvider.handleChatRequest() userCmd='${userCmd}' promptWithoutUserCmd='${promptWithoutUserCmd}'`)
