@@ -6,10 +6,10 @@ To build locally you do need:
 
 once:
 ```
-(have at least nodejs >=12 installed)
+(have at least nodejs >=22 installed)
 npm install -g typescript
 npm install -g vsce
-npm install
+yarn install
 ````
 then
 ```
