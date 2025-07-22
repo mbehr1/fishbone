@@ -21,7 +21,7 @@ export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[]; fbaHa
 
     return (
       <>
-        <UserMessage priority={70}>Fishbone title: '{fba.title}''</UserMessage>
+        <UserMessage priority={70}>Fishbone title: '{fba.title}'</UserMessage>
         <UserMessage priority={70}>
           This fishbone contains details for the following effects:
           {fba.fishbone.map((e) => (

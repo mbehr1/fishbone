@@ -180,12 +180,21 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
   }
 
   private _onDidChangeActiveRestQueryDoc = new vscode.EventEmitter<{ ext: string; uri: vscode.Uri | undefined }>()
+  private _lastRestQueryDocEvent: { ext: string; uri: vscode.Uri | undefined } | undefined
   /**
    * event that get triggered if any active restquery (currently only dlt) doc
    * (the dlt doc that can be referenced with /get/docs/0/...) changes.
    * The event gets debounced a bit to prevent lots of traffic after switching documents.
    */
   get onDidChangeActiveRestQueryDoc(): vscode.Event<{ ext: string; uri: vscode.Uri | undefined }> {
+    if (this._lastRestQueryDocEvent) {
+      // fire the last event immediately if one subscribes and we do have an event already
+      setImmediate(() => {
+        if (this._lastRestQueryDocEvent) {
+          this._onDidChangeActiveRestQueryDoc.fire(this._lastRestQueryDocEvent)
+        }
+      })
+    }
     return this._onDidChangeActiveRestQueryDoc.event
   }
 
@@ -281,7 +290,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                   let extId = value.id
                   let subOnDidChange = fnOnDidChangeActiveRestQueryDoc(async (uri: vscode.Uri | undefined) => {
                     log.info(`extension ${extId} onDidChangeActiveRestQueryDoc: uri=${uri?.toString()}`)
-                    this._onDidChangeActiveRestQueryDoc.fire({ ext: extId, uri: uri })
+                    this._lastRestQueryDocEvent = { ext: extId, uri: uri }
+                    this._onDidChangeActiveRestQueryDoc.fire(this._lastRestQueryDocEvent)
                   })
                   if (subOnDidChange !== undefined) {
                     newSubs.push(subOnDidChange)
