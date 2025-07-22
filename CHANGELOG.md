@@ -1,5 +1,12 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.38.3](https://github.com/mbehr1/fishbone/compare/v1.38.2...v1.38.3) (2025-07-22)
+
+### Bug Fixes
+
+* **fai:** ignore prev history on dlt/fba changes ([418f877](https://github.com/mbehr1/fishbone/commit/418f877a5af61aaf55c92b528dd116d5603bb0be))
+* notify immediately about last rq doc ([fc098fd](https://github.com/mbehr1/fishbone/commit/fc098fddb7cc434864c75b4530ac00573862ca04))
+
 ## [1.38.2](https://github.com/mbehr1/fishbone/compare/v1.38.1...v1.38.2) (2025-07-20)
 
 ### Bug Fixes
