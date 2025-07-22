@@ -187,15 +187,15 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
    * The event gets debounced a bit to prevent lots of traffic after switching documents.
    */
   get onDidChangeActiveRestQueryDoc(): vscode.Event<{ ext: string; uri: vscode.Uri | undefined }> {
-    if (this._lastRestQueryDocEvent) {
-      // fire the last event immediately if one subscribes and we do have an event already
+    return (listener: (e: { ext: string; uri: vscode.Uri | undefined }) => any, thisArgs?: any, disposables?: vscode.Disposable[]) => {
       setImmediate(() => {
         if (this._lastRestQueryDocEvent) {
-          this._onDidChangeActiveRestQueryDoc.fire(this._lastRestQueryDocEvent)
+          // Fire the last event immediately if one subscribes and we already have an event
+          listener.call(thisArgs, this._lastRestQueryDocEvent)
         }
       })
+      return this._onDidChangeActiveRestQueryDoc.event(listener, thisArgs, disposables)
     }
-    return this._onDidChangeActiveRestQueryDoc.event
   }
 
   dispose() {
