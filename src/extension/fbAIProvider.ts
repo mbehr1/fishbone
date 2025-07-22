@@ -44,6 +44,9 @@ interface IFaiChatResult extends vscode.ChatResult {
 }
 
 export interface TsxToolUserMetadata {
+  historyStartIdx: number // the index in the history to feed into the llm (e.g. on log/fba change old history is ignored)
+  activeDocUri: string | undefined // the active dlt log that was used
+  fbUris: (string | undefined)[] // the fishbone URIs used for the analysis
   command?: string
   toolCallsMetadata: ToolCallsMetadata
 }
@@ -157,9 +160,9 @@ export class FBAIProvider implements vscode.Disposable {
   ): Promise<IFaiChatResult> {
     const log = this.log
     log.info(
-      `FBAIProvider.handleChatRequest(req.command='${request.command}' req.prompt='${request.prompt}' req.model.id='${
-        request.model.id
-      }') req.model=${JSON.stringify(request.model)}...`,
+      `FBAIProvider.handleChatRequest(req.command='${request.command}' req.prompt='${request.prompt}' context.history.length=${
+        context.history.length
+      } req.model.id='${request.model.id}') req.model=${JSON.stringify(request.model)}...`,
     )
     // todo how to check whether the model supports tools?
     const supportsToolCalling = (request.model as any).capabilities?.supportsToolCalling
@@ -178,6 +181,56 @@ export class FBAIProvider implements vscode.Disposable {
     // if those are used via /<cmd> they get called as "undefined" command with propmpt "/<cmd> ..."
     const promptFiles = this.getPromptFiles()
 
+    const fbs: IFBsToInclude[] = this.editorProvider._treeRootNodes
+      .map((node) => {
+        return node.docData?.lastPostedObj !== undefined
+          ? ({ fb: node.docData.lastPostedObj, uri: node._document?.uri } as IFBsToInclude)
+          : undefined
+      })
+      .filter((node) => node !== undefined)
+
+    const fbUris = fbs.map((fb) => fb.uri?.toString() || undefined)
+
+    // if there is a history, check if the active DLT log or the fishbones used did change
+    // if so, ask the user whether he wants to reset the history
+    let historyStartIdx = 0
+    if (context.history.length > 0) {
+      const lastTurn = context.history[context.history.length - 1]
+      if (lastTurn instanceof vscode.ChatResponseTurn && lastTurn.result.metadata) {
+        historyStartIdx = lastTurn.result.metadata.historyStartIdx || 0
+        if (
+          lastTurn.result.metadata?.activeDocUri !== this.editorProvider._lastActiveRestQueryDoc.uri ||
+          lastTurn.result.metadata.fbUris.length !== fbUris.length ||
+          !lastTurn.result.metadata.fbUris.every((uri: string | undefined, i: number) => uri === fbUris[i]) // todo allow different order?
+        ) {
+          stream.markdown(`The active DLT log or the fishbones used have changed. Ignoring prev. history.`)
+          historyStartIdx = context.history.length // reset history
+        }
+      } else {
+        stream.markdown(
+          `History(len=${context.history.length}) does not end with a ChatResponseTurn with metadata. Please report this as an error to fishbone extension!`,
+        )
+        log.warn(`FBAIProvider.handleChatRequest() lastTurn is not a ChatResponseTurn or has no metadata, using full history`)
+      }
+    }
+
+    if (this.editorProvider._lastActiveRestQueryDoc.uri) {
+      stream.progress(`Analysing using ${fbs.length} fishbones using ${fbTools.length} tools...`)
+      stream.reference(vscode.Uri.parse(this.editorProvider._lastActiveRestQueryDoc.uri))
+      fbs.forEach((fb) => {
+        if (fb.uri !== undefined) {
+          stream.reference(fb.uri)
+        }
+      })
+    } else {
+      stream.markdown(`Analysing without DLT log opened using ${fbs.length} fishbones using ${fbTools.length} tools...`)
+      log.warn(
+        `FBAIProvider.handleChatRequest() no active DLT log document found. doc=${JSON.stringify(
+          this.editorProvider._lastActiveRestQueryDoc,
+        )}`,
+      )
+    }
+
     if (request.command === 'list') {
       stream.markdown(`Available tools: ${vscode.lm.tools.map((tool) => tool.name).join(', ')}\n\n`)
 
@@ -189,7 +242,13 @@ export class FBAIProvider implements vscode.Disposable {
         `Fishbone tagged tools:\n\n\`\`\`json\n\n${fbTools.map((tool) => JSON.stringify(tool, undefined, 2)).join(',\n')}\n\`\`\`\n\n`,
       )
       return {
-        metadata: { command: request.command, toolCallsMetadata: { toolCallRounds: [], toolCallResults: {} } },
+        metadata: {
+          historyStartIdx,
+          activeDocUri: this.editorProvider._lastActiveRestQueryDoc.uri,
+          fbUris,
+          command: request.command,
+          toolCallsMetadata: { toolCallRounds: [], toolCallResults: {} },
+        },
       }
     } else if (request.command === undefined || request.command === 'analyse') {
       // TODO: delete parts of history if new command is different to prev one?
@@ -210,6 +269,7 @@ export class FBAIProvider implements vscode.Disposable {
       // if the userCmd is undefined scan the history for the last command and use that
       if (userCmd === undefined) {
         for (let i = context.history.length - 1; i >= 0; i--) {
+          // we search from full history
           const item = context.history[i]
           if (item instanceof vscode.ChatRequestTurn) {
             const [rUserCmd, _rPromptWithoutUserCmd] = getCmdAndReq(item)
@@ -237,32 +297,13 @@ export class FBAIProvider implements vscode.Disposable {
 
       log.info(`FBAIProvider.handleChatRequest() userCmd='${userCmd}' promptWithoutUserCmd='${promptWithoutUserCmd}'`)
 
-      const fbs: IFBsToInclude[] = this.editorProvider._treeRootNodes
-        .map((node) => {
-          return node.docData?.lastPostedObj !== undefined
-            ? ({ fb: node.docData.lastPostedObj, uri: node._document?.uri } as IFBsToInclude)
-            : undefined
-        })
-        .filter((node) => node !== undefined)
-
-      if (this.editorProvider._lastActiveRestQueryDoc.uri) {
-        stream.progress(`Analysing using ${fbs.length} fishbones using ${fbTools.length} tools...`)
-        stream.reference(vscode.Uri.parse(this.editorProvider._lastActiveRestQueryDoc.uri))
-        fbs.forEach((fb) => {
-          if (fb.uri !== undefined) {
-            stream.reference(fb.uri)
-          }
-        })
-      } else {
-        stream.progress(`Analysing without DLT log opened using ${fbs.length} fishbones using ${fbTools.length} tools...`)
-      }
       try {
         const prompt = await renderPrompt(
           FBAIPrompt, // ctor
           {
             cmdPrompt,
             userQuery: promptWithoutUserCmd,
-            history: context.history,
+            history: historyStartIdx > 0 ? context.history.slice(historyStartIdx) : context.history,
             ownTools: this.ownToolInfos,
             provider: this,
             activeDocUri: this.editorProvider._lastActiveRestQueryDoc.uri,
@@ -289,11 +330,11 @@ export class FBAIProvider implements vscode.Disposable {
           }
         })
         // log the messages:
-        if (log.logLevel >= vscode.LogLevel.Debug) {
+        /*if (log.logLevel >= vscode.LogLevel.Trace) {
           for (const m of messages) {
             log.debug(`FBAIProvider.handleChatRequest() message: ${JSON.stringify(m)}`)
           }
-        }
+        }*/
 
         const toolReferences = [...request.toolReferences]
         const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> = {}
@@ -349,7 +390,7 @@ export class FBAIProvider implements vscode.Disposable {
                 cmdPrompt,
                 userQuery: promptWithoutUserCmd,
                 ownTools: this.ownToolInfos,
-                history: context.history,
+                history: historyStartIdx > 0 ? context.history.slice(historyStartIdx) : context.history,
                 provider: this,
                 activeDocUri: this.editorProvider._lastActiveRestQueryDoc.uri,
                 fbs,
@@ -364,11 +405,11 @@ export class FBAIProvider implements vscode.Disposable {
               `FBAIProvider.handleChatRequest() rendered prompt with tool calls: #messages=${result.messages.length} with ${result.tokenCount} tokens`,
             )
             messages = result.messages
-            if (log.logLevel >= vscode.LogLevel.Debug) {
+            /*if (log.logLevel >= vscode.LogLevel.Trace) {
               for (const m of messages) {
                 log.debug(`FBAIProvider messages after tool renderPrompt: ${JSON.stringify(m)}`)
               }
-            }
+            }*/
             const toolResultMetadata = result.metadata.getAll(ToolResultMetadata)
             // console.log(`FBAI handleChatRequest got ${toolResultMetadata.length} toolResultMetadata`, toolResultMetadata)
             if (toolResultMetadata?.length) {
@@ -384,6 +425,9 @@ export class FBAIProvider implements vscode.Disposable {
 
         return {
           metadata: {
+            historyStartIdx,
+            activeDocUri: this.editorProvider._lastActiveRestQueryDoc.uri,
+            fbUris,
             command: request.command,
             // Return tool call metadata so it can be used in prompt history on the next request
             toolCallsMetadata: {
@@ -399,12 +443,26 @@ export class FBAIProvider implements vscode.Disposable {
       }
 
       // this.reporter?.logUsage('request', { kind: 'play' });
-      return { metadata: { command: request.command, toolCallsMetadata: { toolCallRounds: [], toolCallResults: {} } } }
+      return {
+        metadata: {
+          historyStartIdx,
+          activeDocUri: this.editorProvider._lastActiveRestQueryDoc.uri,
+          fbUris,
+          command: request.command,
+          toolCallsMetadata: { toolCallRounds: [], toolCallResults: {} },
+        },
+      }
     }
     return {
       errorDetails: { message: 'not implemented yet', responseIsFiltered: false },
-      metadata: { command: request.command },
-    } as IFaiChatResult
+      metadata: {
+        historyStartIdx,
+        activeDocUri: this.editorProvider._lastActiveRestQueryDoc.uri,
+        fbUris,
+        command: request.command,
+        toolCallsMetadata: { toolCallRounds: [], toolCallResults: {} },
+      },
+    }
   }
 
   private getPromptFiles() {
