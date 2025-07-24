@@ -10,6 +10,12 @@ once:
 npm install -g typescript
 npm install -g vsce
 yarn install
+# Go to the webview source directory
+cd /src/webview
+# Install dependencies using yarn
+yarn install
+# Go back to fishbone directory
+cd ../..
 ````
 then
 ```
