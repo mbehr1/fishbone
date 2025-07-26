@@ -1,6 +1,9 @@
 node_modules
 esbuild.mjs
 tsconfig_test.json
+BUILD.md
+.github/**
+.husky/**
 .vscode/**
 .vscode-test/**
 out/test/**
