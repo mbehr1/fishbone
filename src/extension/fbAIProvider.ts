@@ -26,7 +26,7 @@ import * as vscode from 'vscode'
 import * as jp from 'jsonpath/jsonpath.min.js'
 import * as JSON5 from 'json5'
 import matter from 'gray-matter'
-import TelemetryReporter from '@vscode/extension-telemetry'
+import { TelemetryReporter } from '@vscode/extension-telemetry'
 import { renderPrompt } from '@vscode/prompt-tsx'
 import { FBAIPrompt, ToolCallRound, ToolResultMetadata } from './fbAiHistory'
 import { DocData, FBAEditorProvider } from './fbaEditor'
@@ -38,6 +38,7 @@ import { FBANBRestQueryRenderer } from './fbaNBRQRenderer'
 import { IFBsToInclude } from './fbAiFishboneContext'
 import path from 'path'
 import { readdirSync, readFileSync } from 'fs'
+import { stringify } from 'safe-stable-stringify'
 
 interface IFaiChatResult extends vscode.ChatResult {
   metadata: TsxToolUserMetadata
@@ -190,6 +191,16 @@ export class FBAIProvider implements vscode.Disposable {
       .filter((node) => node !== undefined)
 
     const fbUris = fbs.map((fb) => fb.uri?.toString() || undefined)
+
+    this.reporter?.sendTelemetryEvent('fbaIProvider.handleChatRequest', {
+      command: request.command,
+      contextHistoryLength: '' + context.history.length,
+      modelId: request.model.id,
+      supportsToolCalling: !!supportsToolCalling ? 'true' : 'false',
+      nrFbTools: '' + fbTools.length,
+      nrPromptFiles: '' + promptFiles.length,
+      nrFbs: '' + fbs.length,
+    })
 
     // if there is a history, check if the active DLT log or the fishbones used did change
     // if so, ask the user whether he wants to reset the history
@@ -439,6 +450,16 @@ export class FBAIProvider implements vscode.Disposable {
       } catch (err) {
         log.error('Error in FBAIProvider.handleChatRequest:', err)
         stream.progress(`oops. got an error: ${err}`)
+        this.reporter?.sendTelemetryErrorEvent('fbaIProvider.handleChatRequestError', {
+          err: stringify(err),
+          command: request.command,
+          modelId: request.model.id,
+          supportsToolCalling: !!supportsToolCalling ? 'true' : 'false',
+          nrFbTools: '' + fbTools.length,
+          nrPromptFiles: '' + promptFiles.length,
+          nrFbs: '' + fbs.length,
+          contextHistoryLength: '' + context.history.length,
+        })
         //handleError(logger, err, stream);
       }
 

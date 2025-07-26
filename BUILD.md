@@ -6,7 +6,7 @@ To build locally you do need:
 
 once:
 ```
-(have at least nodejs >=22 installed)
+(have at least nodejs >=22.17 installed)
 npm install -g typescript
 npm install -g vsce
 yarn install
@@ -216,9 +216,9 @@ jobs:
       - name: Commitlint
         uses: wagoid/commitlint-github-action@v5
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: 12
+          node-version: "lts/*"
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Install webview dependencies

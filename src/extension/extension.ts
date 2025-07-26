@@ -4,7 +4,7 @@
 
 import * as fs from 'fs'
 import * as vscode from 'vscode'
-import TelemetryReporter from '@vscode/extension-telemetry'
+import { TelemetryReporter } from '@vscode/extension-telemetry'
 import { extensionId, GlobalState } from './constants'
 import { FBAEditorProvider } from './fbaEditor'
 
