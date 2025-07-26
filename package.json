@@ -247,7 +247,7 @@
     "conventional-changelog-conventionalcommits": ">= 8.0.0"
   },
   "dependencies": {
-    "@vscode/extension-telemetry": "^0.9.8",
+    "@vscode/extension-telemetry": "^1.0.0",
     "@vscode/prompt-tsx": "^0.3.0-alpha.24",
     "dlt-logs-utils": "0.13.4",
     "gray-matter": "^4.0.3",

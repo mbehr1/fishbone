@@ -1544,10 +1544,10 @@
   resolved "https://registry.npmjs.org/@ungap/promise-all-settled/-/promise-all-settled-1.1.2.tgz"
   integrity sha512-sL/cEvJWAnClXw0wHk85/2L0G6Sj8UB0Ctc1TEMbKSsmpRosqhwj9gWgFRZSrBr2f9tiXISwNhCPmlfqUqyb9Q==
 
-"@vscode/extension-telemetry@^0.9.8":
-  version "0.9.8"
-  resolved "https://registry.yarnpkg.com/@vscode/extension-telemetry/-/extension-telemetry-0.9.8.tgz#109a9db5e09d5b05f9403a3fef60d5963b668fc3"
-  integrity sha512-7YcKoUvmHlIB8QYCE4FNzt3ErHi9gQPhdCM3ZWtpw1bxPT0I+lMdx52KHlzTNoJzQ2NvMX7HyzyDwBEiMgTrWQ==
+"@vscode/extension-telemetry@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@vscode/extension-telemetry/-/extension-telemetry-1.0.0.tgz#1e53b108a02bf4bd5cdbcb3fb96eac6783e7686b"
+  integrity sha512-vaTZE65zigWwSWYB6yaZUAyVC/Ux+6U82hnzy/ejuS/KpFifO+0oORNd5yAoPeIRnYjvllM6ES3YlX4K5tUuww==
   dependencies:
     "@microsoft/1ds-core-js" "^4.3.4"
     "@microsoft/1ds-post-js" "^4.3.4"
