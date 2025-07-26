@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.38.4](https://github.com/mbehr1/fishbone/compare/v1.38.3...v1.38.4) (2025-07-26)
+
+### Bug Fixes
+
+* **fai:** provide telemetry info ([42d8782](https://github.com/mbehr1/fishbone/commit/42d8782f3f9afd68aaa60e9538cd596fee9e2f4c))
+
 ## [1.38.3](https://github.com/mbehr1/fishbone/compare/v1.38.2...v1.38.3) (2025-07-22)
 
 ### Bug Fixes
