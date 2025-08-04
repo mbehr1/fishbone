@@ -3,6 +3,8 @@ import * as JSON5 from 'json5'
 import { FBAIProvider, SequencesResult } from './fbAIProvider'
 import { DocData } from './fbaEditor'
 import { DltFilter, escapeForMD, FbSequenceResult, lastEventForOccurrence, seqResultToMdAst } from 'dlt-logs-utils/sequence'
+import { globalEventBus } from '../agents/core/EventBus';
+import { EventType } from '../agents/core/types';
 import { toMarkdown } from 'mdast-util-to-markdown'
 import { gfmTableToMarkdown } from 'mdast-util-gfm-table'
 import { RQ, rqUriDecode, rqUriEncode } from 'dlt-logs-utils/restQuery'
@@ -329,25 +331,56 @@ export class QueryLogsTool implements vscode.LanguageModelTool<IQueryLogsParamet
       return `query for filters failed with exception: '${e}'`
     }
   }
-  async invoke(options: vscode.LanguageModelToolInvocationOptions<IQueryLogsParameters>, _token: vscode.CancellationToken) {
-    const params = options.input
-    console.log('FBAIProvider QLT invoked with params:', params)
+  async invoke(options: vscode.LanguageModelToolInvocationOptions<IQueryLogsParameters>, _token: vscode.CancellationToken): Promise<vscode.LanguageModelToolResult> {
+    const params = options.input;
+    const log = this.provider.getLogChannel();
+    console.log('FBAIProvider QLT invoked with params:', params);
 
-    if (Array.isArray(params.filters) && params.filters.length > 0) {
-      try {
-        const filters = params.filters.map((frag) => new DltFilter(frag))
-        const res = await this.processFilters(filters)
-        console.log(`FBAIProvider QLT got res:${JSON.stringify(res, undefined, 2)}`)
-        if (typeof res === 'string') {
-          return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(res)])
-        }
-        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(`No logs are matching the ${params.filters} filters.`)])
-      } catch (e) {
-        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(`Invalid parameter. Parsing filters got error:${e}`)])
-      }
-    } else {
-      return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart('Invalid parameter. filters not an array')])
+    if (!Array.isArray(params.filters) || params.filters.length === 0) {
+      return new vscode.LanguageModelToolResult([
+        new vscode.LanguageModelTextPart('Invalid parameter. filters not an array')
+      ]);
     }
+
+    // --- AGENTIC: Publish QUERY event on the shared EventBus ---
+    // We'll listen for the next QUERY_RESULT event and return its result
+    return await new Promise<vscode.LanguageModelToolResult>(async (resolve) => {
+      let resolved = false;
+      const handler = (event: any) => {
+        if (resolved) { return; }
+        resolved = true;
+        unsubscribe();
+        if (event.payload && event.payload.result) {
+          resolve(new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart(
+              `Query returned ${Array.isArray(event.payload.result) ? event.payload.result.length : 0} logs:\n\njson\n${JSON.stringify(event.payload.result, null, 2)}\n`)
+          ]));
+        } else if (event.payload && event.payload.error) {
+          resolve(new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart(`Query failed: ${event.payload.error}`)
+          ]));
+        } else {
+          resolve(new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart('Query completed but no result or error was returned.')
+          ]));
+        }
+      };
+      const unsubscribe = globalEventBus.subscribe(EventType.QUERY_RESULT, handler);
+      await globalEventBus.publish({
+        type: EventType.QUERY,
+        payload: { query: JSON.stringify(params.filters) }
+      }, log);
+      // Timeout in case no result is received
+      setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          unsubscribe();
+          resolve(new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart('Query timed out waiting for results.')
+          ]));
+        }
+      }, 5000);
+    });
   }
 
   async prepareInvocation(
