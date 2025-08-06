@@ -67,7 +67,7 @@ export interface FishboneTreeItem extends vscode.TreeItem {
  *
  */
 export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscode.Disposable {
-  public static register(log: vscode.LogOutputChannel, context: vscode.ExtensionContext, reporter?: TelemetryReporter): void {
+  public static register(log: vscode.LogOutputChannel, context: vscode.ExtensionContext, reporter?: TelemetryReporter): FBAEditorProvider {
     const provider = new FBAEditorProvider(log, context, reporter)
     context.subscriptions.push(
       vscode.window.registerCustomEditorProvider(FBAEditorProvider.viewType, provider, {
@@ -78,6 +78,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     context.subscriptions.push(new FBANotebookProvider(log, context, provider, provider._fsProvider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
     context.subscriptions.push(new FBAIProvider(log, context, provider, reporter))
+    return provider;
   }
 
   private static readonly viewType = 'fishbone.fba' // has to match the package.json
@@ -815,9 +816,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     const initialDataStr = JSON.stringify(initialData)
 
     return /* html */ `
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
                 <meta charset="UTF-8">
                 <meta name="theme-color" content="#000000" />
 
@@ -827,12 +828,12 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                         script-src ${webview.cspSource} 'unsafe-eval' 'unsafe-inline';
                         style-src ${webview.cspSource} 'unsafe-inline';">
 
-				<meta name="viewport" content="width=device-width, initial-scale=0.5">
+        <meta name="viewport" content="width=device-width, initial-scale=0.5">
 
-				<link href="${stylesUri.toString(true)}" rel="stylesheet" />
+        <link href="${stylesUri.toString(true)}" rel="stylesheet" />
 
                 <title>Fishbone Analysis</title>
-			</head>
+      </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>
                 <script nonce="${nonce}">
@@ -842,8 +843,8 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
                 </script>
                 <div id="root"></div>
                 <script nonce="${nonce}" crossorigin="anonymous" src="${mainUri.toString(true)}"></script>
-			</body>
-			</html>`
+      </body>
+      </html>`
   }
 
   /**

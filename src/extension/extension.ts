@@ -8,6 +8,13 @@ import { TelemetryReporter } from '@vscode/extension-telemetry'
 import { extensionId, GlobalState } from './constants'
 import { FBAEditorProvider } from './fbaEditor'
 
+// --- AGENTIC: Import EventBus and QueryAgent ---
+import { globalEventBus } from '../agents/core/EventBus';
+import { EventType } from '../agents/core/types';
+import { QueryAgent } from '../agents/tasks/QueryAgent';
+import { DltFilter } from 'dlt-logs-utils/sequence';
+import { rqUriEncode, RQ } from 'dlt-logs-utils/restQuery';
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -34,7 +41,28 @@ export function activate(context: vscode.ExtensionContext) {
     `extension ${extensionId} v${extensionVersion} ${prevVersion !== extensionVersion ? `prevVersion: ${prevVersion} ` : ''}is now active!`,
   )
 
-  FBAEditorProvider.register(log, context, reporter)
+  const fbaEditorProvider = FBAEditorProvider.register(log, context, reporter)
+
+  // --- AGENTIC: Instantiate QueryAgent ---
+  // Compose a DLT provider object with the required methods for QueryAgent
+  // Use the FBAIProvider or FBAEditorProvider as needed for performRestQueryUri
+  // For now, use a minimal stub for demonstration; you may want to wire to the real provider
+
+  // Use the real performRestQueryUri from the active FBAEditorProvider
+  const dltProvider = {
+    performRestQueryUri: async (uri: string) => {
+      log.info(`[QueryAgent-DLT] performRestQueryUri called with uri: ${uri}`);
+      return fbaEditorProvider.performRestQueryUri(uri);
+    },
+    DltFilter,
+    rqUriEncode,
+    RQ: {} // Dummy value to satisfy QueryAgent type
+  };
+
+  // Use the global event bus for all agentic events
+  // This will ensure QueryAgent is active and logs to the output window
+  const queryAgent = new QueryAgent(globalEventBus, dltProvider);
+  log.info('[Agentic] QueryAgent instantiated and listening for QUERY events.');
 
   context.subscriptions.push(
     vscode.commands.registerCommand('fishbone.addNewFile', async () => {
@@ -67,6 +95,14 @@ export function activate(context: vscode.ExtensionContext) {
   void showWelcomeOrWhatsNew(context, extensionVersion, prevVersion)
 
   void context.globalState.update(GlobalState.Version, extensionVersion)
+
+  // --- AGENTIC: Example of publishing a QUERY event (for testing) ---
+  setTimeout(() => {
+    globalEventBus.publish({
+      type: EventType.QUERY,
+      payload: { query: '{"test":1}' }
+    }, log);
+  }, 2000);
 }
 
 // this method is called when your extension is deactivated

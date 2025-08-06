@@ -73,6 +73,9 @@ export interface IOwnTools {
 }
 
 export class FBAIProvider implements vscode.Disposable {
+  public getLogChannel(): vscode.LogOutputChannel {
+    return this.log;
+  }
   ownToolInfos: IOwnTools[] = []
 
   constructor(
