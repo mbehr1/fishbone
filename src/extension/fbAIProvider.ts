@@ -102,8 +102,8 @@ export class FBAIProvider implements vscode.Disposable {
         )
       })
       context.subscriptions.push(fai)
-      context.subscriptions.push(vscode.lm.registerTool('fishbone_rootcauseDetails', new RootcauseDetailsTool(this)))
-      context.subscriptions.push(vscode.lm.registerTool('fishbone_queryLogs', new QueryLogsTool(this)))
+      let rootCauseDetailsTool: RootcauseDetailsTool | undefined = undefined
+      let queryLogsTool: QueryLogsTool | undefined = undefined
       // lets see whether we can use our own tool (or whether access is eg. restricted):
       const fbTools = vscode.lm.tools.filter((tool) => tool.tags.includes('fishbone'))
       log.info(`FBAIProvider() found ${fbTools.length} fishbone tools:`, fbTools)
@@ -125,14 +125,16 @@ export class FBAIProvider implements vscode.Disposable {
         for (const toolInfo of ownLmToolsMapped) {
           switch (toolInfo.name) {
             case 'fishbone_rootcauseDetails':
+              rootCauseDetailsTool = new RootcauseDetailsTool(log, this, toolInfo)
               this.ownToolInfos.push({
-                tool: new RootcauseDetailsTool(this),
+                tool: rootCauseDetailsTool,
                 info: toolInfo,
               })
               break
             case 'fishbone_queryLogs':
+              queryLogsTool = new QueryLogsTool(log, this, toolInfo)
               this.ownToolInfos.push({
-                tool: new QueryLogsTool(this),
+                tool: queryLogsTool,
                 info: toolInfo,
               })
               break
@@ -145,6 +147,16 @@ export class FBAIProvider implements vscode.Disposable {
         log.warn(`FBAIProvider() error while reading own tools from package.json: ${e}`)
       }
       log.info(`FBAIProvider() providing ${this.ownToolInfos.length} own tools`)
+      context.subscriptions.push(
+        vscode.lm.registerTool(
+          'fishbone_rootcauseDetails',
+          rootCauseDetailsTool ? rootCauseDetailsTool : new RootcauseDetailsTool(log, this, undefined),
+        ),
+      )
+      context.subscriptions.push(
+        vscode.lm.registerTool('fishbone_queryLogs', queryLogsTool ? queryLogsTool : new QueryLogsTool(log, this, undefined)),
+      )
+
     } catch (e) {
       log.error('FBAIProvider constructor error:', e)
     }

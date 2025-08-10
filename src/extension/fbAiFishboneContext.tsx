@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 import { BasePromptElementProps, PromptElement, PromptPiece, PromptSizing, UserMessage } from '@vscode/prompt-tsx'
-import { stringify } from 'safe-stable-stringify'
+
 import { Fishbone } from './fbaFormat'
+import { safeStableStringify } from './util'
 
 export interface IFBsToInclude {
   uri: vscode.Uri | undefined
@@ -64,21 +65,6 @@ export class FishboneContext extends PromptElement<{ fbs: IFBsToInclude[]; fbaHa
   }
 }
 
-// #region hash / safe-stable-stringify
-
-// TODO put into utils... (or even dlt-log-utils)
-/**
- * Safely converts an object to a string representation, including support for BigInts.
- *
- * @param obj - The object to stringify.
- * @returns The string representation of the object.
- */
-function safeStableStringify(obj: any): string {
-  // safe-stable-stringify handles bigints but by representing as number strings that
-  // later on cannot be parsed and where the info that it was a bigint got lost
-  // so we convert bigints to strings with the number + 'n' here
-  return stringify(obj, (_, v) => (typeof v === 'bigint' ? v.toString() + 'n' : v)) || ''
-}
 
 // cyrb53 (c) 2018 bryc (github.com/bryc). License: Public domain. Attribution appreciated.
 // A fast and simple 64-bit (or 53-bit) string hash function with decent collision resistance.
