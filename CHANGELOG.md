@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.38.5](https://github.com/mbehr1/fishbone/compare/v1.38.4...v1.38.5) (2025-08-10)
+
+### Bug Fixes
+
+* **fAi:** provide proper inputSchema for tools ([70c8698](https://github.com/mbehr1/fishbone/commit/70c86988bc00922f73cdaef5fb393eed11ee5443))
+
 ## [1.38.4](https://github.com/mbehr1/fishbone/compare/v1.38.3...v1.38.4) (2025-07-26)
 
 ### Bug Fixes
