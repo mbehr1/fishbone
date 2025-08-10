@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import * as request from 'request'
 import { extensionId } from './constants'
+import { stringify } from 'safe-stable-stringify'
 import { URL } from 'url'
 import { Token, tokenize } from 'jju'
 
@@ -246,4 +247,19 @@ export const jsonTokenAtRange = (text: string, range: vscode.Range): Token | und
     console.warn(`jsonTokenAtRange failed with error:'${e}'`)
   }
   return convToken
+}
+
+// #region safe-stable-stringify
+
+/**
+ * Safely converts an object to a string representation, including support for BigInts.
+ *
+ * @param obj - The object to stringify.
+ * @returns The string representation of the object.
+ */
+export function safeStableStringify(obj: any): string {
+  // safe-stable-stringify handles bigints but by representing as number strings that
+  // later on cannot be parsed and where the info that it was a bigint got lost
+  // so we convert bigints to strings with the number + 'n' here
+  return stringify(obj, (_, v) => (typeof v === 'bigint' ? v.toString() + 'n' : v)) || ''
 }

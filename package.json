@@ -22,7 +22,7 @@
   },
   "homepage": "https://mbehr1.github.io/fishbone/",
   "engines": {
-    "vscode": "^1.99.1"
+    "vscode": "^1.102.0"
   },
   "categories": [
     "Visualization",
@@ -98,7 +98,10 @@
               "type": "string",
               "description": "The uid of the root cause to provide details for. It needs to be exactly the fbUid without any additional characters pre- or appended."
             }
-          }
+          },
+          "required": [
+            "fbUid"
+          ]
         }
       },
       {
@@ -117,12 +120,19 @@
           "properties": {
             "filters": {
               "type": "array",
+              "minItems": 1,
+              "description": "List of filters to apply. If no positive filter is provided all logs are shown that are not filtered out by negative filters. If any positive filter is provided only logs passing: any (or) of the positive filters and are not filtered out by any of the negative filters.",
               "items": {
                 "type": "object",
+                "additionalProperties": false,
                 "properties": {
                   "type": {
                     "type": "number",
                     "description": "The type of the filter (0 = pos, 1 = negative)."
+                  },
+                  "ecu": {
+                    "type": "string",
+                    "description": "Optional ecu to filter for."
                   },
                   "apid": {
                     "type": "string",
@@ -135,6 +145,22 @@
                   "payloadRegex": {
                     "type": "string",
                     "description": "Optional regular expression to filter the payload of the log for."
+                  },
+                  "ignoreCasePayload": {
+                    "type": "boolean",
+                    "description": "Optional flag to ignore case for the payload regex. If not set any payload search is case sensitive."
+                  },
+                  "logLevelMin": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 6,
+                    "description": "Optional minimum log level to filter for. The following log-levels are defined: FATAL=1, ERROR=2, WARNING=3, INFO=4, DEBUG=5, VERBOSE=6."
+                  },
+                  "logLevelMax": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 6,
+                    "description": "Optional maximum log level to filter for. E.g. to add all messages with warnings, error or fatal messages use a positive filter with logLevelMax = 3."
                   }
                 },
                 "required": [
@@ -142,7 +168,10 @@
                 ]
               }
             }
-          }
+          },
+          "required": [
+            "filters"
+          ]
         }
       }
     ],
@@ -227,7 +256,7 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "^22.16.5",
     "@types/request": "^2.48.12",
-    "@types/vscode": "^1.99.1",
+    "@types/vscode": "^1.102.0",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
     "esbuild": "^0.25.8",
@@ -261,7 +290,8 @@
     "request": "^2.88.2",
     "safe-stable-stringify": "^2.5.0",
     "short-unique-id": "4.4.4",
-    "tslib": "2.6.2"
+    "tslib": "2.6.2",
+    "zod": "4.0.17"
   },
   "commitlint": {
     "extends": [
