@@ -156,7 +156,6 @@ export class FBAIProvider implements vscode.Disposable {
       context.subscriptions.push(
         vscode.lm.registerTool('fishbone_queryLogs', queryLogsTool ? queryLogsTool : new QueryLogsTool(log, this, undefined)),
       )
-
     } catch (e) {
       log.error('FBAIProvider constructor error:', e)
     }
@@ -316,7 +315,7 @@ export class FBAIProvider implements vscode.Disposable {
             .join('\n')}\n\nUsing default prompt (from /analyse command)!`,
         )
       }
-      const cmdPrompt = userPrompt?.content || this.getDefaultPrompt(userCmd)
+      const cmdPrompt = userPrompt?.content || FBAIProvider.getDefaultPrompt(userCmd)
 
       log.info(`FBAIProvider.handleChatRequest() userCmd='${userCmd}' promptWithoutUserCmd='${promptWithoutUserCmd}'`)
 
@@ -508,8 +507,12 @@ export class FBAIProvider implements vscode.Disposable {
       }
       return acc // <-- this ensures acc is passed along and remains a Set
     }, new Set<string>())
+    return FBAIProvider.getPromptFilesFromDirs(log, Array.from(dirsToScan))
+  }
+
+  static getPromptFilesFromDirs(log: vscode.LogOutputChannel, dirsToScan: string[]) {
     // scan dirs for .prompt.md files:
-    const promptFiles = Array.from(dirsToScan).reduce((acc, dir) => {
+    const promptFiles = dirsToScan.reduce((acc, dir) => {
       // are there any .prompt.md files in the dir (using readDirSync)
       const files = readdirSync(dir)
       for (const file of files) {
@@ -540,10 +543,57 @@ export class FBAIProvider implements vscode.Disposable {
       [] as { name: string; content: string; data: any }[],
     )
 
-    return prompts
+    // add default analyse prompt if not present:
+    if (!prompts.find((p) => p.name === 'analyse')) {
+      prompts.push({ name: 'analyse', content: FBAIProvider.getDefaultPrompt(), data: {} })
+    }
+
+    // if a promptFile has the frontmatter attribute "fai.extends" which can be an array of strings or a single string pointing
+    // to the prompt file. Circular references are ignored. Referenced prompt files are not included twice.
+    // the content of that (including any fs.extends... from that prompt) get pre-pended to the content of the prompt file
+
+    const fullPrompts = prompts.map((p) => FBAIProvider.getFullPrompt(p, new Set(), prompts))
+
+    return fullPrompts
   }
 
-  private getDefaultPrompt(_command?: string): string {
+  static getFullPrompt(
+    prompt: { name: string; content: string; data: any },
+    addedPrompts: Set<string>,
+    allOrigPrompts: { name: string; content: string; data: any }[],
+    processingPrompts: Set<string> = new Set(),
+  ): { name: string; content: string; data: any } {
+    processingPrompts.add(prompt.name)
+    const extendsPrompts: string[] = Array.isArray(prompt.data?.['fai.extends'])
+      ? prompt.data['fai.extends']
+      : typeof prompt.data?.['fai.extends'] === 'string'
+        ? [prompt.data['fai.extends']]
+        : []
+    if (extendsPrompts.length > 0) {
+      const toRet = {
+        name: prompt.name,
+        content:
+          extendsPrompts.reduce((acc, cur) => {
+            return (
+              acc +
+              (addedPrompts.has(cur) || processingPrompts.has(cur)
+                ? ''
+                : FBAIProvider.getFullPrompt(allOrigPrompts.find((p) => p.name === cur)!, addedPrompts, allOrigPrompts, processingPrompts)
+                    .content + '\n')
+            )
+          }, '') + (addedPrompts.has(prompt.name) ? '' : prompt.content),
+        data: prompt.data,
+      }
+      addedPrompts.add(prompt.name)
+      processingPrompts.delete(prompt.name)
+      return toRet
+    }
+    addedPrompts.add(prompt.name)
+    processingPrompts.delete(prompt.name)
+    return prompt
+  }
+
+  static getDefaultPrompt(_command?: string): string {
     // this should be markdown format:
     return `
     Your task is to analyse logs systematically via the help of fishbone files. The logs are typically in the form of dlt log files.
