@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.39.0](https://github.com/mbehr1/fishbone/compare/v1.38.5...v1.39.0) (2025-09-21)
+
+### Features
+
+* **fai:** add fai.extends for own prompt files ([4aa6db5](https://github.com/mbehr1/fishbone/commit/4aa6db55f7d8630ea5117d5bc1665d45477f6493))
+
 ## [1.38.5](https://github.com/mbehr1/fishbone/compare/v1.38.4...v1.38.5) (2025-08-10)
 
 ### Bug Fixes
