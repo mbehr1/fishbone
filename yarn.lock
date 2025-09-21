@@ -1558,6 +1558,16 @@
   resolved "https://registry.yarnpkg.com/@vscode/prompt-tsx/-/prompt-tsx-0.3.0-alpha.24.tgz#ae3960a29dfffc291dee0a7cd6882bed169bde6b"
   integrity sha512-WUz6rPLcN6F64WxxwTiLzHOuhUcdLKBWMckppn43DBC1Ba67Lvd9RV+2LOxj938YzvEVOKGoAY/qgRtXd77I7Q==
 
+"@vscode/test-electron@^1.6.1":
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/@vscode/test-electron/-/test-electron-1.6.2.tgz#f639cab19a0013949015079dcfd2ff0c1aa88a1b"
+  integrity sha512-W01ajJEMx6223Y7J5yaajGjVs1QfW3YGkkOJHVKfAMEqNB1ZHN9wCcViehv5ZwVSSJnjhu6lYEYgwBdHtCxqhQ==
+  dependencies:
+    http-proxy-agent "^4.0.1"
+    https-proxy-agent "^5.0.0"
+    rimraf "^3.0.2"
+    unzipper "^0.10.11"
+
 "@vscode/vsce-sign-alpine-arm64@2.0.2":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@vscode/vsce-sign-alpine-arm64/-/vsce-sign-alpine-arm64-2.0.2.tgz#4accc485e55aa6ff04b195b47f722ead57daa58e"
@@ -8220,16 +8230,6 @@ version-range@^4.13.0:
   version "4.14.0"
   resolved "https://registry.yarnpkg.com/version-range/-/version-range-4.14.0.tgz#91c12e4665756a9101d1af43faeda399abe0edec"
   integrity sha512-gjb0ARm9qlcBAonU4zPwkl9ecKkas+tC2CGwFfptTCWWIVTWY1YUbT2zZKsOAF1jR/tNxxyLwwG0cb42XlYcTg==
-
-vscode-test@^1.6.1:
-  version "1.6.1"
-  resolved "https://registry.npmjs.org/vscode-test/-/vscode-test-1.6.1.tgz"
-  integrity sha512-086q88T2ca1k95mUzffvbzb7esqQNvJgiwY4h29ukPhFo8u+vXOOmelUoU5EQUHs3Of8+JuQ3oGdbVCqaxuTXA==
-  dependencies:
-    http-proxy-agent "^4.0.1"
-    https-proxy-agent "^5.0.0"
-    rimraf "^3.0.2"
-    unzipper "^0.10.11"
 
 walk-up-path@^3.0.1:
   version "3.0.1"
