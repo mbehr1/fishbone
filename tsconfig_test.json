@@ -2,15 +2,24 @@
   "compilerOptions": {
     "typeRoots": ["./node_modules/@types", "./types"],
     "module": "commonjs",
+    "moduleResolution": "node",
     "target": "es2021",
     "outDir": "out/test",
     "lib": ["es2021"],
     "sourceMap": true,
     "rootDir": "src",
     "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["mocha", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "dlt-logs-utils/restQuery": ["./node_modules/dlt-logs-utils/dist/restQuery.d.ts"],
+      "dlt-logs-utils/sequence": ["./node_modules/dlt-logs-utils/dist/sequence.d.ts"]
+    },
     "jsx": "react",
     "jsxFactory": "vscpp",
     "jsxFragmentFactory": "vscppf"
   },
-  "exclude": ["node_modules", ".vscode-test", "src/webview", "src/extension"]
+  "exclude": ["node_modules", ".vscode-test", "src/webview"]
 }
