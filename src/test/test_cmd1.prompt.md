@@ -2,7 +2,7 @@
 mode: 'agent'
 model: GPT-4o
 tools: []
-fai.extends: ['analyse']
+fai.extends: ['analyse', 'non-existing']
 description: 'Test command 1 for own prompts'
 ---
 Your goal is to analyse flash failures based on the provided logs and fishbone files. 
