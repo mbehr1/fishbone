@@ -1,5 +1,11 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## [1.39.1](https://github.com/mbehr1/fishbone/compare/v1.39.0...v1.39.1) (2025-09-30)
+
+### Bug Fixes
+
+* **fai:** handle unknown prompts in fai.extends gracefully ([98269ea](https://github.com/mbehr1/fishbone/commit/98269ea0999b9e81040e8e9d4b609b6467182c00))
+
 ## [1.39.0](https://github.com/mbehr1/fishbone/compare/v1.38.5...v1.39.0) (2025-09-21)
 
 ### Features
