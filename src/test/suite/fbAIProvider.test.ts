@@ -61,6 +61,12 @@ suite('FBAIProvider.getFullPrompt', () => {
     assert.strictEqual(countB , 1, `B appears more than once (${countB}) due to circular ref`)
     // we dont check order here as its kind of undefined
   })
+
+  test('handles non-existing extended prompt gracefully', () => {
+    const a = { name: 'a', content: 'A', data: { 'fai.extends': 'non-existing' } }
+    const resA = getFullPrompt(a, new Set(), [a])
+    assert.ok(resA.content.includes("Error: Unknown prompt 'non-existing'"), `res=${JSON.stringify(resA)}`)
+  })
 })
 
 suite('FBAIProvider.getPromptFiles', ()=>{

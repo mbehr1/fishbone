@@ -578,8 +578,16 @@ export class FBAIProvider implements vscode.Disposable {
               acc +
               (addedPrompts.has(cur) || processingPrompts.has(cur)
                 ? ''
-                : FBAIProvider.getFullPrompt(allOrigPrompts.find((p) => p.name === cur)!, addedPrompts, allOrigPrompts, processingPrompts)
-                    .content + '\n')
+                : FBAIProvider.getFullPrompt(
+                    allOrigPrompts.find((p) => p.name === cur) || {
+                      name: cur,
+                      content: `Error: Unknown prompt '${cur}' used for extends in '${prompt.name}'!`,
+                      data: {},
+                    },
+                    addedPrompts,
+                    allOrigPrompts,
+                    processingPrompts,
+                  ).content + '\n')
             )
           }, '') + (addedPrompts.has(prompt.name) ? '' : prompt.content),
         data: prompt.data,
