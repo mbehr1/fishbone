@@ -22,7 +22,7 @@
   },
   "homepage": "https://mbehr1.github.io/fishbone/",
   "engines": {
-    "vscode": "^1.102.0"
+    "vscode": "^1.105.0"
   },
   "categories": [
     "Visualization",
@@ -237,12 +237,12 @@
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.mjs --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "vscode:prepublish": "yarn run package",
+    "vscode:prepublish": "npm run package",
     "package": "npm run check-types && node esbuild.mjs --production && npm run build:webview",
-    "build:webview": "yarn --cwd ./src/webview build",
+    "build:webview": "npm --prefix ./src/webview run build",
     "lint": "eslint src --ext ts",
-    "nawatch:webview": "yarn --cwd ./src/webview watch",
-    "pretest": "yarn run compile && yarn run lint",
+    "nawatch:webview": "npm --prefix ./src/webview run watch",
+    "pretest": "npm run compile && npm run lint",
     "test": "tsc --project tsconfig_test.json && node ./out/test/test/runTest.js"
   },
   "devDependencies": {
@@ -254,7 +254,7 @@
     "@types/json5": "2.2.0",
     "@types/jsonpath": "0.2.4",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^22.16.5",
+    "@types/node": "^24.10.0",
     "@types/request": "^2.48.12",
     "@types/vscode": "^1.102.0",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
@@ -400,6 +400,5 @@
       ]
     ],
     "preset": "conventionalcommits"
-  },
-  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
+  }
 }

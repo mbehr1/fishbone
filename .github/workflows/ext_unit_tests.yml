@@ -18,11 +18,11 @@ jobs:
       with:
         node-version: "lts/*"
     - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      run: npm ci
     - name: Install webview dependencies
-      run: yarn install --frozen-lockfile
+      run: npm ci
       working-directory: ./src/webview
-    - run: xvfb-run -a yarn run test
+    - run: xvfb-run -a npm run test
       if: runner.os == 'Linux'
-    - run: yarn run test
+    - run: npm run test
       if: runner.os != 'Linux'

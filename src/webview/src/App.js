@@ -9,7 +9,7 @@
  * - rethink "react" class support (function as string parsed to js?)
  *
  * - use webpack (or something else) for proper react "app" bundling/generation incl. debugging support
- *   ( to get rid of src/webview yarn build, F5 (cmd+s...))
+ *   ( to get rid of src/webview npm run build, F5 (cmd+s...))
  *
  */
 

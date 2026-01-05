@@ -6,10 +6,10 @@
     ],
     "module": "es2022",
     "moduleResolution": "bundler",
-    "target": "es2021",
+    "target": "es2022",
     "outDir": "out",
     "lib": [
-      "es2021"
+      "es2022"
     ],
     "sourceMap": true,
     "rootDir": "src",
