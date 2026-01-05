@@ -18,15 +18,20 @@ import { currentFBAFileVersion, fbaToString, fbaYamlFromText, Fishbone, getFBDat
 import { getAttributeFromFba, RQ, rqUriEncode } from 'dlt-logs-utils/restQuery'
 import * as JSON5 from 'json5'
 import { FBAIProvider } from './fbAIProvider'
+import assert from 'assert'
 
 const uid = new ShortUniqueId.default({ length: 8 })
 
 interface AssetManifest {
-  files: {
-    'main.js': string
-    'main.css': string
-    'runtime-main.js': string
-    [key: string]: string
+  allFiles: string[]
+  entries: {
+    index: {
+      html: string[]
+      initial: {
+        js: string[]
+        css: string[]
+      }
+    }
   }
 }
 
@@ -801,11 +806,13 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     const webviewPath: string = path.join(this.context.extensionPath, 'out', 'webview')
     const assetManifest: AssetManifest = require(path.join(webviewPath, 'asset-manifest.json'))
 
-    const main: string = assetManifest.files['main.js']
-    const styles: string = assetManifest.files['main.css']
+    assert(assetManifest.entries.index.initial.js.length > 0, 'no js in asset manifest')
+    const jss: string[] = assetManifest.entries.index.initial.js
+    assert(assetManifest.entries.index.initial.css.length > 0, 'no css in asset manifest')
+    const styles: string[] = assetManifest.entries.index.initial.css
 
-    const mainUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', main))
-    const stylesUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', styles))
+    const jsUris = jss.map((js) => webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', js)))
+    const styleUris = styles.map((style) => webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', style)))
 
     // Use a nonce to whitelist which scripts can be run
     const nonce = getNonce()
@@ -818,31 +825,33 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
-                <meta charset="UTF-8">
-                <meta name="theme-color" content="#000000" />
+        <meta charset="UTF-8">
+        <meta name="theme-color" content="#000000" />
 
-                <meta http-equiv="Content-Security-Policy"
-                    content="default-src 'none';
-                        img-src ${webview.cspSource} https:;
-                        script-src ${webview.cspSource} 'unsafe-eval' 'unsafe-inline';
-                        style-src ${webview.cspSource} 'unsafe-inline';">
+        <meta http-equiv="Content-Security-Policy"
+            content="default-src 'none';
+                img-src ${webview.cspSource} https:;
+                script-src ${webview.cspSource} 'unsafe-eval' 'unsafe-inline';
+                style-src ${webview.cspSource} 'unsafe-inline';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=0.5">
 
-				<link href="${stylesUri.toString(true)}" rel="stylesheet" />
+        ${styleUris.map((stylesUri) => `<link href="${stylesUri.toString(true)}" rel="stylesheet" />`).join('\n')}
 
-                <title>Fishbone Analysis</title>
+        <title>Fishbone Analysis</title>
 			</head>
-            <body>
-                <noscript>You need to enable JavaScript to run this app.</noscript>
-                <script nonce="${nonce}">
-                    console.log('in initial script');
-                    window.acquireVsCodeApi = acquireVsCodeApi;
-                    window.initialData = ${initialDataStr};
-                </script>
-                <div id="root"></div>
-                <script nonce="${nonce}" crossorigin="anonymous" src="${mainUri.toString(true)}"></script>
-			</body>
+        <body>
+            <noscript>You need to enable JavaScript to run this app.</noscript>
+            <script nonce="${nonce}">
+                console.log('in initial script');
+                window.acquireVsCodeApi = acquireVsCodeApi;
+                window.initialData = ${initialDataStr};
+            </script>
+            <div id="root"></div>
+            ${jsUris
+              .map((mainUri) => `<script nonce="${nonce}" crossorigin="anonymous" defer src="${mainUri.toString(true)}"></script>`)
+              .join('\n')}
+  			</body>
 			</html>`
   }
 

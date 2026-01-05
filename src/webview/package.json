@@ -23,7 +23,6 @@
     "marked": "^17.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
     "react-table": "^7.8.0",
     "short-unique-id": "4.4.4",
     "typescript": "5.9.3",
@@ -33,18 +32,13 @@
     "typescript": "5.9.3"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "postbuild": "mkdir -p ../../out && rimraf ../../out/webview && mv build ../../out/webview && rimraf ../../docs/fishbone/static/online && cp -r ../../out/webview/ ../../docs/fishbone/static/online",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "watch": "BROWSER=none react-scripts start"
+    "start": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview",
+    "postbuild": "mkdir -p ../../out && rimraf ../../out/webview && mv dist ../../out/webview && rimraf ../../docs/fishbone/static/online && cp -r ../../out/webview/ ../../docs/fishbone/static/online"
   },
   "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "extends": []
   },
   "browserslist": {
     "production": [
@@ -59,6 +53,9 @@
     ]
   },
   "devDependencies": {
+    "@rsbuild/core": "^1.7.1",
+    "@rsbuild/plugin-react": "^1.4.2",
+    "rimraf":"6.1.2",
     "webpack-bundle-analyzer": "^4.6.1"
   }
 }
