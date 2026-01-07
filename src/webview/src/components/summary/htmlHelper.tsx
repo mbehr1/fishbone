@@ -5,7 +5,7 @@ import Tooltip from '@mui/material/Tooltip'
 /**
  * Returns a link based on the input path
  */
-export function CreateLink(text, hook, parameter) {
+export function CreateLink(text:string, hook: (param: string)=>void, parameter:string) {
   return (
     <Link
       component='button'
@@ -24,7 +24,7 @@ export function CreateLink(text, hook, parameter) {
 /**
  * Returns a link based on the input path
  */
-export function CreateTooltip(tooltipText, innerElement, key) {
+export function CreateTooltip(tooltipText:string, innerElement: React.ReactElement, key: string) {
   return (
     <Tooltip key={key} placement='top' title={tooltipText} arrow>
       {innerElement}

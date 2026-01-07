@@ -107,7 +107,9 @@ function triggerRestQuery(requestStr, jsonPath) {
             const data = jp.query(res.data, jsonPath)
             //console.log(`jsonPath('${jsonPath}') returned '${JSON.stringify(data).slice(0, 100)}'`);
             resolve(data)
-          } else resolve(res)
+          } else {
+            resolve(res)
+          }
         })
         .catch(reject)
     } catch (e) {
@@ -313,9 +315,13 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
  */
 export function objectShallowEq(a, b) {
   //console.log(`objectShallowEq comp `, a, b);
-  if (typeof a !== typeof b) return false
+  if (typeof a !== typeof b) {
+    return false
+  }
   const objAKeys = Object.keys(a)
-  if (objAKeys.length !== Object.keys(b).length) return false
+  if (objAKeys.length !== Object.keys(b).length) {
+    return false
+  }
   let eq = true
   for (let i = 0; eq && i < objAKeys.length; ++i) {
     const key = objAKeys[i]
