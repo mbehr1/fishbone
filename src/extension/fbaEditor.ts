@@ -19,6 +19,7 @@ import { getAttributeFromFba, RQ, rqUriEncode } from 'dlt-logs-utils/restQuery'
 import * as JSON5 from 'json5'
 import { FBAIProvider } from './fbAIProvider'
 import assert from 'assert'
+import { FBMcpProvider } from './fbMcpProvider'
 
 const uid = new ShortUniqueId.default({ length: 8 })
 
@@ -83,6 +84,9 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     context.subscriptions.push(new FBANotebookProvider(log, context, provider, provider._fsProvider))
     // does not work in CustomTextEditor (only in text view) context.subscriptions.push(vscode.languages.registerDocumentDropEditProvider({ pattern: '**/*.fba' }, provider));
     context.subscriptions.push(new FBAIProvider(log, context, provider, reporter))
+
+    const mcpProvider = new FBMcpProvider(log, context, provider)
+    context.subscriptions.push(mcpProvider)
   }
 
   private static readonly viewType = 'fishbone.fba' // has to match the package.json

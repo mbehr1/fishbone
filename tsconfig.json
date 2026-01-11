@@ -22,7 +22,8 @@
     // tsx support
     "jsx": "react",
     "jsxFactory": "vscpp",
-    "jsxFragmentFactory": "vscppf"
+    "jsxFragmentFactory": "vscppf",
+    "skipLibCheck": true
   },
   "exclude": [
     "node_modules",
