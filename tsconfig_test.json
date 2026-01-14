@@ -11,9 +11,12 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "types": ["mocha", "node"],
     "baseUrl": ".",
     "paths": {
+      "@modelcontextprotocol/sdk/experimental": ["./node_modules/@modelcontextprotocol/sdk/dist/cjs/experimental/index.d.ts"],
       "dlt-logs-utils/restQuery": ["./node_modules/dlt-logs-utils/dist/restQuery.d.ts"],
       "dlt-logs-utils/sequence": ["./node_modules/dlt-logs-utils/dist/sequence.d.ts"]
     },
