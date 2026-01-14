@@ -740,7 +740,6 @@ export class FBAIProvider implements vscode.Disposable {
                     case 'func':
                       // todo try catch... conv to string/number
                       try {
-                        // eslint-disable-next-line no-new-func
                         const fn = new Function('result', convParam)
                         const fnRes = fn(result)
                         //console.log(`typeof fnRes='${typeof fnRes}'`);

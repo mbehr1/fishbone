@@ -62,7 +62,7 @@ export default function DataProviderEditDialog(props) {
             const filterStrs = []
             if (posNegFilterFrags.length > 0 && attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0) {
               filterStrs.push(
-                // eslint-disable-next-line no-template-curly-in-string
+                 
                 '{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,' +
                   (props.applyMode ? '"tmpFb":1,' : '') +
                   '"type":1}',
@@ -194,12 +194,12 @@ export default function DataProviderEditDialog(props) {
         const hasLC = attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
         const hasEcu = attributes.findIndex((attr) => attr.hasOwnProperty('ecu')) >= 0
         if (hasLC) {
-          // eslint-disable-next-line no-template-curly-in-string
+           
           filters.push({ lifecycles: '${attributes.lifecycles.id}', name: 'selected lifecycles', not: true, type: 1 })
         }
         if (hasEcu) {
           filters.push(
-            // eslint-disable-next-line no-template-curly-in-string
+             
             { ecu: '${attributes.ecu}', name: 'selected ecu', not: true, type: 1 },
           )
         }
@@ -223,7 +223,7 @@ export default function DataProviderEditDialog(props) {
         setDataSource(`ext:mbehr1.dlt-logs/get/docs/0/filters?sequences=${encodeURIComponent(JSON.stringify(sequences, undefined, 2))}`)
         setDataJsonPath('$.data[*]')
         setDataConv(
-          // eslint-disable-next-line no-template-curly-in-string
+           
           "func:const summaries=result.filter((t)=>t.type==='seqSummary').map((d)=>d.attributes);return ''+summaries.map((s)=>`${s.name}:${s.summary}`).join(',')",
         )
         break
@@ -248,12 +248,12 @@ export default function DataProviderEditDialog(props) {
           const hasLC = attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
           const hasEcu = attributes.findIndex((attr) => attr.hasOwnProperty('ecu')) >= 0
           if (hasLC) {
-            // eslint-disable-next-line no-template-curly-in-string
+             
             filters.push({ lifecycles: '${attributes.lifecycles.id}', name: 'selected lifecycles', not: true, type: 1 })
           }
           if (hasEcu) {
             filters.push(
-              // eslint-disable-next-line no-template-curly-in-string
+               
               { ecu: '${attributes.ecu}', name: 'selected ecu', not: true, type: 1 },
             )
           }
@@ -264,7 +264,7 @@ export default function DataProviderEditDialog(props) {
             payloadRegex: '^',
           })
           setDataSource(
-            // eslint-disable-next-line no-template-curly-in-string
+             
             `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(JSON.stringify(filters, undefined, 2))}`,
           )
         }
@@ -397,20 +397,20 @@ export default function DataProviderEditDialog(props) {
                       dataSource?.startsWith('ext:mbehr1.dlt-logs')
                         ? dataSource
                         : props.applyMode
-                          ? // eslint-disable-next-line no-template-curly-in-string
+                          ?  
                             `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}&disableAll=view${
                               attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
                                 ? `&add=${encodeURIComponent(
-                                    // eslint-disable-next-line no-template-curly-in-string
+                                     
                                     '{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,"tmpFb":1,"type":1}',
                                   )}`
                                 : ''
                             }`
-                          : // eslint-disable-next-line no-template-curly-in-string
+                          :  
                             `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(
                               `[{${
                                 attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
-                                  ? // eslint-disable-next-line no-template-curly-in-string
+                                  ?  
                                     '"lifecycles":"${attributes.lifecycles.id}",'
                                   : ''
                               }"name":"not selected lifecycles","not":true,"type":1}]`,
@@ -433,20 +433,20 @@ export default function DataProviderEditDialog(props) {
                       dataSource?.startsWith('ext:mbehr1.dlt-logs')
                         ? dataSource
                         : props.applyMode
-                          ? // eslint-disable-next-line no-template-curly-in-string
+                          ?  
                             `ext:mbehr1.dlt-logs/get/docs/0/filters?delete=${encodeURIComponent('{"tmpFb":1}')}&disableAll=view${
                               attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
                                 ? `&add=${encodeURIComponent(
-                                    // eslint-disable-next-line no-template-curly-in-string
+                                     
                                     '{"lifecycles":"${attributes.lifecycles.id}","name":"not selected lifecycles","not":true,"tmpFb":1,"type":1}',
                                   )}`
                                 : ''
                             }`
-                          : // eslint-disable-next-line no-template-curly-in-string
+                          :  
                             `ext:mbehr1.dlt-logs/get/docs/0/filters?query=${encodeURIComponent(
                               `[{${
                                 attributes.findIndex((attr) => attr.hasOwnProperty('lifecycles')) >= 0
-                                  ? // eslint-disable-next-line no-template-curly-in-string
+                                  ?  
                                     '"lifecycles":"${attributes.lifecycles.id}",'
                                   : ''
                               }"name":"not selected lifecycles","not":true,"type":1}]`,

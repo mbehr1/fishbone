@@ -328,7 +328,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     if (docData.gotAliveFromPanel) {
       // send instantly
       const msgCmd = msg.command
-      /* eslint-disable semi */
+       
       docData.webviewPanel.webview.postMessage(msg).then(
         (fullFilled: boolean) => {
           if (!fullFilled) {
@@ -339,7 +339,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           log.warn(`FBAEditorProvider.postMessage(...) direct rejected with ${rejectReason}`)
         },
       )
-      /* eslint-enable semi */
+       
     } else {
       docData.msgsToPost.push(msg)
     }

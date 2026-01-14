@@ -84,7 +84,7 @@ export function formatJson5(json5Str) {
           break
       }
     }
-    if (nextLine.length > 0) formattedStr += nextLine
+    if (nextLine.length > 0) {formattedStr += nextLine}
 
     // special legacy rule:
     // console.warn(`formatJson5: special legacy rule check: nrNewLines=${nrNewLines} nrWS=${nrWS} nrComments=${nrComments} for: ${json5Str}`);

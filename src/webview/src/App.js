@@ -658,7 +658,7 @@ export default class App extends Component {
         fbUid: uid.randomUUID(),
         label: 'SW name',
         dataProvider: {
-          // eslint-disable-next-line no-template-curly-in-string
+           
           source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
           jsonPath: '$.data[*].attributes.sws[*]',
         },
@@ -672,7 +672,7 @@ export default class App extends Component {
         label: 'Lifecycles',
         multiple: true,
         dataProvider: {
-          // eslint-disable-next-line no-template-curly-in-string
+           
           source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
           jsonPath: '$.data[*].attributes.lifecycles[*].attributes',
         },

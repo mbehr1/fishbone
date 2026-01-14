@@ -7,15 +7,15 @@ import JSON5 from 'json5'
 import * as uv0 from 'dlt-logs-utils'
 import { rqUriDecode, rqUriEncode } from 'dlt-logs-utils/restQuery'
 
-// eslint-disable-next-line no-undef
+ 
 if (!globalThis.JSON5) {
-  // eslint-disable-next-line no-undef
+   
   globalThis.JSON5 = JSON5
 }
 
-// eslint-disable-next-line no-undef
+ 
 if (!globalThis.uv0) {
-  // eslint-disable-next-line no-undef
+   
   globalThis.uv0 = uv0
 }
 
@@ -265,7 +265,7 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
         case 'func':
           // todo try catch... conv to string/number
           try {
-            // eslint-disable-next-line no-new-func
+             
             const fn = new Function('result', convParam)
             const fnRes = fn(result)
             //console.log(`typeof fnRes='${typeof fnRes}'`);
