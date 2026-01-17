@@ -8,18 +8,30 @@
 
 import * as path from 'path'
 import * as fs from 'fs'
+import * as jp from 'jsonpath/jsonpath.min.js'
 import * as vscode from 'vscode'
 import { getNonce, performHttpRequest } from './util'
 import { TelemetryReporter } from '@vscode/extension-telemetry'
 import ShortUniqueId from 'short-unique-id'
 import { FBAFSProvider } from './fbaFSProvider'
 import { FBANotebookProvider } from './fbaNotebookProvider'
-import { currentFBAFileVersion, fbaToString, fbaYamlFromText, Fishbone, getFBDataFromText } from './fbaFormat'
-import { getAttributeFromFba, RQ, rqUriEncode } from 'dlt-logs-utils/restQuery'
+import {
+  currentFBAFileVersion,
+  fbaToString,
+  fbaYamlFromText,
+  FBBadge,
+  FBEffect,
+  FBRootCause,
+  Fishbone,
+  getFBDataFromText,
+} from './fbaFormat'
+import { getAttributeFromFba, RQ, RQCmd, rqUriDecode, rqUriEncode } from 'dlt-logs-utils/restQuery'
 import * as JSON5 from 'json5'
-import { FBAIProvider } from './fbAIProvider'
+import { FBAIProvider, SequencesResult } from './fbAIProvider'
 import assert from 'assert'
 import { FBMcpProvider } from './fbMcpProvider'
+import { FBANBRestQueryRenderer } from './fbaNBRQRenderer'
+import { DltFilter, FbSequenceResult, SeqChecker } from 'dlt-logs-utils/sequence'
 
 const uid = new ShortUniqueId.default({ length: 8 })
 
@@ -328,7 +340,7 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     if (docData.gotAliveFromPanel) {
       // send instantly
       const msgCmd = msg.command
-       
+
       docData.webviewPanel.webview.postMessage(msg).then(
         (fullFilled: boolean) => {
           if (!fullFilled) {
@@ -339,7 +351,6 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
           log.warn(`FBAEditorProvider.postMessage(...) direct rejected with ${rejectReason}`)
         },
       )
-       
     } else {
       docData.msgsToPost.push(msg)
     }
@@ -660,6 +671,54 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
     this.updateWebview(docData, document)
   }
 
+  // MARK: support functions for fishbone access:
+  static iterateAllFBElements(fishbone: FBEffect[], parents: any[], fn: (type: string, elem: any, parent: any) => void) {
+    for (const effect of fishbone) {
+      fn('effect', effect, fishbone)
+      if (effect?.categories?.length) {
+        for (const category of effect.categories) {
+          fn('category', category, effect)
+          if (category?.rootCauses?.length) {
+            for (const rc of category.rootCauses) {
+              fn('rc', rc, category)
+              if (rc.type === 'nested') {
+                if (rc.data !== undefined) {
+                  FBAEditorProvider.iterateAllFBElements(rc.data, [...parents, rc], fn)
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * get all known/opened fishbones
+   * @returns all known/opened fishbones
+   */
+  public getFishbones(): DocData[] {
+    return this._treeRootNodes
+      .map((node) => (node.docData?.lastPostedObj ? node.docData : undefined))
+      .filter((node) => node !== undefined) as DocData[]
+  }
+
+  /**
+   * Return the root cause with the given fbUid from the given fishbone.
+   * @param fb - fishbone that contains the root cause
+   * @param fbUid - fbUid of the root cause to return
+   * @returns - FBRootCause if found
+   */
+  public getRootCause(fb: Fishbone, fbUid: string): FBRootCause | undefined {
+    let found: FBRootCause | undefined = undefined
+    FBAEditorProvider.iterateAllFBElements(fb.fishbone, [], (type: string, elem: any, parent: any) => {
+      if (type === 'rc' && elem.fbUid === fbUid) {
+        found = elem
+      }
+    })
+    return found
+  }
+
   /**
    * Perform a rest query.
    *
@@ -737,6 +796,181 @@ export class FBAEditorProvider implements vscode.CustomTextEditorProvider, vscod
         })
       }
       return didChange
+    }
+  }
+
+  public async evaluateRestQuery(docData: DocData, badge: FBBadge) {
+    const log = this.log
+    if (badge.conv && badge.source && typeof badge.source === 'string' && badge.source.startsWith('ext:mbehr1.dlt-logs/')) {
+      try {
+        const rq = rqUriDecode(badge.source)
+        // for now always evaluate the first command that returns a value
+        for (const cmd of rq.commands) {
+          if (cmd.cmd === 'query') {
+            // todo what if multiple queries?
+            return this.performRestQuery(docData, rq).then(
+              (resJson) => {
+                //console.log(`FBAI evaluateRestQuery got resJson`)
+                let answer: { jsonPathResult?: any[]; convResult?: number | string; restQueryResult: any } = { restQueryResult: resJson }
+                let result = resJson
+                if (badge.jsonPath && badge.jsonPath.length > 0) {
+                  result = jp.query(resJson, badge.jsonPath)
+                  //console.log(`FBAI evaluateRestQuery queried jsonPath`)
+                  answer.jsonPathResult = result
+                }
+                if (badge.conv && badge.conv.length > 0) {
+                  const dataConv = badge.conv
+                  const indexFirstC = dataConv.indexOf(':')
+                  const convType = dataConv.slice(0, indexFirstC)
+                  const convParam = dataConv.slice(indexFirstC + 1)
+                  // console.log(`convType='${convType}' convParam='${convParam}' result=`, result);
+                  switch (convType) {
+                    case 'length':
+                      answer.convResult = Array.isArray(result) ? result.length : 0
+                      // console.log(`conv length from ${JSON.stringify(result)} returns '${JSON.stringify(answer.convResult)}'`);
+                      break
+                    case 'index':
+                      answer.convResult =
+                        Array.isArray(result) && result.length > Number(convParam)
+                          ? typeof result[Number(convParam)] === 'string'
+                            ? result[Number(convParam)]
+                            : JSON.stringify(result[Number(convParam)])
+                          : 0
+                      break
+                    case 'func':
+                      // todo try catch... conv to string/number
+                      try {
+                        const fn = new Function('result', convParam)
+                        const fnRes = fn(result)
+                        //console.log(`typeof fnRes='${typeof fnRes}'`);
+                        switch (typeof fnRes) {
+                          case 'string':
+                          case 'number':
+                            answer.convResult = fnRes
+                            break
+                          case 'object':
+                            answer.convResult = JSON.stringify(fnRes)
+                            break
+                          default:
+                            answer.convResult = `unknown result type '${typeof fnRes}'. Please return string or number`
+                            break
+                        }
+                      } catch (e) {
+                        answer.convResult = `got error e='${e}' from conv function`
+                      }
+                      break
+                    default:
+                      answer.convResult = `unknown convType ${convType}`
+                      break
+                  }
+                }
+                result =
+                  answer.convResult !== undefined
+                    ? answer.convResult
+                    : answer.jsonPathResult !== undefined
+                      ? answer.jsonPathResult
+                      : answer.restQueryResult
+                return result
+              },
+              (rejectReason) => {},
+            )
+          } else if (cmd.cmd === 'sequences') {
+            // for now we do implement it here (again) instead of using the dlt-logs sequence
+            // and adding e.g. seqDetails and some sequence.scopes... to enable details
+            // We do this to e.g. later support providing a summary only for a single occurrence
+            // to avoid largely nested tables/markdowns.
+            const r = await this.evaluateSequence(docData, rq, cmd)
+            if (r !== undefined) {
+              return r
+            } // else ignore
+          } else {
+            log.info(`rq.cmd=${cmd} ignored!`)
+          }
+        }
+      } catch (e) {
+        log.warn(`evaluateRestQuery got error:${e}`)
+      }
+    }
+  }
+
+  private async evaluateSequence(docData: DocData, rq: RQ, cmd: RQCmd) {
+    const log = this.log
+    try {
+      const maxNrMsgs = 1_000_000
+      const sequences = JSON5.parse(cmd.param)
+      if (Array.isArray(sequences) && sequences.length > 0) {
+        // code similar to fbaNBRQRenderer.executeSequences... (todo refactor)
+        const resPromises = []
+        for (const jsonSeq of sequences) {
+          const seqResult: FbSequenceResult = {
+            sequence: jsonSeq,
+            occurrences: [],
+            logs: [],
+          }
+          const seqChecker = new SeqChecker(jsonSeq, seqResult, DltFilter)
+          const allFilters = seqChecker.getAllFilters()
+          if (allFilters.length === 0) {
+            continue
+          }
+          // we do want lifecycle infos as well
+          allFilters[0].addLifecycles = true
+          allFilters[0].maxNrMsgs = maxNrMsgs + 1 // one more to detect whether we ran into the limit
+          const allFiltersRq: RQ = {
+            path: rq.path,
+            commands: [
+              {
+                cmd: 'query',
+                param: JSON.stringify(allFilters),
+              },
+            ],
+          }
+          resPromises.push(
+            this.performRestQuery(docData, allFiltersRq).then(
+              (resJson) => {
+                if ('data' in resJson && Array.isArray(resJson.data)) {
+                  const lifecycles = new Map(
+                    (<any[]>resJson.data)
+                      .filter((d: any) => d.type === 'lifecycles')
+                      .map((d: any) => [d.id as number, FBANBRestQueryRenderer.getLCInfoFromRQLc(d.attributes)]),
+                  )
+                  const msgs = <any[]>resJson.data
+                    .filter((d: any) => d.type === 'msg')
+                    .map((d: any) => {
+                      const lifecycle = lifecycles.get(d.attributes.lifecycle)
+                      return {
+                        index: d.id,
+                        ...d.attributes,
+                        lifecycle,
+                        receptionTimeInMs: lifecycle ? lifecycle.lifecycleStart.valueOf() + d.attributes.timeStamp / 10000 : 0,
+                      }
+                    })
+                  // console.log(`FBAI evaluateSequence ${seqChecker.name} got ${msgs.length} msgs`, resJson)
+                  const hitMaxNrMsgsLimit = msgs.length > maxNrMsgs
+                  if (hitMaxNrMsgsLimit) {
+                    msgs.splice(maxNrMsgs)
+                    // TODO add error/warning?
+                  }
+                  seqChecker.processMsgs(msgs)
+                  return seqResult
+                }
+                return `sequence '${seqChecker.name}' returned no data`
+              },
+              (failureReason) => {
+                const str = `sequence '${seqChecker.name}' evaluation failed with: ${failureReason}`
+                log.warn('FBAI evaluateSequence: ' + str)
+                return str
+              },
+            ),
+          )
+        }
+        const r = await Promise.allSettled(resPromises)
+        const r2: (string | FbSequenceResult)[] = r.map((setRes) => (setRes.status === 'fulfilled' ? setRes.value : setRes.reason))
+        return new SequencesResult(r2)
+      } else {
+        log.warn(`rq.cmd=${cmd} ignored as no sequences provided!`)
+      }
+    } catch (e) {
+      log.warn(`evaluateSequence got error:${e}`)
     }
   }
 

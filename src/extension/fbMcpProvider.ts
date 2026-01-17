@@ -23,6 +23,9 @@ import { Variables } from '@modelcontextprotocol/sdk/shared/uriTemplate.js'
 
 import { FBAEditorProvider } from './fbaEditor'
 import { FBAIProvider } from './fbAIProvider'
+import { QueryLogsParametersSchema, QueryLogsTool, RootcauseDetailsTool, RootCauseDetailsToolSchema } from './fbAiTools'
+import { Fishbone } from './fbaFormat'
+import { hashForFishbone } from './fbAiFishboneContext'
 
 interface McpServerData {
   mcpServerDefinition: vscode.McpServerDefinition
@@ -57,6 +60,7 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
         this.log.info(`fbMcp: MCP Express app listening`)
       }
     })
+    // TODO how to handle errors?
     const address = server.address()
     const addrString = typeof address === 'string' ? address : address ? `${address.address}:${address.port}` : 'unknown'
     const port = typeof address === 'string' ? 0 : address ? address.port : 0
@@ -72,10 +76,7 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
     // todo: use address.address instead of "localhost"?
     this.servers = [
       {
-        mcpServerDefinition: new vscode.McpHttpServerDefinition(
-          'Fishbone MCP server',
-          vscode.Uri.parse(`http://localhost:${port}/mcp`),
-        ),
+        mcpServerDefinition: new vscode.McpHttpServerDefinition('Fishbone MCP server', vscode.Uri.parse(`http://localhost:${port}/mcp`)),
         app: app,
         server: server,
         transports: {},
@@ -106,29 +107,72 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
     // register our resources:
     this.registerResources(server)
 
-    // Register a simple tool that returns a greeting
-    server.registerTool(
-      'greet',
-      {
-        title: 'Greeting Tool', // Display name for UI
-        description: 'A simple greeting tool',
-        inputSchema: {
-          name: z.string().describe('Name to greet'),
-        },
+    this.registerTools(server)
+
+    this.editorProvider.onDidChangeActiveRestQueryDoc(
+      (event) => {
+        server.sendLoggingMessage({
+          level: 'info',
+          data: `Active rest query document changed to: '${event.uri?.toString() || 'none'}'`,
+        })
       },
-      async ({ name }): Promise<CallToolResult> => {
+      this,
+      this.disposables,
+    )
+
+    return server
+  }
+
+  // MARK: registerTools
+  // Register tools to the MCP server
+  private registerTools(server: McpServer) {
+    const log = this.log
+
+    const queryTool = new QueryLogsTool(log, this.editorProvider, undefined)
+    const cancellationToken = new vscode.CancellationTokenSource().token
+
+    const lmToolResultText = (res: vscode.LanguageModelToolResult): string => {
+      const allTexts = res.content.every((part) => part instanceof vscode.LanguageModelTextPart)
+      return allTexts ? res.content.map((part) => (part as vscode.LanguageModelTextPart).value).join('\n') : JSON.stringify(res.content)
+    }
+
+    server.registerTool(
+      'query_logs',
+      {
+        title: 'Query logs with filters',
+        description: 'Query matching dlt-logs with a set of filters. Returns all logs matching the provided filters.',
+        inputSchema: QueryLogsParametersSchema,
+        // outputSchema: { logs: z.array(z.object()) }, // TODO proper schema for log entries
+      },
+      async (input): Promise<CallToolResult> => {
+        log.info(`fbMcp: Invoking 'query_logs' tool with filters: ${JSON.stringify(input)}`)
+        const res = await queryTool.invoke({ input, toolInvocationToken: undefined }, cancellationToken)
+        const text = lmToolResultText(res)
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Hello, ${name}!`,
-            },
-          ],
+          content: [{ type: 'text', text }],
+          // todo provide structuredContent with raw logs array?
         }
       },
     )
 
-    return server
+    const rootCauseDetailsTool = new RootcauseDetailsTool(log, this.editorProvider, undefined)
+    server.registerTool(
+      'get_rootcause_details',
+      {
+        title: 'Get root cause details',
+        description: 'Provide details for a root cause in a fishbone.',
+        inputSchema: RootCauseDetailsToolSchema,
+        // outputSchema: { logs: z.array(z.object()) }, // TODO proper schema for root cause details
+      },
+      async (input): Promise<CallToolResult> => {
+        log.info(`fbMcp: Invoking 'get_rootcause_details' tool with input: ${JSON.stringify(input)}`)
+        const res = await rootCauseDetailsTool.invoke({ input, toolInvocationToken: undefined }, cancellationToken)
+        const text = lmToolResultText(res)
+        return {
+          content: [{ type: 'text', text }],
+        }
+      },
+    )
   }
 
   private getPromptFiles() {
@@ -159,15 +203,20 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
       async ({ issue }) => {
         try {
           const promptFiles = this.getPromptFiles()
-          log.info(`fbMcp: Found ${promptFiles.length} prompt files (${promptFiles.map(pf => pf.name).join(', ')}) for fishbone-analysis prompt`)
-          server.sendLoggingMessage({level: 'debug', data: `Found ${promptFiles.length} prompt files (${promptFiles.map(pf => pf.name).join(', ')}) for fishbone-analysis prompt`})
+          log.info(
+            `fbMcp: Found ${promptFiles.length} prompt files (${promptFiles.map((pf) => pf.name).join(', ')}) for fishbone-analysis prompt`,
+          )
+          server.sendLoggingMessage({
+            level: 'debug',
+            data: `Found ${promptFiles.length} prompt files (${promptFiles.map((pf) => pf.name).join(', ')}) for fishbone-analysis prompt`,
+          })
           // todo: do I need to await sendLoggingMessage?
 
           const name = issue || 'analyse'
           let prompt = promptFiles.find((pf) => pf.name === name)
           // if issue is empty and no prompt found, return default prompt:
           if (!issue && !prompt) {
-            prompt = {name: 'analyse', content: FBAIProvider.getDefaultPrompt('analyse'), data: {}}
+            prompt = { name: 'analyse', content: FBAIProvider.getDefaultPrompt('analyse'), data: {} }
           }
 
           log.info(`fbMcp: Returning fishbone-analysis prompt for issue:${issue}`)
@@ -238,13 +287,14 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
         if (doc.docData?.lastPostedObj) {
           const fba = doc.docData.lastPostedObj
           if (fba.fishbone.length > 0 && String(fba.fishbone[0].fbUid) === id) {
-            log.info(`fbMcp: Reading resource for id ${id}, title: ${fba.title}`)
+            const fbaHash = hashForFishbone(fba)
+            log.info(`fbMcp: Reading resource for id ${id}, title: ${fba.title}, fbaHash: ${fbaHash}`)
             return {
               contents: [
                 {
                   uri: uri.toString(),
                   mimeType: 'application/json',
-                  text: JSON.stringify(fba, null, 2),
+                  text: JSON.stringify(this.fbToJson(fba, fbaHash), null, 2), // JSON.stringify(fba, null, 2),
                 },
               ],
             }
@@ -253,8 +303,125 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
       }
       return { contents: [] } // TODO or an error?
     }
-    const res = server.registerResource('fishbones', template, cfg, cb)
-    // TODO res.remove()
+    const _res_fb = server.registerResource('fishbones', template, cfg, cb)
+
+    // current dlt log resource:
+    const listLogsCb: ListResourcesCallback = (): ListResourcesResult => {
+      const resources: { uri: string; name: string }[] = this.editorProvider._lastActiveRestQueryDoc.uri
+        ? [
+            {
+              uri: `logs://docs/0`,
+              name: vscode.Uri.parse(this.editorProvider._lastActiveRestQueryDoc.uri).path,
+            },
+          ]
+        : []
+      const res: ListResourcesResult = {
+        resources,
+      }
+      return res
+    }
+
+    const _res_logs = server.registerResource(
+      'logs',
+      new ResourceTemplate('logs://docs/{docId}', { list: listLogsCb }),
+      {},
+      async (uri: URL, variables: Variables): Promise<ReadResourceResult> => {
+        log.info(`fbMcp: Reading log resource for uri: '${uri.toString()}'`)
+        const id = variables['docId']
+        if (this.editorProvider._lastActiveRestQueryDoc.uri && typeof id === 'string') {
+          const res = await this.queryDocInfo(id)
+          return {
+            contents: [
+              {
+                uri: uri.toString(),
+                mimeType: 'application/json',
+                text: typeof res === 'string' ? res : JSON.stringify(res, null, 2),
+              },
+            ],
+          }
+        }
+        return { contents: [] }
+      },
+    )
+    this.editorProvider.onDidChangeActiveRestQueryDoc(
+      (event) => {
+        server.sendResourceListChanged()
+      },
+      this,
+      this.disposables,
+    )
+  }
+
+  async queryDocInfo(id: string) {
+    // try a query to dlt-logs ext:
+    const uri = 'ext:mbehr1.dlt-logs' + '/get/docs/' + id + '/ecus'
+    return this.editorProvider.performRestQueryUri(uri).then(
+      (resJson) => {
+        if ('data' in resJson && Array.isArray(resJson.data)) {
+          return resJson.data as {
+            type: 'ecus'
+            id: string
+            attributes: {
+              name: string
+              lifecycles: { type: 'lifecycles'; id: number; attributes: { startTimeUtc: string; endTimeUtc: string; msgs: number } }[]
+              sws: string[]
+            }
+          }[]
+        } else {
+          return `querying document info returned no data`
+        }
+      },
+      (rejectReason) => {
+        return `querying document info failed with reason: ${rejectReason}`
+      },
+    )
+  }
+
+  fbToJson(
+    fb: Fishbone,
+    fbaHash: number,
+  ): {
+    type: string
+    title: string
+    effects: { name: string; categories: { name: string; elements: any[] }[] }[]
+  } {
+    return {
+      type: 'fishbone',
+      title: fb.title,
+      // attributes: fb.attributes,
+      effects: fb.fishbone.map((e) => {
+        return {
+          // type: 'effect',
+          name: e.name,
+          categories: e.categories
+            .map((c) => {
+              return {
+                // type: 'category',
+                name: c.name,
+                elements: c.rootCauses.map((r) => {
+                  if (r.type === 'nested' && r.data !== undefined) {
+                    const nfb: Fishbone = {
+                      title: r.title || '<nested rc wo title>',
+                      attributes: fb.attributes,
+                      fishbone: r.data,
+                    }
+                    return this.fbToJson(nfb, fbaHash)
+                  } else {
+                    return r.fbUid !== undefined
+                      ? {
+                          type: 'root cause',
+                          fbUid: `${fbaHash}_${r.fbUid}`,
+                          title: `${r.title || r.props?.label || 'no title'}`,
+                        }
+                      : undefined
+                  }
+                }),
+              }
+            })
+            .filter((e) => e !== undefined),
+        }
+      }),
+    }
   }
 
   // MARK: mcpPostHandler
