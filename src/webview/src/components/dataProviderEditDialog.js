@@ -7,7 +7,7 @@ import { Button, DialogContent, DialogTitle, FormControl, IconButton, InputLabel
 import CloseIcon from '@mui/icons-material/Close'
 import EditIcon from '@mui/icons-material/Edit'
 import FilterListIcon from '@mui/icons-material/FilterList'
-import Grid from '@mui/material/Grid'
+import { GridLegacy as Grid } from '@mui/material'
 import Paper from '@mui/material/Paper'
 import RadioGroup from '@mui/material/RadioGroup'
 import Radio from '@mui/material/Radio'
