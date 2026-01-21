@@ -12,17 +12,14 @@ jobs:
             vsce_target: win32-x64
             platform: win32
             arch: x64
-            npm_config_arch: x64
           - os: ubuntu-latest
             vsce_target: linux-x64
             platform: linux
             arch: x64
-            npm_config_arch: x64
           - os: macos-latest
             vsce_target: darwin-arm64
             platform: darwin
             arch: arm64
-            npm_config_arch: arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -36,20 +33,19 @@ jobs:
         run: npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm_config_arch: ${{ matrix.npm_config_arch }}
       - name: Install webview dependencies
         run: npm ci
         working-directory: ./src/webview
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm_config_arch: ${{ matrix.npm_config_arch }}
       - name: Build
-        run: npm run package
+        run: echo "Manual build via npm run package. Part of npx vsce package"
+        # run: npm run package
       - run: npx vsce --version
       - shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
       - run: npx vsce package --out fishbone-${{env.target}}-PR${{github.event.number}}.vsix
       - uses: actions/upload-artifact@v4
         with:
-          name: fishbone-vsix-${{ env.target }}
+          name: fishbone-vsix-${{ env.target }}-PR${{ github.event.number }}
           path: "*.vsix"
