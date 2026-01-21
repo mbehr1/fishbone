@@ -24,7 +24,7 @@ import Typography from '@mui/material/Typography'
 import FishboneChart from './components/fishbone/fishboneChart'
 import { FormControlLabel, IconButton, Container, TextField, StyledEngineProvider, AppBar, Toolbar, Menu, MenuItem } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
-import { GridLegacy as Grid } from '@mui/material'
+import { GridLegacy as Grid } from '@mui/material' // TODO https://mui.com/material-ui/migration/upgrade-to-grid-v2/
 import InputDataProvided from './components/dataProvider'
 import FBACheckbox from './components/fbaCheckbox'
 import SummaryDialog from './components/summaryDialog'

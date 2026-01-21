@@ -31,7 +31,7 @@
     "start": "rsbuild dev",
     "build": "rsbuild build",
     "preview": "rsbuild preview",
-    "postbuild": "mkdir -p ../../out && rimraf ../../out/webview && mv dist ../../out/webview && rimraf ../../docs/fishbone/static/online && cp -r ../../out/webview/ ../../docs/fishbone/static/online"
+    "postbuild": "node scripts/postbuild.js"
   },
   "eslintConfig": {
     "extends": []
@@ -51,7 +51,6 @@
   "devDependencies": {
     "@rsbuild/core": "^1.7.1",
     "@rsbuild/plugin-react": "^1.4.2",
-    "rimraf": "6.1.2",
     "webpack-bundle-analyzer": "^4.6.1"
   }
 }
