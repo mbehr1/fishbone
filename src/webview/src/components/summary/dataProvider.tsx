@@ -56,7 +56,6 @@ export function SummaryHeaderProvider(): ColumnDef<any>[] {
               const value = row.effect
               return typeof value === 'string' ? value : value?.key || ''
             },
-            aggregate: true,
             aggregationFn: 'count',
             aggregatedCell: ({ getValue }) => {
               const value = getValue()

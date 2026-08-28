@@ -296,8 +296,8 @@ function Table({ onClose, columns, data }: { onClose: () => void; columns: any[]
           {table.getRowModel().rows.map((row, i) => {
             //prepareRow(row)
             return (
-              <React.Fragment>
-                <TableRow key={row.id} hover={true}>
+              <React.Fragment key={row.id}>
+                <TableRow hover={true}>
                   {row.getVisibleCells().map((cell) => {
                     return (
                       <TableCell className={classes.tableCell} style={{ whiteSpace: 'pre-line' }} key={cell.id}>

@@ -22,8 +22,8 @@ jobs:
             arch: arm64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "lts/*"
       - run: npm --version
@@ -45,7 +45,7 @@ jobs:
       - shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
       - run: npx vsce package --out fishbone-${{env.target}}-PR${{github.event.number}}.vsix
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: fishbone-vsix-${{ env.target }}-PR${{ github.event.number }}
           path: "*.vsix"
