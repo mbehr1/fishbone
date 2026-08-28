@@ -658,7 +658,6 @@ export default class App extends Component {
         fbUid: uid.randomUUID(),
         label: 'SW name',
         dataProvider: {
-           
           source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
           jsonPath: '$.data[*].attributes.sws[*]',
         },
@@ -672,7 +671,6 @@ export default class App extends Component {
         label: 'Lifecycles',
         multiple: true,
         dataProvider: {
-           
           source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
           jsonPath: '$.data[*].attributes.lifecycles[*].attributes',
         },

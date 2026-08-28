@@ -977,7 +977,6 @@ export class FBANBRestQueryRenderer {
                   break
                 case 'func':
                   try {
-                     
                     if (!(globalThis as any).JSON5) {
                       ;(globalThis as any).JSON5 = JSON5
                     }

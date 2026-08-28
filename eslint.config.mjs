@@ -6,7 +6,7 @@ export default [
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
-        ecmaVersion: 6,
+        ecmaVersion: 'latest',
         sourceType: 'module',
       },
     },

@@ -306,7 +306,6 @@ export default function DLTFilterAssistantDialog(props) {
       }
     }
     if (true /* or add attributes here? */) {
-       
       const newAttrs = { name: 'not selected lifecycles', type: 1, not: true, lifecycles: '${attributes.lifecycles.id}' }
       const newFilter = new RestCommandFilter(props.applyMode ? { ...newAttrs, tmpFb: 1 } : newAttrs)
       const curIdx = parsedFilters.findIndex((filter) => objectShallowEq(newFilter, filter))

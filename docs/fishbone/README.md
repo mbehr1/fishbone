@@ -27,7 +27,7 @@ This command generates static content into the `build` directory and can be serv
 ## Deployment
 
 ```console
-GIT_USER=mbehr1 npm deploy
+GIT_USER=mbehr1 npm run deploy
 ```
 
 If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

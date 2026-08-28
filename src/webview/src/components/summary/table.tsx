@@ -124,7 +124,7 @@ function DebouncedTextField({
     }, debounce)
 
     return () => clearTimeout(timeout)
-  }, [value])
+  }, [value, onChange, debounce])
 
   return (
     <TextField
@@ -149,7 +149,7 @@ function customFilterFn(row: Row<TData>, columnId: string, filterValue: any, add
   }
 
   const filterStr = String(filterValue).toLowerCase()
-  console.warn(`Filtering row '${row.id}' on column '${columnId}' with filter value '${filterStr}'`)
+  // console.warn(`Filtering row '${row.id}' on column '${columnId}' with filter value '${filterStr}'`)
 
   const value = row.getValue<any>(columnId)
   if (value === null) {
@@ -185,7 +185,7 @@ function customGlobalFilterFn(row: Row<TData>, columnId: string, filterValue: an
   }
 
   const filterStr = String(filterValue).toLowerCase()
-  console.warn(`Filtering row '${row.id}' on column '${columnId}' with filter value '${filterStr}'`)
+  // console.warn(`Filtering row '${row.id}' on column '${columnId}' with filter value '${filterStr}'`)
 
   // Check all cells in the row
   return row.getAllCells().some((cell) => {
@@ -212,7 +212,7 @@ function customGlobalFilterFn(row: Row<TData>, columnId: string, filterValue: an
       }
     }
 
-    console.warn(`  Checking cell in column ${cell.column.id} with value:`, value)
+    // console.warn(`  Checking cell in column ${cell.column.id} with value:`, value)
     return false
   })
 }

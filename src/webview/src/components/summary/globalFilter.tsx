@@ -7,7 +7,7 @@ import { Theme } from '@mui/material/styles'
 import SearchIcon from '@mui/icons-material/Search'
 
 const globalFilterStyle = makeStyles((theme: Theme) => {
-  console.warn('globalFilterStyle theme:', theme)
+  // console.warn('globalFilterStyle theme:', theme)
   return {
     search: {
       position: 'relative',
