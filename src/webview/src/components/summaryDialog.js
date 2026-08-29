@@ -23,7 +23,7 @@ export default function SummaryDialog(props) {
     props.onClose()
   }
 
-  const header = props.open ? SummaryHeaderProvider() : null
+  const header = SummaryHeaderProvider()
   const data = props.open ? SummaryDataProvider(props.fbdata, props.title, props.onFbPathChange, props.onClose) : null
 
   return (
