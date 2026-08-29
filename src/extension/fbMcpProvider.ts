@@ -53,35 +53,31 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
     app.get('/mcp', this.mcpGetHandler.bind(this, app))
     app.delete('/mcp', this.mcpDeleteHandler.bind(this, app))
 
-    const server = app.listen(0, (error) => {
-      if (error) {
-        this.log.error(`fbMcp: MCP Express app failed to start: ${error.message}`)
-      } else {
-        this.log.info(`fbMcp: MCP Express app listening`)
+    const server = app.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      const addrString = typeof address === 'string' ? address : address ? `${address.address}:${address.port}` : 'unknown'
+      const port = typeof address === 'string' ? 0 : address ? address.port : 0
+      this.log.info(`fbMcp: MCP Express app started on '${addrString}'`)
+
+      if (port === 0) {
+        this.log.error(`fbMcp: MCP Express app has invalid port 0, aborting MCP server creation`)
+        server.close()
+        server.closeAllConnections()
+        return
       }
+
+      this.servers = [
+        {
+          mcpServerDefinition: new vscode.McpHttpServerDefinition('Fishbone MCP server', vscode.Uri.parse(`http://localhost:${port}/mcp`)),
+          app: app,
+          server: server,
+          transports: {},
+        },
+      ]
     })
-    // TODO how to handle errors?
-    const address = server.address()
-    const addrString = typeof address === 'string' ? address : address ? `${address.address}:${address.port}` : 'unknown'
-    const port = typeof address === 'string' ? 0 : address ? address.port : 0
-    this.log.info(`fbMcp: MCP Express app started on '${addrString}'`)
-
-    if (port === 0) {
-      this.log.error(`fbMcp: MCP Express app has invalid port 0, aborting MCP server creation`)
-      server.close()
-      server.closeAllConnections()
-      return
-    }
-
-    // todo: use address.address instead of "localhost"?
-    this.servers = [
-      {
-        mcpServerDefinition: new vscode.McpHttpServerDefinition('Fishbone MCP server', vscode.Uri.parse(`http://localhost:${port}/mcp`)),
-        app: app,
-        server: server,
-        transports: {},
-      },
-    ]
+    server.on('error', (error) => {
+      this.log.error(`fbMcp: MCP Express app failed to start: ${error.message}`)
+    })
   }
 
   // Create an MCP server with our implementation/features
