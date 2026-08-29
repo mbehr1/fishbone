@@ -80,7 +80,7 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
   }
 
   // Create an MCP server with our implementation/features
-  private getServer(): McpServer {
+  private getServer(sessionDisposables: vscode.Disposable[] = this.disposables): McpServer {
     // Create shared task store for demonstration
     const taskStore = new InMemoryTaskStore()
     const server = new McpServer(
@@ -100,7 +100,7 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
     // register prompts:
     this.registerPrompts(server)
     // register our resources:
-    this.registerResources(server)
+    this.registerResources(server, sessionDisposables)
 
     this.registerTools(server)
 
@@ -112,7 +112,7 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
         })
       },
       this,
-      this.disposables,
+      sessionDisposables,
     )
 
     return server
@@ -230,7 +230,7 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
 
   // MARK: registerResources
   // Register resources to the MCP server
-  private registerResources(server: McpServer) {
+  private registerResources(server: McpServer, sessionDisposables: vscode.Disposable[] = this.disposables) {
     const log = this.log
     const cfg: ResourceMetadata = {}
     const listCb: ListResourcesCallback = (): ListResourcesResult => {
@@ -343,7 +343,7 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
         server.sendResourceListChanged()
       },
       this,
-      this.disposables,
+      sessionDisposables,
     )
   }
 
@@ -457,18 +457,21 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
           },
         })
 
-        // Set up onclose handler to clean up transport when closed
+        const sessionDisposables: vscode.Disposable[] = []
+
+        // Set up onclose handler to clean up transport and per-session subscriptions when closed
         transport.onclose = () => {
           const sid = transport.sessionId
           if (sid && transports[sid]) {
             log.info(`Transport closed for session ${sid}, removing from transports map`)
             delete transports[sid]
           }
+          sessionDisposables.forEach((d) => d.dispose())
         }
 
         // Connect the transport to the MCP server BEFORE handling the request
         // so responses can flow back through the same transport
-        const server = this.getServer()
+        const server = this.getServer(sessionDisposables)
         await server.connect(transport)
 
         await transport.handleRequest(req, res, req.body)
