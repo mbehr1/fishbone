@@ -43,9 +43,6 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
     private readonly context: vscode.ExtensionContext,
     private editorProvider: FBAEditorProvider,
   ) {
-    this.disposables.push(vscode.lm.registerMcpServerDefinitionProvider('fishbone.mcp-servers', this))
-    this.log.info('fbMcp: FBMcpProvider registered')
-
     // create initial servers
     const app = createMcpExpressApp({ host: 'localhost' })
     // define a port and start listening already to block it:
@@ -74,6 +71,8 @@ export class FBMcpProvider implements vscode.McpServerDefinitionProvider, vscode
           transports: {},
         },
       ]
+      this.disposables.push(vscode.lm.registerMcpServerDefinitionProvider('fishbone.mcp-servers', this))
+      this.log.info('fbMcp: FBMcpProvider registered')
     })
     server.on('error', (error) => {
       this.log.error(`fbMcp: MCP Express app failed to start: ${error.message}`)
