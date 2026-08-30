@@ -1,5 +1,14 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## <small>1.40.1 (2026-08-30)</small>
+
+* Merge pull request #91 from mbehr1/chore/lic_mpl2 ([77c2318](https://github.com/mbehr1/fishbone/commit/77c2318)), closes [#91](https://github.com/mbehr1/fishbone/issues/91)
+* Merge pull request #92 from mbehr1/fix/pkg_upd ([d3a2067](https://github.com/mbehr1/fishbone/commit/d3a2067)), closes [#92](https://github.com/mbehr1/fishbone/issues/92)
+* fix(deps): npm audit fix updates ([6234c32](https://github.com/mbehr1/fishbone/commit/6234c32))
+* chore: manual dependency updates ([2287e9b](https://github.com/mbehr1/fishbone/commit/2287e9b))
+* chore: update license information to Mozilla Public License 2.0 ([e1886eb](https://github.com/mbehr1/fishbone/commit/e1886eb))
+* docs: add SECURITY.md ([561a4d7](https://github.com/mbehr1/fishbone/commit/561a4d7))
+
 ## 1.40.0 (2026-08-30)
 
 * Merge pull request #89 from mbehr1/feat/mcp_basic ([56fa052](https://github.com/mbehr1/fishbone/commit/56fa052)), closes [#89](https://github.com/mbehr1/fishbone/issues/89)
