@@ -1,5 +1,27 @@
 # Change log for 'Fishbone' ([documentation](https://mbehr1.github.io/fishbone)):
 
+## 1.40.0 (2026-08-30)
+
+* Merge pull request #89 from mbehr1/feat/mcp_basic ([56fa052](https://github.com/mbehr1/fishbone/commit/56fa052)), closes [#89](https://github.com/mbehr1/fishbone/issues/89)
+* fix: code review comments ([8c5130b](https://github.com/mbehr1/fishbone/commit/8c5130b))
+* fix(fbaEditorProvider): add nonce to script-src for enhanced security in CSP ([bd0a77c](https://github.com/mbehr1/fishbone/commit/bd0a77c))
+* fix(fbMcpProvider): improve error handling and logging for MCP Express app startup ([73a3f55](https://github.com/mbehr1/fishbone/commit/73a3f55))
+* fix(fbMcpProvider): move MCP server registration to after server initialization ([4884c03](https://github.com/mbehr1/fishbone/commit/4884c03))
+* fix(fbMcpProvider): scope MCP session listeners to transport lifecycle ([cafe6d1](https://github.com/mbehr1/fishbone/commit/cafe6d1))
+* fix(layout): use GridLegacy instead of Grid v2 ([bffce31](https://github.com/mbehr1/fishbone/commit/bffce31))
+* fix(tests): adjust tests for mcp sdk ([fb7c907](https://github.com/mbehr1/fishbone/commit/fb7c907))
+* chore: change from yarn to npm, node 24.12 ([f3872d3](https://github.com/mbehr1/fishbone/commit/f3872d3))
+* chore: migrate webview from create-react-app to rsbuild ([43cee1a](https://github.com/mbehr1/fishbone/commit/43cee1a))
+* chore: package updates ([c692312](https://github.com/mbehr1/fishbone/commit/c692312))
+* chore: update eslint version ([338d40c](https://github.com/mbehr1/fishbone/commit/338d40c))
+* chore: update GitHub Actions to use latest versions of checkout and setup-node ([3253790](https://github.com/mbehr1/fishbone/commit/3253790))
+* chore: update marked and json-stable-stringify ([88f80d5](https://github.com/mbehr1/fishbone/commit/88f80d5))
+* chore(webview): react 19, tanstack/table v8 ([25b7d89](https://github.com/mbehr1/fishbone/commit/25b7d89))
+* ci: support build under windows, build_pr ([2ca6c50](https://github.com/mbehr1/fishbone/commit/2ca6c50))
+* ci(build_pr): remove unsed env and build step ([e8f6324](https://github.com/mbehr1/fishbone/commit/e8f6324))
+* feat(mcp): add tools query_logs and get_rootcause_details ([97d2725](https://github.com/mbehr1/fishbone/commit/97d2725))
+* feat(mcp): first mcp support ([5e814d8](https://github.com/mbehr1/fishbone/commit/5e814d8))
+
 ## [1.39.1](https://github.com/mbehr1/fishbone/compare/v1.39.0...v1.39.1) (2025-09-30)
 
 ### Bug Fixes
