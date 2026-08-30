@@ -20,8 +20,8 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 function getOptionLabel(option) {
   //console.log(`getOptionLabel(typeof option=${typeof option})`, option);
 
-  if (typeof option === 'string') return option
-  if (option === null || option === undefined) return '<null|undefined>'
+  if (typeof option === 'string') {return option}
+  if (option === null || option === undefined) {return '<null|undefined>'}
   if ('label' in option) {
     return option.label
   }
@@ -30,10 +30,10 @@ function getOptionLabel(option) {
 }
 
 function containsUnknownValue(value, options) {
-  if (value === null || value === undefined || value === '') return false
-  if (Array.isArray(value) && value.length === 0) return false
-  if (!Array.isArray(options)) return false
-  if (options.length === 0) return true // value is not in options!
+  if (value === null || value === undefined || value === '') {return false}
+  if (Array.isArray(value) && value.length === 0) {return false}
+  if (!Array.isArray(options)) {return false}
+  if (options.length === 0) {return true} // value is not in options!
 
   const labelOptions = options.map((opt) => getOptionLabel(opt))
 
@@ -41,12 +41,12 @@ function containsUnknownValue(value, options) {
     // if any value is not in options return true;
     for (let i = 0; i < value.length; ++i) {
       const val = getOptionLabel(value[i])
-      if (labelOptions.indexOf(val) < 0) return true
+      if (labelOptions.indexOf(val) < 0) {return true}
     }
   } else {
     // !Array(value)
-    if (value === null) return false
-    if (labelOptions.indexOf(getOptionLabel(value)) < 0) return true
+    if (value === null) {return false}
+    if (labelOptions.indexOf(getOptionLabel(value)) < 0) {return true}
   }
   return false
 }

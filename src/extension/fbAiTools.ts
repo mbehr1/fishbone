@@ -11,7 +11,7 @@ import { hashForFishbone } from './fbAiFishboneContext'
 import { FBBadge } from './fbaFormat'
 import { safeStableStringify } from './util'
 
-const RootCauseDetailsToolSchema = z.object({
+export const RootCauseDetailsToolSchema = z.object({
   fbUid: z
     .string()
     .describe(
@@ -20,11 +20,20 @@ const RootCauseDetailsToolSchema = z.object({
 })
 type IRootcauseDetailsParameters = z.infer<typeof RootCauseDetailsToolSchema>
 
+type IDataProvider = {
+  performRestQueryUri(url: string): Promise<any>
+  performRestQuery(docData: DocData, rq: RQ): Promise<any>
+  substFilterAttributes(docData: DocData, filters: any[]): void
+  evaluateRestQuery(docData: DocData, badge: FBBadge): Promise<any>
+  getFishbones(): DocData[]
+  getRootCause(fb: any, fbUid: string): any | undefined
+}
+
 // #region RootcauseDetails
 export class RootcauseDetailsTool implements vscode.LanguageModelTool<IRootcauseDetailsParameters> {
   constructor(
     private log: vscode.LogOutputChannel,
-    private provider: FBAIProvider,
+    private provider: IDataProvider,
     toolInfo: vscode.LanguageModelToolInformation | undefined,
   ) {
     // verify the inputSchema
@@ -261,7 +270,7 @@ export class RootcauseDetailsTool implements vscode.LanguageModelTool<IRootcause
       } else {
         log.warn(`FBAIProvider RCDT found no rc with that fbUid:'${options.input.fbUid}'`)
         return new vscode.LanguageModelToolResult([
-          new vscode.LanguageModelTextPart('Invalid parameter. fbUid not for a known root cause.'),
+          new vscode.LanguageModelTextPart(`Invalid parameter. fbUid('${options.input.fbUid}') not a known root cause.`),
         ])
       }
     } else {
@@ -287,7 +296,7 @@ export class RootcauseDetailsTool implements vscode.LanguageModelTool<IRootcause
 
 // #region QueryLogs
 
-const QueryLogsParametersSchema = z.object({
+export const QueryLogsParametersSchema = z.object({
   filters: z
     .array(
       z.object({
@@ -331,7 +340,7 @@ type IQueryLogsParameters = z.infer<typeof QueryLogsParametersSchema>
 export class QueryLogsTool implements vscode.LanguageModelTool<IQueryLogsParameters> {
   constructor(
     private log: vscode.LogOutputChannel,
-    private provider: FBAIProvider,
+    private provider: IDataProvider,
     toolInfo: vscode.LanguageModelToolInformation | undefined,
   ) {
     // verify the inputSchema

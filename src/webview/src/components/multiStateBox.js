@@ -15,8 +15,8 @@ import IconButton from '@mui/material/IconButton'
  */
 
 export default function MultiStateBox(props) {
-  if (!Array.isArray(props.values)) return null
-  if (props.values.length < 1) return null
+  if (!Array.isArray(props.values)) {return null}
+  if (props.values.length < 1) {return null}
 
   // determine current active value:
   const curValue = props.value

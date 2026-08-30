@@ -343,14 +343,12 @@ export function getFBDataFromText(text: string): Fishbone {
                 break
               case 'sw':
                 keyObj.dataProvider = {
-                  // eslint-disable-next-line no-template-curly-in-string
                   source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
                   jsonPath: '$.data[*].attributes.sws[*]',
                 }
                 break
               case 'lifecycles':
                 keyObj.dataProvider = {
-                  // eslint-disable-next-line no-template-curly-in-string
                   source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
                   jsonPath: '$.data[*].attributes.lifecycles[*].attributes',
                 }

@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography'
 import CloseIcon from '@mui/icons-material/Close'
 import { IconButton } from '@mui/material'
 
-const TableToolbar = (props) => {
+const TableToolbar: React.FC<TableToolbarProps> = (props) => {
   const { preGlobalFilteredRows, setGlobalFilter, globalFilter, onClose } = props
   return (
     <Toolbar>
@@ -23,10 +23,11 @@ const TableToolbar = (props) => {
   )
 }
 
-TableToolbar.propTypes = {
-  setGlobalFilter: PropTypes.func.isRequired,
-  preGlobalFilteredRows: PropTypes.array.isRequired,
-  globalFilter: PropTypes.string.isRequired,
+interface TableToolbarProps {
+  preGlobalFilteredRows: any[],
+  setGlobalFilter: (filterValue: string | undefined) => void,
+  globalFilter: string | undefined,
+  onClose: () => void,
 }
 
 export default TableToolbar

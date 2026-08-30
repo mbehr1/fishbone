@@ -5,11 +5,13 @@ module.exports = {
   url: 'https://mbehr1.github.io',
   baseUrl: '/fishbone/',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
   favicon: 'img/fishbone-icon2.png',
   organizationName: 'mbehr1',
   projectName: 'fishbone',
   markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
     mermaid: true,
   },
   themes: ['@docusaurus/theme-mermaid'],

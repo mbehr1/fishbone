@@ -9,7 +9,7 @@
  * - rethink "react" class support (function as string parsed to js?)
  *
  * - use webpack (or something else) for proper react "app" bundling/generation incl. debugging support
- *   ( to get rid of src/webview yarn build, F5 (cmd+s...))
+ *   ( to get rid of src/webview npm run build, F5 (cmd+s...))
  *
  */
 
@@ -17,14 +17,14 @@ import React, { Component, createContext } from 'react'
 import './App.css'
 import Breadcrumbs from '@mui/material/Breadcrumbs'
 import Link from '@mui/material/Link'
-import Paper from '@mui/material/Paper'
+import { Paper } from '@mui/material'
 import Checkbox from '@mui/material/Checkbox'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import FishboneChart from './components/fishbone/fishboneChart'
 import { FormControlLabel, IconButton, Container, TextField, StyledEngineProvider, AppBar, Toolbar, Menu, MenuItem } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
-import Grid from '@mui/material/Grid'
+import { GridLegacy as Grid } from '@mui/material' // TODO https://mui.com/material-ui/migration/upgrade-to-grid-v2/
 import InputDataProvided from './components/dataProvider'
 import FBACheckbox from './components/fbaCheckbox'
 import SummaryDialog from './components/summaryDialog'
@@ -33,7 +33,8 @@ import { receivedResponse, customEventStack } from './util'
 import HomeIcon from '@mui/icons-material/Home'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import FileOpenIcon from '@mui/icons-material/FileOpen'
-import { createTheme, ThemeProvider } from '@mui/material/styles'
+import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles'
+import { ThemeProvider as StylesThemeProvider } from '@mui/styles'
 import * as yaml from 'js-yaml'
 import ShortUniqueId from 'short-unique-id'
 var stableStringify = require('json-stable-stringify')
@@ -73,7 +74,9 @@ function deepCopyRootCause(rootCause) {
               if (typeof value === 'function') {
                 return undefined
               }
-              if (key === 'fbUid') return uid.randomUUID()
+              if (key === 'fbUid') {
+                return uid.randomUUID()
+              }
               return value
             }),
           )
@@ -103,7 +106,9 @@ function deepCopyCategory(category) {
           if (typeof value === 'function') {
             return undefined
           }
-          if (key === 'fbUid') return uid.randomUUID()
+          if (key === 'fbUid') {
+            return uid.randomUUID()
+          }
           return value
         }),
       )
@@ -151,8 +156,12 @@ export default class App extends Component {
    */
   getCurData(curPath, data) {
     console.log(`getCurData(curPath=${JSON.stringify(curPath)}) called...`)
-    if (!curPath.length) return null
-    if (curPath.length === 1) return data
+    if (!curPath.length) {
+      return null
+    }
+    if (curPath.length === 1) {
+      return data
+    }
     // a path consists of e.g. [ (roottitle, effectIndex1), (childTitle, effectIndex2),... ]
     // the childFB1 has to be reachable via an nested type rootcause named "childFB1title" within roottitle/effectIndex1
 
@@ -186,7 +195,9 @@ export default class App extends Component {
               }
             }
           }
-          if (found) break
+          if (found) {
+            break
+          }
         }
         if (!found) {
           console.log(`didnt found '${childTitle}'`)
@@ -211,7 +222,9 @@ export default class App extends Component {
   matchingFbPath(curPath, data, firstTitle) {
     const matchingPath = [{ title: firstTitle, effectIndex: 0 }]
     console.log(`matchingFbPath(curPath.length=${curPath.length}) called`)
-    if (curPath[0]?.title !== firstTitle) return matchingPath
+    if (curPath[0]?.title !== firstTitle) {
+      return matchingPath
+    }
 
     // now check from the end:
     // we could do binary search but for this use case most of the time
@@ -220,10 +233,14 @@ export default class App extends Component {
       const pathData = this.getCurData(curPath, data)
       if (!pathData) {
         curPath.pop()
-      } else return curPath
+      } else {
+        return curPath
+      }
     }
     console.log(`matchingFbPath(curPath.length=${curPath.length}) done`)
-    if (curPath.length > 0) return curPath
+    if (curPath.length > 0) {
+      return curPath
+    }
     return matchingPath
   }
 
@@ -304,7 +321,9 @@ export default class App extends Component {
               // call the hooks from the stack until one returns false:
               for (var i = customEventStack.length - 1; i >= 0; i--) {
                 const [evType, handler] = customEventStack[i]
-                if (evType !== msg.eventType) continue
+                if (evType !== msg.eventType) {
+                  continue
+                }
                 if (!handler(event)) {
                   break
                 }
@@ -639,7 +658,6 @@ export default class App extends Component {
         fbUid: uid.randomUUID(),
         label: 'SW name',
         dataProvider: {
-          // eslint-disable-next-line no-template-curly-in-string
           source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
           jsonPath: '$.data[*].attributes.sws[*]',
         },
@@ -653,7 +671,6 @@ export default class App extends Component {
         label: 'Lifecycles',
         multiple: true,
         dataProvider: {
-          // eslint-disable-next-line no-template-curly-in-string
           source: `ext:mbehr1.dlt-logs/get/docs/0/ecus?ecu=${encodeURIComponent('"${attributes.ecu}"')}`,
           jsonPath: '$.data[*].attributes.lifecycles[*].attributes',
         },
@@ -673,7 +690,9 @@ export default class App extends Component {
    */
   onAddRootCause(type, data, effectIndex, category) {
     console.log(`onAddRootCause (type='${type}' at category=${category?.name}`)
-    if (!category) return
+    if (!category) {
+      return
+    }
     const rootCauses = category.rootCauses
     let insertIndex = rootCauses.length
     let newRootCause = undefined
@@ -772,7 +791,9 @@ export default class App extends Component {
 
   onDeleteEffect(data, effectIndex) {
     console.log(`onDeleteEffect called. effectIndex = ${effectIndex} data=`, data)
-    if (data.length <= 1) return // we dont allow to delete the last effect
+    if (data.length <= 1) {
+      return
+    } // we dont allow to delete the last effect
     data.splice(effectIndex, 1)
 
     // we do select the prev one as next one
@@ -788,7 +809,9 @@ export default class App extends Component {
     console.log(`onDeleteCategory called. category.name=${category.name}`, category)
 
     // don't support deleting the last category:
-    if (data[effectIndex].categories.length <= 1) return
+    if (data[effectIndex].categories.length <= 1) {
+      return
+    }
 
     // find the category and delete it:
     const catIdx = data[effectIndex].categories.findIndex((element) => element === category)
@@ -861,7 +884,9 @@ export default class App extends Component {
     // console.log(`onPaste() rootCause=`, rootCause);
     console.log(`onPaste() state.clipboard=`, this.state.clipboard)
 
-    if (this.state.clipboard === undefined) return
+    if (this.state.clipboard === undefined) {
+      return
+    }
 
     const doCut = this.state.clipboard.doCut
     let didInsert = false
@@ -979,6 +1004,14 @@ export default class App extends Component {
               // looks weird?        fontWeightRegular: 'var(--vscode-font-weight)'
             },
             components: {
+              MuiPaper: {
+                styleOverrides: {
+                  root: {
+                    color: vscodeStyles.getPropertyValue('--vscode-foreground'),
+                    backgroundColor: vscodeStyles.getPropertyValue('--vscode-editor-background'),
+                  },
+                },
+              },
               MuiChip: {
                 styleOverrides: {
                   colorSecondary: {
@@ -1090,17 +1123,6 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
     if (this.state.attributes?.length > 0) {
       console.log(`App.render() adding ${this.state.attributes.length} attributes:`)
 
-      /*
-      const useStyles = makeStyles((theme) => ({
-  root: {
-    '& .MuiTextField-root': {
-      margin: theme.spacing(1),
-      width: '25ch',
-    },
-  },
-}));
-      */
-
       const formStyle = {
         margin: 3,
         width: '80ch',
@@ -1134,7 +1156,9 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
       console.log(`handleBreadcrumbClick level=${level}`)
       // shorten path to that level:
       const curPath = this.state.fbPath
-      while (curPath.length > level + 1) curPath.pop()
+      while (curPath.length > level + 1) {
+        curPath.pop()
+      }
       this.setState({ fbPath: curPath })
     }
 
@@ -1265,136 +1289,138 @@ color: vscodeStyles.getPropertyValue('--vscode-checkbox-foreground'),
       <AttributesContext.Provider value={this.state.attributes || []}>
         <div className='App'>
           <StyledEngineProvider injectFirst>
-            <ThemeProvider theme={theme}>
-              <AppBar position='static' color='transparent'>
-                <Toolbar variant='dense'>
-                  <div style={{ flexGrow: 1 }}></div>
-                  <Breadcrumbs>{breadcrumbFragment}</Breadcrumbs>
-                  <div style={{ flexGrow: 1 }}></div>
-                  {this.props.vscode.isStandaloneApi && (
-                    <>
-                      <input
-                        color='primary'
-                        accept='application/yaml'
-                        type='file'
-                        onChange={handleFileOpenEvent}
-                        id='icon-button-file'
-                        style={{ display: 'none' }}
-                      />
-                      <label htmlFor='icon-button-file'>
-                        <IconButton variant='contained' component='span' size='small' color='primary'>
-                          <FileOpenIcon />
-                        </IconButton>
-                      </label>
-                    </>
-                  )}
-                  <IconButton size='small' edge='end' color='primary' onClick={handleClick}>
-                    <MoreHorizIcon />
-                  </IconButton>
-                  <Menu
-                    id='appMoreMenu'
-                    anchorEl={this.state.anchorEl}
-                    keepMounted
-                    open={Boolean(this.state.anchorEl)}
-                    onClose={handleClose}
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        handleClose()
-                        this.onResetAllEntries(false)
-                      }}
+            <MuiThemeProvider theme={theme}>
+              <StylesThemeProvider theme={theme}>
+                <AppBar position='static' color='transparent'>
+                  <Toolbar variant='dense'>
+                    <div style={{ flexGrow: 1 }}></div>
+                    <Breadcrumbs>{breadcrumbFragment}</Breadcrumbs>
+                    <div style={{ flexGrow: 1 }}></div>
+                    {this.props.vscode.isStandaloneApi && (
+                      <>
+                        <input
+                          color='primary'
+                          accept='application/yaml'
+                          type='file'
+                          onChange={handleFileOpenEvent}
+                          id='icon-button-file'
+                          style={{ display: 'none' }}
+                        />
+                        <label htmlFor='icon-button-file'>
+                          <IconButton variant='contained' component='span' size='small' color='primary'>
+                            <FileOpenIcon />
+                          </IconButton>
+                        </label>
+                      </>
+                    )}
+                    <IconButton size='small' edge='end' color='primary' onClick={handleClick}>
+                      <MoreHorizIcon />
+                    </IconButton>
+                    <Menu
+                      id='appMoreMenu'
+                      anchorEl={this.state.anchorEl}
+                      keepMounted
+                      open={Boolean(this.state.anchorEl)}
+                      onClose={handleClose}
                     >
-                      reset all entries
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        handleClose()
-                        this.onResetAllEntries(true)
-                      }}
-                    >
-                      reset & reimport all entries
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        handleClose()
-                        this.onShowSummary()
-                      }}
-                    >
-                      show summary
-                    </MenuItem>
-                    {this.state?.attributes?.findIndex((attr) => attr.hasOwnProperty('lifecycles')) < 0 && (
                       <MenuItem
                         onClick={() => {
                           handleClose()
-                          this.onAddDLTAttributes()
+                          this.onResetAllEntries(false)
                         }}
                       >
-                        add DLT attributes
+                        reset all entries
                       </MenuItem>
-                    )}
-                  </Menu>
-                </Toolbar>
-              </AppBar>
-              <SummaryDialog
-                label='Summary'
-                fbdata={this.state.data}
-                onFbPathChange={onFbPathChange}
-                title={this.state.title}
-                open={this.state.showSummaryDialog === true}
-                onClose={() => this.setState({ showSummaryDialog: false })}
-              />
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <Paper>
-                    <div>
-                      <Grid container spacing={2} justifyContent='center'>
-                        <Grid item gutterBottom></Grid>
-                      </Grid>
-                    </div>
-                    <FishboneChart
-                      fbaFsAuthority={this.state.fbaFsAuthority}
-                      onStateChange={(fbData) => this.handleFBStateChange(fbData)}
-                      reactInlineElementsAdder={this.addInlineElements}
-                      onChange={this.handleInputChange.bind(this)}
-                      effectContextMenu={[
-                        { text: 'add category', cb: this.onAddCategory.bind(this) },
-                        { text: 'add effect', cb: this.onAddEffect.bind(this) },
-                        this.state.clipboard !== undefined && this.state.clipboard.type === 'category'
-                          ? { text: 'paste', cb: this.onPaste.bind(this) }
-                          : undefined,
-                        { text: 'delete effect', cb: this.onDeleteEffect.bind(this) },
-                      ]}
-                      categoryContextMenu={[
-                        { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
-                        { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
-                        { text: 'import fishbone', cb: this.onAddRootCause.bind(this, 'import') },
-                        { text: 'add category', cb: this.onAddCategory.bind(this) },
-                        { text: 'copy', cb: this.onCopy.bind(this, false, 'category') },
-                        { text: 'cut', cb: this.onCopy.bind(this, true, 'category') },
-                        this.state.clipboard !== undefined /* we allow all types (currently rootcause and category */
-                          ? { text: 'paste', cb: this.onPaste.bind(this) }
-                          : undefined,
-                        { text: 'delete category', cb: this.onDeleteCategory.bind(this) },
-                      ]}
-                      rootCauseContextMenu={[
-                        { text: 'copy', cb: this.onCopy.bind(this, false, 'rootcause') },
-                        { text: 'cut', cb: this.onCopy.bind(this, true, 'rootcause') },
-                        this.state.clipboard !== undefined && this.state.clipboard.type === 'rootcause'
-                          ? { text: 'paste', cb: this.onPaste.bind(this) }
-                          : undefined,
-                        { text: 'delete root-cause', cb: this.onDeleteRootCause.bind(this) },
-                      ]}
-                      data={this.getCurData(this.state.fbPath, this.state.data)}
-                      effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex}
-                      cols='12'
-                    />
-                  </Paper>
+                      <MenuItem
+                        onClick={() => {
+                          handleClose()
+                          this.onResetAllEntries(true)
+                        }}
+                      >
+                        reset & reimport all entries
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          handleClose()
+                          this.onShowSummary()
+                        }}
+                      >
+                        show summary
+                      </MenuItem>
+                      {this.state?.attributes?.findIndex((attr) => attr.hasOwnProperty('lifecycles')) < 0 && (
+                        <MenuItem
+                          onClick={() => {
+                            handleClose()
+                            this.onAddDLTAttributes()
+                          }}
+                        >
+                          add DLT attributes
+                        </MenuItem>
+                      )}
+                    </Menu>
+                  </Toolbar>
+                </AppBar>
+                <SummaryDialog
+                  label='Summary'
+                  fbdata={this.state.data}
+                  onFbPathChange={onFbPathChange}
+                  title={this.state.title}
+                  open={this.state.showSummaryDialog === true}
+                  onClose={() => this.setState({ showSummaryDialog: false })}
+                />
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Paper>
+                      <div>
+                        <Grid container spacing={2} justifyContent='center'>
+                          <Grid item gutterBottom></Grid>
+                        </Grid>
+                      </div>
+                      <FishboneChart
+                        fbaFsAuthority={this.state.fbaFsAuthority}
+                        onStateChange={(fbData) => this.handleFBStateChange(fbData)}
+                        reactInlineElementsAdder={this.addInlineElements}
+                        onChange={this.handleInputChange.bind(this)}
+                        effectContextMenu={[
+                          { text: 'add category', cb: this.onAddCategory.bind(this) },
+                          { text: 'add effect', cb: this.onAddEffect.bind(this) },
+                          this.state.clipboard !== undefined && this.state.clipboard.type === 'category'
+                            ? { text: 'paste', cb: this.onPaste.bind(this) }
+                            : undefined,
+                          { text: 'delete effect', cb: this.onDeleteEffect.bind(this) },
+                        ]}
+                        categoryContextMenu={[
+                          { text: 'add root-cause', cb: this.onAddRootCause.bind(this, 'FBACheckbox') },
+                          { text: 'add nested fishbone', cb: this.onAddRootCause.bind(this, 'nested') },
+                          { text: 'import fishbone', cb: this.onAddRootCause.bind(this, 'import') },
+                          { text: 'add category', cb: this.onAddCategory.bind(this) },
+                          { text: 'copy', cb: this.onCopy.bind(this, false, 'category') },
+                          { text: 'cut', cb: this.onCopy.bind(this, true, 'category') },
+                          this.state.clipboard !== undefined /* we allow all types (currently rootcause and category */
+                            ? { text: 'paste', cb: this.onPaste.bind(this) }
+                            : undefined,
+                          { text: 'delete category', cb: this.onDeleteCategory.bind(this) },
+                        ]}
+                        rootCauseContextMenu={[
+                          { text: 'copy', cb: this.onCopy.bind(this, false, 'rootcause') },
+                          { text: 'cut', cb: this.onCopy.bind(this, true, 'rootcause') },
+                          this.state.clipboard !== undefined && this.state.clipboard.type === 'rootcause'
+                            ? { text: 'paste', cb: this.onPaste.bind(this) }
+                            : undefined,
+                          { text: 'delete root-cause', cb: this.onDeleteRootCause.bind(this) },
+                        ]}
+                        data={this.getCurData(this.state.fbPath, this.state.data)}
+                        effectIndex={this.state.fbPath[this.state.fbPath.length - 1].effectIndex}
+                        cols='12'
+                      />
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6}>
+                    {attributeSection}
+                  </Grid>
                 </Grid>
-                <Grid item xs={6}>
-                  {attributeSection}
-                </Grid>
-              </Grid>
-            </ThemeProvider>
+              </StylesThemeProvider>
+            </MuiThemeProvider>
           </StyledEngineProvider>
         </div>
       </AttributesContext.Provider>

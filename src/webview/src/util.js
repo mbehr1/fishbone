@@ -7,15 +7,11 @@ import JSON5 from 'json5'
 import * as uv0 from 'dlt-logs-utils'
 import { rqUriDecode, rqUriEncode } from 'dlt-logs-utils/restQuery'
 
-// eslint-disable-next-line no-undef
 if (!globalThis.JSON5) {
-  // eslint-disable-next-line no-undef
   globalThis.JSON5 = JSON5
 }
 
-// eslint-disable-next-line no-undef
 if (!globalThis.uv0) {
-  // eslint-disable-next-line no-undef
   globalThis.uv0 = uv0
 }
 
@@ -107,7 +103,9 @@ function triggerRestQuery(requestStr, jsonPath) {
             const data = jp.query(res.data, jsonPath)
             //console.log(`jsonPath('${jsonPath}') returned '${JSON.stringify(data).slice(0, 100)}'`);
             resolve(data)
-          } else resolve(res)
+          } else {
+            resolve(res)
+          }
         })
         .catch(reject)
     } catch (e) {
@@ -263,7 +261,6 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
         case 'func':
           // todo try catch... conv to string/number
           try {
-            // eslint-disable-next-line no-new-func
             const fn = new Function('result', convParam)
             const fnRes = fn(result)
             //console.log(`typeof fnRes='${typeof fnRes}'`);
@@ -313,9 +310,13 @@ export async function triggerRestQueryDetails(dataSourceObj, attributes) {
  */
 export function objectShallowEq(a, b) {
   //console.log(`objectShallowEq comp `, a, b);
-  if (typeof a !== typeof b) return false
+  if (typeof a !== typeof b) {
+    return false
+  }
   const objAKeys = Object.keys(a)
-  if (objAKeys.length !== Object.keys(b).length) return false
+  if (objAKeys.length !== Object.keys(b).length) {
+    return false
+  }
   let eq = true
   for (let i = 0; eq && i < objAKeys.length; ++i) {
     const key = objAKeys[i]

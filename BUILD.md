@@ -6,14 +6,14 @@ To build locally you do need:
 
 once:
 ```
-(have at least nodejs >=22.17 installed)
+(have at least nodejs >=24.12 installed)
 npm install -g typescript
 npm install -g vsce
-yarn install
+npm install
 # Go to the webview source directory
 cd /src/webview
-# Install dependencies using yarn
-yarn install
+# Install dependencies using npm
+npm install
 # Go back to fishbone directory
 cd ../..
 ````
@@ -45,8 +45,6 @@ The [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) rules
 
 commitlint is used:
 ```sh
-yarn add -D @commitlint/{cli,config-conventional}
-or
 npm install --save-dev @commitlint/{cli,config-conventional}
 ```
 
@@ -62,8 +60,6 @@ We use the config in the package.json (as we use git hooks ... later as well):
 Husky v6 is used for easy git commit hooks on local setup:
 ```sh
 npm install --save-dev husky
-or 
-yarn add -D husky
 ```
 and activated in package.json as well:
 ```json
@@ -90,7 +86,7 @@ jobs:
   commitlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: wagoid/commitlint-github-action@v5
@@ -105,9 +101,6 @@ Semantic-release is used to
  - create a github release tag/version
 
 ```sh
-yarn add -D semantic-release @semantic-release/changelog @semantic-release/git
-yarn add -D semantic-release-vsce
-or
 npm install --save-dev semantic-release @semantic-release/changelog @semantic-release/git
 npm install --save-dev semantic-release-vsce
 ```
@@ -210,19 +203,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Commitlint
         uses: wagoid/commitlint-github-action@v5
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
           node-version: "lts/*"
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
       - name: Install webview dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
         working-directory: ./src/webview
       - name: Release
         env:

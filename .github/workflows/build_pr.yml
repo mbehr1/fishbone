@@ -1,0 +1,51 @@
+name: build_pr
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            vsce_target: win32-x64
+            platform: win32
+            arch: x64
+          - os: ubuntu-latest
+            vsce_target: linux-x64
+            platform: linux
+            arch: x64
+          - os: macos-latest
+            vsce_target: darwin-arm64
+            platform: darwin
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "lts/*"
+      - run: npm --version
+      #- run: npm i -g npm@8.5.1
+      #- run: npm --version
+      - name: Install dependencies
+        run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install webview dependencies
+        run: npm ci
+        working-directory: ./src/webview
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build
+        run: echo "Manual build via npm run package. Part of npx vsce package"
+        # run: npm run package
+      - run: npx vsce --version
+      - shell: pwsh
+        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
+      - run: npx vsce package --out fishbone-${{env.target}}-PR${{github.event.number}}.vsix
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fishbone-vsix-${{ env.target }}-PR${{ github.event.number }}
+          path: "*.vsix"

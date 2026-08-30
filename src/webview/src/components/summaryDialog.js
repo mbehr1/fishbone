@@ -24,13 +24,15 @@ export default function SummaryDialog(props) {
   }
 
   const header = SummaryHeaderProvider()
-  const data = SummaryDataProvider(props.fbdata, props.title, props.onFbPathChange, props.onClose)
+  const data = props.open ? SummaryDataProvider(props.fbdata, props.title, props.onFbPathChange, props.onClose) : null
 
   return (
     <Dialog fullScreen open={props.open} onClose={handleClose}>
-      <DialogContent dividers>
-        <SummaryTable onClose={handleClose} header={header} data={data}></SummaryTable>
-      </DialogContent>
+      {props.open && (
+        <DialogContent dividers>
+          <SummaryTable onClose={handleClose} header={header} data={data}></SummaryTable>
+        </DialogContent>
+      )}
     </Dialog>
   )
 }

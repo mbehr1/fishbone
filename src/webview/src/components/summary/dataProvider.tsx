@@ -1,3 +1,6 @@
+// TODOs:
+// - default expand all groups
+
 import React from 'react'
 
 import Select from '@mui/material/Select'
@@ -7,51 +10,17 @@ import ErrorIcon from '@mui/icons-material/Error'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 
-import { GetMarkdownActive, GetTextValue, RenderConditionText } from './../utils/markdown'
+import { GetMarkdownActive, GetTextValue, RenderConditionText } from '../utils/markdown'
 import { CreateTooltip, CreateLink } from './htmlHelper'
+import { AggregationFn, ColumnDef } from '@tanstack/table-core'
 
-// This is a custom filter UI for selecting
-// a unique option from a list
-function SelectColumnFilter({ column: { filterValue, setFilter, preFilteredRows, id } }) {
-  // Calculate the options for filtering
-  // using the preFilteredRows
-  const options = React.useMemo(() => {
-    const options = new Set()
-    preFilteredRows.forEach((row) => {
-      options.add(row.values[id])
-    })
-    return [...options.values()]
-  }, [id, preFilteredRows])
-
-  // Render a multi-select box
-  return (
-    <Select
-      native
-      style={{ paddingHorizontal: '2px' }}
-      value={filterValue}
-      onChange={(e) => {
-        setFilter(e.target.value || undefined)
-      }}
-      inputProps={{
-        id: 'select-filter-input',
-      }}
-    >
-      <option value=''>&nbsp;All</option>
-      {options.map((option, i) => (
-        <option key={i} value={option}>
-          &nbsp;{option}
-        </option>
-      ))}
-    </Select>
-  )
-}
-
-function getStatusAggregator(values) {
+const statusAggregationFn: AggregationFn<any> = (columnId, leafRows) => {
   var openCount = 0,
     okCount = 0,
     errorCount = 0
 
-  values.forEach((value) => {
+  leafRows.forEach((row) => {
+    const value = row.getValue<string>(columnId)
     if (typeof value === 'string') {
       switch (value) {
         case 'open':
@@ -64,7 +33,7 @@ function getStatusAggregator(values) {
           errorCount++
           break
         default:
-          console.log(`getStatusAggregator: Invalid status type ${value}`)
+          console.log(`Invalid status type ${value}`)
       }
     }
   })
@@ -72,52 +41,70 @@ function getStatusAggregator(values) {
   return [openCount, okCount, errorCount]
 }
 
-export function SummaryHeaderProvider() {
+export function SummaryHeaderProvider(): ColumnDef<any>[] {
   return React.useMemo(
     () => [
       {
-        Header: 'Name',
+        header: 'Name',
         columns: [
           {
-            Header: 'Effect',
-            accessor: 'effect',
-            filter: 'customFilter',
-            aggregate: 'count',
-            Aggregated: ({ value }) => {
+            header: 'Effect',
+            accessorKey: 'effect',
+            cell: (props) => props.getValue(),
+            filterFn: 'customFilter',
+            getGroupingValue: (row) => {
+              const value = row.effect
+              return typeof value === 'string' ? value : value?.key || ''
+            },
+            aggregationFn: 'count',
+            aggregatedCell: ({ getValue }) => {
+              const value = getValue()
               return value === 1 ? `${value} effect` : `${value} effects`
             },
           },
           {
-            Header: 'Category',
-            accessor: 'category',
-            filter: 'customFilter',
-            aggregate: 'count',
-            Aggregated: ({ value }) => {
+            header: 'Category',
+            accessorKey: 'category',
+            cell: (props) => props.getValue(),
+            filterFn: 'customFilter',
+            getGroupingValue: (row) => {
+              const value = row.category
+              return typeof value === 'string' ? value : value?.key || ''
+            },
+            aggregationFn: 'count',
+            aggregatedCell: ({ getValue }) => {
+              const value = getValue()
               return value === 1 ? `${value} category` : `${value} categories`
             },
           },
           {
-            Header: 'Root Cause',
-            accessor: 'rc',
-            filter: 'customFilter',
-            disableGroupBy: true,
-            aggregate: 'count',
-            Aggregated: ({ value }) => {
+            header: 'Root Cause',
+            accessorKey: 'rc',
+            cell: (props) => props.getValue(),
+            filterFn: 'customFilter',
+            enableGrouping: false,
+            aggregationFn: 'count',
+            aggregatedCell: ({ getValue }) => {
+              const value = getValue()
               return value === 1 ? `${value} root-cause` : `${value} root-causes`
             },
           },
         ],
       },
       {
-        Header: 'Properties',
+        header: 'Properties',
         columns: [
           {
-            Header: 'Status',
-            accessor: 'value',
-            Filter: SelectColumnFilter,
-            filter: 'includes',
-            aggregate: getStatusAggregator,
-            Aggregated: ({ value }) => {
+            header: 'Status',
+            accessorKey: 'value',
+            cell: (props) => props.getValue(),
+            meta: {
+              filterVariant: 'select',
+            },
+            filterFn: 'customFilter',
+            aggregationFn: statusAggregationFn,
+            aggregatedCell: ({ getValue }) => {
+              const value = getValue<[number, number, number]>()
               return (
                 <React.Fragment>
                   <Chip size='small' icon={<CheckBoxOutlineBlankIcon />} color='primary' label={value[0]} variant='outlined' />
@@ -126,24 +113,37 @@ export function SummaryHeaderProvider() {
                 </React.Fragment>
               )
             },
+            getGroupingValue: (row) => {
+              const value = row.value
+              if (value === 'error') {
+                return 'errors'
+              }
+              if (value === 'open') {
+                return 'open'
+              }
+              return 'ok'
+            },
           },
           {
-            Header: 'Background',
-            accessor: 'background',
-            filter: 'customFilter',
-            disableGroupBy: true,
+            header: 'Background',
+            accessorKey: 'background',
+            cell: (props) => props.getValue(),
+            filterFn: 'customFilter',
+            enableGrouping: false,
           },
           {
-            Header: 'Instructions',
-            accessor: 'instructions',
-            filter: 'customFilter',
-            disableGroupBy: true,
+            header: 'Instructions',
+            accessorKey: 'instructions',
+            cell: (props) => props.getValue(),
+            filterFn: 'customFilter',
+            enableGrouping: false,
           },
           {
-            Header: 'Comments',
-            accessor: 'comments',
-            filter: 'customFilter',
-            disableGroupBy: true,
+            header: 'Comments',
+            accessorKey: 'comments',
+            cell: (props) => props.getValue(),
+            filterFn: 'customFilter',
+            enableGrouping: false,
           },
         ],
       },
@@ -152,8 +152,13 @@ export function SummaryHeaderProvider() {
   )
 }
 
-export function SummaryDataProvider(rawData, currentTitle, onFbPathChange, onClose) {
-  const FbPathLinkClicked = (path) => {
+export function SummaryDataProvider(
+  rawData: any,
+  currentTitle: string | undefined,
+  onFbPathChange: (arg0: any) => void,
+  onClose: () => void,
+) {
+  const FbPathLinkClicked = (path: any) => {
     if (onFbPathChange && onClose) {
       onFbPathChange(path)
       onClose()
@@ -165,8 +170,13 @@ export function SummaryDataProvider(rawData, currentTitle, onFbPathChange, onClo
   return CreateTableData(rawData, hooks, currentTitle)
 }
 
-function CreateTableData(rawData, hooks, currentTitle = '', path = []) {
-  var tableData = []
+type PathItem = {
+  title: string
+  effectIndex: number
+}
+
+function CreateTableData(rawData: any[], hooks: { FbPathLinkClicked: any }, currentTitle = '', path: PathItem[] = []) {
+  var tableData: any[] = []
 
   var effectIndex = 0
 
@@ -174,7 +184,7 @@ function CreateTableData(rawData, hooks, currentTitle = '', path = []) {
     path.push({ title: currentTitle, effectIndex: effectIndex })
     effectIndex++
 
-    effect.categories.forEach((category) => {
+    effect.categories.forEach((category: { rootCauses: any[]; name: string }) => {
       category.rootCauses.forEach((rc) => {
         if (typeof rc === 'object') {
           if ('props' in rc) {
@@ -184,7 +194,9 @@ function CreateTableData(rawData, hooks, currentTitle = '', path = []) {
 
             path.forEach(function (e, idx, array) {
               pathString += e.title
-              if (idx < array.length - 1) pathString += ' -> '
+              if (idx < array.length - 1) {
+                pathString += ' -> '
+              }
             })
 
             tableData.push({

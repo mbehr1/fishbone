@@ -5,7 +5,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import { Button, DialogContent, DialogTitle, IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
-import Grid from '@mui/material/Grid'
+import { GridLegacy as Grid } from '@mui/material'
 import Paper from '@mui/material/Paper'
 import List from '@mui/material/List'
 import ListItem from '@mui/material/ListItem'
@@ -306,7 +306,6 @@ export default function DLTFilterAssistantDialog(props) {
       }
     }
     if (true /* or add attributes here? */) {
-      // eslint-disable-next-line no-template-curly-in-string
       const newAttrs = { name: 'not selected lifecycles', type: 1, not: true, lifecycles: '${attributes.lifecycles.id}' }
       const newFilter = new RestCommandFilter(props.applyMode ? { ...newAttrs, tmpFb: 1 } : newAttrs)
       const curIdx = parsedFilters.findIndex((filter) => objectShallowEq(newFilter, filter))

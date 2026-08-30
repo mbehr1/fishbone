@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify'
-import marked from 'marked'
+import { marked } from 'marked'
 
 /**
  * helper function to check and return the o.markdownFormat state
